@@ -23,18 +23,18 @@ _EMOJI_RE = re.compile(
     "\uFE00-\uFE0F\u200B-\u200D\u20E3]"
 )
 
-# LLM 情绪标签 -> (rate, pitch)
-_EMO_MAP: dict[str, tuple[str, str]] = {
-    "neutral": ("+0%", "+0Hz"),
-    "happy": ("+8%", "+6Hz"),
-    "excited": ("+12%", "+8Hz"),
-    "sad": ("-8%", "-4Hz"),
-    "angry": ("-4%", "+4Hz"),
-    "calm": ("-6%", "+0Hz"),
-    "thoughtful": ("-6%", "+2Hz"),
-    "question": ("-6%", "+6Hz"),
-    "serious": ("+0%", "+0Hz"),
-    "whisper": ("-10%", "-2Hz"),
+# LLM 情绪标签 -> (rate, pitch, minimax_emotion)
+_EMO_MAP: dict[str, tuple[str, str, str]] = {
+    "neutral": ("+0%", "+0Hz", "calm"),
+    "happy": ("+8%", "+6Hz", "happy"),
+    "excited": ("+12%", "+8Hz", "happy"),
+    "sad": ("-8%", "-4Hz", "sad"),
+    "angry": ("-4%", "+4Hz", "angry"),
+    "calm": ("-6%", "+0Hz", "calm"),
+    "thoughtful": ("-6%", "+2Hz", "calm"),
+    "question": ("-6%", "+6Hz", "surprised"),
+    "serious": ("+0%", "+0Hz", "calm"),
+    "whisper": ("-10%", "-2Hz", "whisper"),
 }
 
 
@@ -54,28 +54,35 @@ def _escape(s: str) -> str:
 
 
 def _heuristic(sentence: str, idx: int) -> dict[str, str]:
-    """按句末标点给韵律参数；连续句号句叠加轻微正弦波形避免全平。"""
+    """按句末标点给韵律参数；连续句号句叠加轻微正弦波形避免全平。
+
+    emotion 字段映射到 MiniMax 9 种之一：happy/sad/angry/fearful/disgusted/
+    surprised/calm/fluent/whisper。edge-tts backend 不消费此字段。
+    """
     s = sentence.strip()
     if not s:
-        return {"rate": "+0%", "pitch": "+0Hz", "break_ms": "300"}
+        return {"rate": "+0%", "pitch": "+0Hz", "break_ms": "300", "emotion": "calm"}
     last = s[-1]
     if last in "？?":                      # 问句：升调、略慢
-        return {"rate": "-6%", "pitch": "+6Hz", "break_ms": "520"}
+        return {"rate": "-6%", "pitch": "+6Hz", "break_ms": "520", "emotion": "surprised"}
     if last in "！!":                      # 感叹/强调：加重、略慢
-        return {"rate": "-4%", "pitch": "+4Hz", "break_ms": "520"}
+        return {"rate": "-4%", "pitch": "+4Hz", "break_ms": "520", "emotion": "happy"}
     if last in "…":                        # 省略/留白：明显放慢
-        return {"rate": "-10%", "pitch": "+0Hz", "break_ms": "720"}
+        return {"rate": "-10%", "pitch": "+0Hz", "break_ms": "720", "emotion": "sad"}
     if last in "；;":                      # 分号：紧凑
-        return {"rate": "+6%", "pitch": "+0Hz", "break_ms": "340"}
+        return {"rate": "+6%", "pitch": "+0Hz", "break_ms": "340", "emotion": "fluent"}
     if last in "。.":                      # 句号：基础值 + 轻微波形起伏
         wave = math.sin(idx * 0.9) * 4     # rate 约 -4%~+4%
         ph = math.cos(idx * 0.9) * 3       # pitch 约 -3Hz~+3Hz
+        # 句号主调 calm，偶发轻微 surprised 增加层次
+        emo = "surprised" if math.sin(idx * 1.3) > 0.6 else "calm"
         return {
             "rate": f"{round(wave):+d}%",
             "pitch": f"{round(ph):+d}Hz",
             "break_ms": "460",
+            "emotion": emo,
         }
-    return {"rate": "+2%", "pitch": "+0Hz", "break_ms": "240"}  # 逗号/无标点断句
+    return {"rate": "+2%", "pitch": "+0Hz", "break_ms": "240", "emotion": "calm"}
 
 
 def _split(text: str) -> list[str]:
@@ -104,8 +111,8 @@ def _plan_llm(text: str, cfg: dict[str, Any]) -> list[dict[str, str]]:
             emo, sent = "neutral", _clean(line)
         if not sent:
             continue
-        rate, pitch = _EMO_MAP.get(emo, ("+0%", "+0Hz"))
-        out.append({"text": sent, "rate": rate, "pitch": pitch, "break_ms": "460"})
+        rate, pitch, m_emo = _EMO_MAP.get(emo, ("+0%", "+0Hz", "calm"))
+        out.append({"text": sent, "rate": rate, "pitch": pitch, "break_ms": "460", "emotion": m_emo})
     return out
 
 
@@ -122,6 +129,7 @@ def plan_sentences(text: str, cfg: dict[str, Any]) -> list[dict[str, str]]:
     for i, s in enumerate(_split(text)):
         p = _heuristic(s, i)
         out.append(
-            {"text": s, "rate": p["rate"], "pitch": p["pitch"], "break_ms": p["break_ms"]}
+            {"text": s, "rate": p["rate"], "pitch": p["pitch"],
+             "break_ms": p["break_ms"], "emotion": p["emotion"]}
         )
     return out

@@ -1,21 +1,16 @@
-"""TTS：edge-tts 逐句生成(可带逐句 rate/pitch) + ffmpeg 拼接，缓解单人播客单调。
+"""TTS 编排：根据 cfg['tts']['backend'] 选 edge-tts / minimax backend。
 
-注意：edge-tts 的 Communicate 只接受纯文本(text=)，传完整 <speak> SSML 会被错误
-合成成超长音频（实测单句 5 字变成 36s）。因此逐句韵律通过「每句一次 Communicate
-调用 + 各自的 rate/pitch 构造参数」实现，句间/段间停顿用 ffmpeg 生成静音拼接。
+edge-tts：逐句 rate/pitch + 句间 ffmpeg 静音，免费；SSML 已被实测禁用（会超长）。
+minimax ：按段 HTTP POST，emotion 控制、22 种语气词透传，需 MINIMAX_API_KEY。
 """
 from __future__ import annotations
 
 import asyncio
 import subprocess
-import tempfile
 from pathlib import Path
 from typing import Any
 
-import edge_tts
-
 from .ingest import slugify
-from .prosody import plan_sentences
 
 
 def _run(cmd: list[str]) -> None:
@@ -24,30 +19,10 @@ def _run(cmd: list[str]) -> None:
         raise RuntimeError(f"ffmpeg 失败: {r.stderr[-500:]}")
 
 
-async def _speak(
-    text: str,
-    voice: str,
-    out_path: Path,
-    rate: str,
-    pitch: str,
-    volume: str,
-) -> None:
-    # 端点偶发抖动(NoAudioReceived)，重试 3 次
-    last: Exception | None = None
-    for _ in range(3):
-        try:
-            comm = edge_tts.Communicate(text, voice, rate=rate, volume=volume, pitch=pitch)
-            await comm.save(str(out_path))
-            return
-        except Exception as e:  # noqa: BLE001
-            last = e
-    raise last or RuntimeError("TTS 失败")
-
-
-def _make_silence(path: Path, ms: int) -> None:
+def _make_silence(path: Path, ms: int, sample_rate: int = 24000) -> None:
     _run([
         "ffmpeg", "-y", "-f", "lavfi",
-        "-i", "anullsrc=channel_layout=mono:sample_rate=24000",
+        "-i", f"anullsrc=channel_layout=mono:sample_rate={sample_rate}",
         "-t", f"{ms / 1000:.3f}", "-acodec", "libmp3lame", "-q:a", "9",
         str(path),
     ])
@@ -65,12 +40,24 @@ def _duration(path: Path) -> int:
         return 0
 
 
-async def generate_audio(
-    segments: list[dict[str, str]],
-    voice_map: dict[str, str],
-    cfg: dict[str, Any],
-    out_path: Path,
-) -> int:
+async def _edge_speak(
+    text: str, voice: str, out_path: Path, rate: str, pitch: str, volume: str,
+) -> None:
+    import edge_tts
+    last: Exception | None = None
+    for _ in range(3):
+        try:
+            comm = edge_tts.Communicate(text, voice, rate=rate, volume=volume, pitch=pitch)
+            await comm.save(str(out_path))
+            return
+        except Exception as e:  # noqa: BLE001
+            last = e
+    raise last or RuntimeError("edge-tts TTS 失败")
+
+
+async def _generate_edge(segments, voice_map, cfg, out_path):
+    import tempfile
+    from .prosody import plan_sentences
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     tts_cfg = cfg.get("tts", {})
@@ -87,39 +74,58 @@ async def generate_audio(
             if use_prosody:
                 sents = plan_sentences(seg["text"], cfg)
             else:
-                sents = [{
-                    "text": seg["text"],
-                    "rate": tts_cfg.get("rate", "+0%"),
-                    "pitch": tts_cfg.get("pitch", "+0Hz"),
-                    "break_ms": 0,
-                }]
+                sents = [{"text": seg["text"], "rate": tts_cfg.get("rate", "+0%"),
+                          "pitch": tts_cfg.get("pitch", "+0Hz"), "break_ms": 0}]
             for j, s in enumerate(sents):
                 seg_path = tmp / f"{i:03d}_{j:03d}.mp3"
-                await _speak(
-                    s["text"], voice, seg_path,
-                    s["rate"], s["pitch"], volume,
-                )
+                await _edge_speak(s["text"], voice, seg_path, s["rate"], s["pitch"], volume)
                 files.append(seg_path)
-                # 句间停顿（末句交给段间停顿）
                 if j < len(sents) - 1 and int(s["break_ms"]) > 0:
                     sil = tmp / f"b{i}_{j}.mp3"
                     _make_silence(sil, int(s["break_ms"]))
                     files.append(sil)
-            # 段间停顿
             if i < len(segments) - 1:
                 sil = tmp / f"s{i}.mp3"
                 _make_silence(sil, pause)
                 files.append(sil)
-
         inputs: list[str] = []
         for f in files:
             inputs += ["-i", str(f)]
         n = len(files)
         chain = "".join(f"[{j}:a]" for j in range(n))
-        filter_desc = f"{chain}concat=n={n}:v=0:a=1[out]"
-        _run(["ffmpeg", "-y", *inputs, "-filter_complex", filter_desc,
-              "-map", "[out]", str(out_path)])
+        _run(["ffmpeg", "-y", *inputs, "-filter_complex",
+              f"{chain}concat=n={n}:v=0:a=1[out]", "-map", "[out]", str(out_path)])
     return _duration(out_path)
+
+
+async def _generate_minimax(segments, voice_map, cfg, out_path):
+    from .tts_minimax import generate_audio_minimax
+    return await generate_audio_minimax(segments, voice_map, cfg, out_path)
+
+
+def _enrich_with_emotion(segments, cfg):
+    """给每个 segment 注入 emotion 字段（按 prosody 启发式 / LLM）。minimax 用。"""
+    from .prosody import plan_sentences
+    out = []
+    for seg in segments:
+        sents = plan_sentences(seg["text"], cfg)
+        # 整段 emotion 取该段第一句 / 整体模式
+        emo = sents[0]["emotion"] if sents else "calm"
+        out.append({**seg, "emotion": emo})
+    return out
+
+
+async def generate_audio(
+    segments: list[dict[str, str]],
+    voice_map: dict[str, str],
+    cfg: dict[str, Any],
+    out_path: Path,
+) -> int:
+    backend = cfg.get("tts", {}).get("backend", "edge-tts").lower()
+    if backend == "minimax":
+        segments = _enrich_with_emotion(segments, cfg)
+        return await _generate_minimax(segments, voice_map, cfg, out_path)
+    return await _generate_edge(segments, voice_map, cfg, out_path)
 
 
 def build_episode_audio(
@@ -130,8 +136,7 @@ def build_episode_audio(
     title: str,
 ) -> tuple[Path, int]:
     out_dir = Path(out_dir)
-    slug = slugify(title)
-    ep_dir = out_dir / slug
+    ep_dir = out_dir / slugify(title)
     ep_dir.mkdir(parents=True, exist_ok=True)
     mp3 = ep_dir / "episode.mp3"
     duration = asyncio.run(generate_audio(segments, voice_map, cfg, mp3))

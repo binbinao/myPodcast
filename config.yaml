@@ -1,7 +1,6 @@
 # myPodcast 配置
-# 角色 -> 音色 映射（edge-tts 中文音色）
-# 可用音色参考：zh-CN-XiaoxiaoNeural(女,温暖) / zh-CN-YunxiNeural(男,活力)
-#               zh-CN-YunyangNeural(男,新闻) / zh-CN-XiaoyiNeural(女,温柔)
+# TTS 后端：edge-tts（免费，零依赖，单调）/ minimax（情感/22拟声词，需 API Key）
+# 切换时 voices 与 voices_minimax 对应不同后端使用的音色 ID。
 
 podcast:
   title: "小搭电台"
@@ -10,22 +9,41 @@ podcast:
   website: "https://example.com"   # 改成你的节目站地址
   description: "把文章、白皮书、长文，变成能听的电台。"
 
-# 默认角色音色（脚本里 [host] [guest] 等标签对应这里）
+# edge-tts 角色音色（zh-CN-XiaoxiaoNeural=女温暖, zh-CN-YunxiNeural=男活力, zh-CN-YunyangNeural=男新闻, zh-CN-XiaoyiNeural=女温柔）
 voices:
   host: "zh-CN-XiaoxiaoNeural"
   guest: "zh-CN-YunxiNeural"
   default: "zh-CN-XiaoxiaoNeural"
 
+# MiniMax 角色音色（speech-2.8-hd 推荐；详见 src/tts_minimax.py 的 COMMON_ZH_VOICES）
+# female-yujie 御姐 / female-shaonv 少女 / female-chengshu 成熟 / female-tianmei 甜美
+# male-qn-qingse 青涩青年 / male-qn-jingying 精英青年 / male-qn-badao 霸道青年 / male-qn-daxuesheng 大学生
+voices_minimax:
+  host: "female-yujie"       # 御姐，沉稳科普向，适合长文单人
+  guest: "male-qn-qingse"    # 青涩青年，活泼
+  default: "female-yujie"
+
 # TTS 参数
 tts:
-  rate: "+0%"      # 语速：+10% 更快 / -10% 更慢（仅当韵律规划关闭时作为整段全局值）
-  volume: "+0%"    # 音量
+  backend: "minimax"         # edge-tts | minimax
+  rate: "+0%"                # 语速（仅 edge-tts 全局模式用）
+  volume: "+0%"              # 音量
   pitch: "+0Hz"
-  pause_ms: 600    # 每段之间的停顿(毫秒)
+  pause_ms: 600              # 每段之间的停顿(毫秒)
+  # MiniMax 配置（仅当 backend=minimax 时生效）
+  minimax:
+    base_url: "https://api.minimaxi.com/v1/t2a_v2"
+    # api_key 不推荐写文件，优先用环境变量 MINIMAX_API_KEY；这里只是兜底
+    api_key: ""
+    model: "speech-2.8-hd"   # 推荐 speech-2.8-hd；turbo 更便宜；2.6/2.0 兜底
+    speed: 1.0               # [0.5, 2]
+    vol: 1.0                 # (0, 10]
+    pitch: 0                 # [-12, 12]
 
 # 韵律规划：缓解单人播客语调单调
-# enable: 是否按句注入 prosody（关则退化为旧版整段全局参数）
-# mode:   heuristic(零依赖,按标点规则) | llm(调 LLM 给每句打情绪标签,需 llm.api_key)
+# enable: 是否按句注入 prosody
+# mode:   heuristic(零依赖,按标点规则) | llm(需 llm.api_key)
+# 注：heuristic 输出 emotion(calm/happy/sad/surprised/...)；minimax 用，edge-tts 忽略
 prosody:
   enable: true
   mode: heuristic

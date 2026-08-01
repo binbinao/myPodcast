@@ -30,8 +30,9 @@ def run_one(episode_path: Path, out_dir: Path, cfg: dict[str, Any]) -> None:
     title = meta.get("title") or Path(episode_path).stem
     print(f"      共 {len(segments)} 段，标题《{title}》")
 
-    print("[3/5] 生成音频 (edge-tts)")
-    voice_map = cfg.get("voices", {})
+    print(f"[3/5] 生成音频 (backend={cfg.get('tts', {}).get('backend', 'edge-tts')})")
+    voice_key = "voices_minimax" if cfg.get("tts", {}).get("backend", "edge-tts").lower() == "minimax" else "voices"
+    voice_map = cfg.get(voice_key, {})
     mp3, duration = build_episode_audio(segments, voice_map, cfg, out_dir, title)
     ep_dir = mp3.parent
     size = mp3.stat().st_size
