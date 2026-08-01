@@ -1,7 +1,7 @@
 {
   "$schema": "https://design-tokens.github.io/community-group/format/",
   "$meta": {
-    "name": "小搭电台 Design Tokens",
+    "name": "小搭-斌哥电台 Design Tokens",
     "version": "1.0.0",
     "owner": "designer",
     "status": "FROZEN — 变量名冻结，改名需 designer 会签",

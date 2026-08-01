@@ -3,7 +3,7 @@
 # 切换时 voices 与 voices_minimax 对应不同后端使用的音色 ID。
 
 podcast:
-  title: "小搭电台"
+  title: "小搭-斌哥电台"
   author: "小搭 & 斌哥"
   language: "zh-CN"
   website: "https://binbinao.github.io/myPodcast"   # 节目站地址（RSS 绝对链接 / Apple 订阅用）
