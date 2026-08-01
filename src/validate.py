@@ -56,7 +56,7 @@ _PIPE_TABLE_RE = re.compile(r"(?m)^\s*\|?[\s\-:|]+\|[\s\-:|]+\s*$")
 _ASTERISK_ITALIC_RE = re.compile(r"(?<![*\w])\*[^*\n]{1,200}\*(?![*\w])")
 
 # Setext 标题（下划线 === / --- 整行）
-_SETEXT_HEADING_RE = re.compile(r"(?m)^[=\-]{3,}\s*$")
+_SETEXT_HEADING_RE = re.compile(r"(?m)^(?:\[[^\]]+\]\s*)?[=\-]{3,}\s*$")
 
 # Markdown 脚注引用 [^1] / [^note]
 _FOOTNOTE_RE = re.compile(r"\[\^[^\]]+\]")
