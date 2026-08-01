@@ -6,7 +6,7 @@ podcast:
   title: "小搭电台"
   author: "小搭 & 斌哥"
   language: "zh-CN"
-  website: "https://example.com"   # 改成你的节目站地址
+  website: "https://binbinao.github.io/myPodcast"   # 节目站地址（RSS 绝对链接 / Apple 订阅用）
   description: "把文章、白皮书、长文，变成能听的电台。"
   cover: "cover.jpg"               # 节目封面图（og:image）
 

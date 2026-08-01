@@ -199,7 +199,9 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     latest.sort(key=lambda x: x.get("date", ""), reverse=True)
 
     def _audio_src(e: dict[str, Any]) -> str:
-        return f"{base}/{e['url']}" if base else e["url"]
+        # 站点内音频用相对路径：index.html 与各集子目录同处站点根目录，
+        # 部署到 gh-pages 子路径(/myPodcast/)也能正确解析，避免占位 example.com 域名 404
+        return e["url"]
 
     def _ep_card(e: dict[str, Any], compact: bool = False) -> str:
         dur = _fmt_dur(e.get("duration", 0))
@@ -225,8 +227,11 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     # Hero（featured episode）
     cover_abs = (Path(out_dir) / Path(cover).name).resolve() if cover else None
     cover_exists = cover_abs.exists() if cover_abs else False
-    # cover 图用站点根路径，避免 base 为占位 example.com 时 404
-    cover_src = f"/{Path(cover).name}" if cover_exists else ""
+    # cover 图用相对文件名：index.html 与 cover.jpg 同处站点根目录，
+    # 相对路径在 gh-pages 子路径(/myPodcast/)也能正确解析，避免 /cover.jpg 域根 404
+    cover_src = Path(cover).name if cover_exists else ""
+    # og:image 需要绝对地址才利于社交卡片抓取；base 为空时退回相对
+    og_image = f"{base}/{cover_src}" if (base and cover_src) else cover_src
     if featured:
         art_block = (
             f'<img class="hero-img" src="{cover_src}" alt="{escape(title)} 封面" loading="eager">'
@@ -378,7 +383,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
 <meta property="og:title" content="{escape(title)}">
 <meta property="og:description" content="{escape(desc)}">
 <meta property="og:type" content="website">
-<meta property="og:image" content="{cover}">
+<meta property="og:image" content="{og_image}">
 <link rel="alternate" type="application/rss+xml" title="{escape(title)}" href="feed.xml">
 <style>
 :root {{
