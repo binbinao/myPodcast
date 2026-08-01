@@ -156,6 +156,39 @@ def _fmt_dur(d: int) -> str:
     return f"{m}:{s:02d}"
 
 
+def _is_body_text(text: str) -> bool:
+    """判断一段文字是否像正文开头而非章节标题。"""
+    if not text:
+        return True
+    # 显式章节标记：第X章 / X.X / 目录 / 核心 / 最后 等，直接认为是标题
+    if re.match(r"^(第\s*\d+|\d+(?:\.\d+)+\s|目录|核心|最后|未来|文章|文件|六种|四种|十大)", text):
+        return False
+    # 正文常见特征：含句内/句末标点、长度失控、以时间/承接词开头
+    if len(text) > 24:
+        return True
+    if re.search(r"[，。！？…；]", text):
+        return True
+    body_prefixes = ("昨天", "今天", "最近", "其实", "回头看", "那么", "这次", "我们", "我", "你")
+    return any(text.startswith(p) for p in body_prefixes)
+
+
+def _display_title(e: dict[str, Any]) -> str:
+    """生成干净的页面展示标题，避免把正文句当成章节名。"""
+    series = e.get("series") or ""
+    chapter = e.get("chapter") or ""
+    ep = e.get("episode")
+    total = e.get("total")
+    # 单集直接返回系列名
+    if (not ep and not total) or (total == 1) or (ep == 1 and total == 1):
+        return series or e.get("title", "")
+    # 章节名干净时：系列名 · 章节名
+    if chapter and not _is_body_text(chapter):
+        return f"{series} · {chapter}" if series else chapter
+    # 否则：系列名 · 第 N 集
+    label = f"第 {ep}/{total} 集" if ep and total else (f"第 {ep} 集" if ep else "")
+    return f"{series} · {label}" if (series and label) else (series or label or e.get("title", ""))
+
+
 def _slugify_series(title: str) -> str:
     """兼容保留：中文 → kebab-case（不再保留中文）。实际应由 manifest 的 slug 字段提供。"""
     from .naming import chinese_to_ascii
@@ -246,7 +279,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     {f'<span class="badge">{escape(ep_label)}</span>' if ep_label else ''}
     <span class="duration">{dur}</span>
   </div>
-  <h3 class="ep-title">{escape(e.get('title',''))}</h3>
+  <h3 class="ep-title">{escape(_display_title(e))}</h3>
   <p class="ep-desc">{escape(e.get('description',''))}</p>
   <audio controls preload="none" src="{_audio_src(e)}"></audio>
   <div class="ep-links">
@@ -276,7 +309,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
   </div>
   <div class="hero-content">
     <p class="hero-eyebrow">最新一期 · <time datetime="{featured.get('date','')}">{featured.get('date','')}</time></p>
-    <h1 class="hero-title">{escape(featured.get('series') or featured.get('title',''))}</h1>
+    <h1 class="hero-title">{escape(_display_title(featured))}</h1>
     <p class="hero-desc">{escape(featured.get('description',''))}</p>
     <div class="hero-cta">
       <a class="btn btn-primary" href="{_audio_src(featured)}" data-action="play-now">▶ 现在就听</a>

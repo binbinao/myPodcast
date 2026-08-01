@@ -105,18 +105,21 @@ def _drop_meta_blocks(blocks: list[str], meta_sections: set[str]) -> list[str]:
 
 
 def _auto_title(block: str, fallback: str) -> str:
+    """从块中推断章节名。
+
+    安全策略：只有第一行明显是标题（无句内标点、长度合适）时才用；
+    否则返回 fallback，避免把正文第一句抽成章节名，污染集标题。
+    """
     txt = _strip_md(block).strip()
     lines = [l for l in txt.splitlines() if l.strip()]
     if not lines:
         return fallback
-    first = lines[0]
-    parts = re.split(r"(?<=[。！？])", first, maxsplit=1)
-    title = parts[0].strip()
-    if not title:
-        title = first.strip()
-    if len(title) > 24:
-        title = title[:24] + "…"
-    return title or fallback
+    first = lines[0].strip()
+    # 显式标题：Markdown 标题行已在 clean_article 中去掉 H1，但保留 H2/H3 在正文；
+    # 若第一行像标题（无逗号/省略号/冒号，且<=20字），才接受。
+    if len(first) <= 20 and not re.search(r"[，。！？…：；]", first):
+        return first
+    return fallback
 
 
 def _group_even(items: list, k: int) -> list[list]:
