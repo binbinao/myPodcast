@@ -23,6 +23,18 @@ tts:
   pitch: "+0Hz"
   pause_ms: 600    # 每段之间的停顿(毫秒)
 
+# 默认单/双人形式：solo(单人) / duo(双人)。每篇文章可用 frontmatter 的 format 覆盖。
+format: "duo"
+
+# 目录
+raw_dir: "raw"        # 原始文章（markdown）
+drafts_dir: "drafts"  # prepare 生成的脚本草稿（评审门，审完再 build）
+
+# 分集切分
+split:
+  min_episode_chars: 600    # 小于此字数的章节合并进上一集
+  max_episode_chars: 3000   # 单集上限，超出按 H3/段落继续切
+
 # 可选 LLM 润色（留空则跳过，直接使用脚本原稿）
 # 支持任何 OpenAI 兼容接口；不填 key 时流水线假设输入已是口播稿
 llm:

@@ -1,5 +1,6 @@
 # 忽略生成产物与缓存
 output/
+drafts/
 __pycache__/
 *.pyc
 .venv/

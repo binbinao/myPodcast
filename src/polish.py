@@ -31,14 +31,14 @@ def _heuristic(body: str) -> str:
     return "\n".join(out)
 
 
-def _llm_polish(body: str, cfg: dict[str, Any]) -> str:
+def llm_complete(system_prompt: str, user_content: str, cfg: dict[str, Any]) -> str:
+    """通用 LLM 调用（OpenAI 兼容）。用于润色与脚本生成。"""
     llm = cfg.get("llm", {})
-    prompt = llm.get("prompt", "把下面内容改写成口语化播客脚本，用 [host] 和 [guest] 交替。")
     payload = {
         "model": llm.get("model", "gpt-4o-mini"),
         "messages": [
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": body},
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_content},
         ],
         "temperature": 0.7,
     }
@@ -53,6 +53,12 @@ def _llm_polish(body: str, cfg: dict[str, Any]) -> str:
     with urllib.request.urlopen(req, timeout=120) as resp:
         data = json.loads(resp.read().decode())
     return data["choices"][0]["message"]["content"].strip()
+
+
+def _llm_polish(body: str, cfg: dict[str, Any]) -> str:
+    llm = cfg.get("llm", {})
+    prompt = llm.get("prompt", "把下面内容改写成口语化播客脚本，用 [host] 和 [guest] 交替。")
+    return llm_complete(prompt, body, cfg)
 
 
 def polish(text: str, cfg: dict[str, Any]) -> str:

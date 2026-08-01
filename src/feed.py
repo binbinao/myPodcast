@@ -62,6 +62,9 @@ def register_episode(out_dir: Path, meta: dict[str, Any], slug: str, duration: i
         "duration": duration,
         "size": size,
         "url": f"{slug}/episode.mp3",
+        "series": meta.get("series", ""),
+        "episode": meta.get("episode", ""),
+        "total": meta.get("total", ""),
     }
     eps = [e for e in eps if e["slug"] != slug]
     eps.insert(0, entry)
@@ -79,7 +82,9 @@ def build_feed(out_dir: Path, podcast: dict[str, Any]) -> Path:
             f"      <title>{escape(e['title'])}</title>\n"
             f"      <description>{escape(e['description'])}</description>\n"
             f"      <pubDate>{e['date']}</pubDate>\n"
-            f'      <enclosure url="{base}/{e["url"]}" type="audio/mpeg" length="{e["size"]}"/>\n'
+            + (f"      <itunes:episode>{e['episode']}</itunes:episode>\n" if e.get("episode") else "")
+            + (f"      <itunes:season>1</itunes:season>\n" if e.get("series") else "")
+            + f'      <enclosure url="{base}/{e["url"]}" type="audio/mpeg" length="{e["size"]}"/>\n'
             f"      <itunes:duration>{e['duration']}</itunes:duration>\n"
             "    </item>"
         )

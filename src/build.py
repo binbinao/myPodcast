@@ -17,8 +17,7 @@ from .polish import polish
 from .tts import build_episode_audio
 
 
-def run(episode_path: Path, out_dir: Path, config_path: Path) -> None:
-    cfg = yaml.safe_load(Path(config_path).read_text(encoding="utf-8"))
+def run_one(episode_path: Path, out_dir: Path, cfg: dict[str, Any]) -> None:
     raw = Path(episode_path).read_text(encoding="utf-8")
 
     print(f"[1/5] 润色脚本: {episode_path.name}")
@@ -44,18 +43,35 @@ def run(episode_path: Path, out_dir: Path, config_path: Path) -> None:
     print("[5/5] 更新 RSS / 节目站")
     slug = slugify(title)
     register_episode(out_dir, meta, slug, duration, size)
+
+
+def run(target: Path, out_dir: Path, config_path: Path) -> None:
+    cfg = yaml.safe_load(Path(config_path).read_text(encoding="utf-8"))
+    out_dir = Path(out_dir)
+
+    if target.is_dir():
+        scripts = sorted(target.glob("*.md"))
+        if not scripts:
+            raise SystemExit(f"✗ 目录 {target} 下没有脚本 markdown")
+    else:
+        scripts = [target]
+
+    n = len(scripts)
+    print(f"处理 {n} 个脚本…\n")
+    for i, s in enumerate(scripts, 1):
+        print(f"===== [{i}/{n}] {s.name} =====")
+        run_one(s, out_dir, cfg)
+
     feed = build_feed(out_dir, cfg.get("podcast", {}))
     index = build_index(out_dir, cfg.get("podcast", {}))
-
-    print("\n✓ 完成")
-    print(f"  音频: {mp3}")
+    print("\n✓ 全部完成")
     print(f"  RSS : {feed}")
     print(f"  站点: {index}")
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="myPodcast 文字转语音流水线")
-    ap.add_argument("episode", help="播客脚本 markdown 路径")
+    ap.add_argument("episode", help="播客脚本 markdown 路径，或含多个脚本的目录（如 drafts/xxx）")
     ap.add_argument("--out", default="output", help="输出目录 (默认 output)")
     ap.add_argument("--config", default="config.yaml", help="配置文件 (默认 config.yaml)")
     args = ap.parse_args()
