@@ -25,6 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # 拉所有历史，build.py 可能读 git log
+          lfs: true       # 拉 LFS 真实 mp3（否则 output/series/**/*.mp3 是 pointer）
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -74,5 +75,9 @@ jobs:
           publish_dir: ./output
           publish_branch: gh-pages
           force_orphan: true
+          # LFS 关键：把 .gitattributes 一起推到 gh-pages，
+          # GitHub Pages 才能识别 *.mp3 是 LFS 文件并从 media URL 出真实音频，
+          # 而不是把 131 字节的 LFS pointer 当 mp3 服务。
+          lfs: true
           user_name: github-actions[bot]
           user_email: github-actions[bot]@users.noreply.github.com
