@@ -91,7 +91,10 @@ def _expected_raw_slug_and_date(
                 d = m.group(1)
     if not _is_valid_date(d):
         d = date.today().isoformat()
-    return d, pick_series_slug(meta, fallback_title)
+    slug = pick_series_slug(meta, fallback_title)
+    # 如果 slug 已含日期前缀，剥掉（避免 expected_name 重复日期）
+    slug = re.sub(r"^\d{4}-\d{2}-\d{2}-", "", slug)
+    return d, slug
 
 
 def enforce_raw_files(raw_dir: Path, *, dry_run: bool = False) -> list[tuple[Path, Path]]:
