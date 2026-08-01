@@ -4,3 +4,7 @@ drafts/
 __pycache__/
 *.pyc
 .venv/
+
+# 系统 / 助手内部状态
+.DS_Store
+.workbuddy/
