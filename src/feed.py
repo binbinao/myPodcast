@@ -346,6 +346,12 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
         # 部署到 gh-pages 子路径(/myPodcast/)也能正确解析，避免占位 example.com 域名 404
         return e["url"]
 
+    def _ep_shownotes_src(e: dict[str, Any]) -> str:
+        # shownotes 路径：series/<slug>/ep-<NN>/shownotes.md (与 mp3 同 ep_dir)
+        slug = e.get("slug", "")
+        ep_idx = e.get("episode") or e.get("ep_index") or 1
+        return f"series/{slug}/ep-{ep_idx:02d}/shownotes.md"
+
     def _ep_card(e: dict[str, Any], compact: bool = False) -> str:
         dur = _fmt_dur(e.get("duration", 0))
         ep_idx = e.get("episode")
@@ -363,7 +369,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
   <audio controls preload="none" src="{_audio_src(e)}"></audio>
   <div class="ep-links">
     <a href="{_audio_src(e)}">收听</a>
-    <a href="{e.get('slug','')}/shownotes.md">Shownotes</a>
+    <a href="{_ep_shownotes_src(e)}">Shownotes</a>
     <a href="{_audio_src(e)}" download>下载</a>
   </div>
 </article>"""
