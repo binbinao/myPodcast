@@ -68,7 +68,7 @@
 
 ---
 
-## 命名规则（三层都用 slug 而非中文）
+## 命名规则（三层都用 slug 而非中文）— **hard gate 自动 enforce**
 
 | 层 | 路径 | 字段来源 |
 |---|---|---|
@@ -76,7 +76,26 @@
 | drafts/ | `drafts/YYYY-MM-DD-slug/ep-XX.md` | 同上 |
 | output/ | `output/series/<series_slug>/ep-NN/episode.mp3 + shownotes.md` | `series_slug` 字段 |
 
+**Hard gate**：`python -m src.prepare` 与 CI 在 push 时都会先跑 `naming_enforce`，
+把不合规的物理 rename 自动修对：
+
+- 入口钩子：`src/prepare.py:run()` 在扫描 raw/ 前调 `enforce_raw_files` + `enforce_drafts_dirs`
+- CI 守护：`.github/workflows/publish.yml` 单测后跑 `naming_enforce`（exit 2 → workflow fail）
+- 冲突保护：目标已存在则 skip + log，绝不覆盖
+
+```bash
+# 本地手动 enforce（dry-run 不修改）
+.venv/bin/python -m src.naming_enforce --dry-run
+
+# 实测：CI 命中违规时的修复方式
+.venv/bin/python -m src.naming_enforce    # 自动改名
+git status                                # 看到 rename 改动
+git add -A && git commit -m "fix(raw): enforce naming" && git push
+```
+
 迁移脚本：`scripts/migrate_naming.py` 处理存量命名一致性。
+src 实现：`src/naming.py:pick_series_slug()` 给 naming/ 场景（series 目录名），
+`pick_slug()` 给 generate/split 场景（文件级 KV）—— 优先级不同。
 
 ---
 

@@ -124,8 +124,23 @@ def parse_legacy_dirname(name: str) -> tuple[str, str] | None:
 # ---------- 辅助：frontmatter 提取 ----------
 
 def pick_slug(meta: dict[str, Any], title: str) -> str:
-    """按优先级：meta.slug → meta.series_slug → ascii slug(title)。"""
+    """按优先级：meta.slug → meta.series_slug → ascii slug(title)。
+
+    适合 generate / split 场景：slug 优先（文件级 KV）。
+    """
     s = meta.get("slug") or meta.get("series_slug")
+    if s:
+        return ascii_slug(str(s))
+    return chinese_to_ascii(title)
+
+
+def pick_series_slug(meta: dict[str, Any], title: str) -> str:
+    """按优先级：meta.series_slug → meta.slug → ascii slug(title)。
+
+    适合 naming_enforce / drafts dir / output series 等"系列目录名"场景：
+    series_slug 是 dir 名权威。raw 文件名也走它（与 drafts/output 对齐）。
+    """
+    s = meta.get("series_slug") or meta.get("slug")
     if s:
         return ascii_slug(str(s))
     return chinese_to_ascii(title)

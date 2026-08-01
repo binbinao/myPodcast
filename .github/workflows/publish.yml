@@ -37,6 +37,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.lock
 
+      - name: Unit tests (守护 LLM 链路 + 命名 hard gate)
+        run: |
+          python -m unittest discover -s tests -v
+
+      - name: Naming hard gate (ci 失败即 fail)
+        # raw/ drafts/ output/series/ 三层扫描，违规 → exit 2 → workflow fail。
+        # 修复方法：在本地执行 `python -m src.naming_enforce` 自动改名后 commit。
+        run: |
+          python -m src.naming_enforce --log-level INFO
+
       - name: Render index + feed (use existing mp3, no TTS)
         # CI 走 --skip-audio 模式：mp3 资产随 git 走（output/ 入 git）；
         # 仅重新渲染 shownotes / RSS / index.html。

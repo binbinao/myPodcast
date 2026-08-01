@@ -1,5 +1,5 @@
 ---
-slug: "gong-cheng-shi-de-zhi-shi-guan-li-cong-shou-cang-dao-fu-li"
+slug: "knowledge-management"
 series_slug: "knowledge-management"
 title: "工程师的知识管理：从收藏到复利"
 date: 2026-08-01

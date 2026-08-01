@@ -89,6 +89,11 @@ def run(raw_dir: Path, drafts_dir: Path, config_path: Path, article: Path | None
     cfg = yaml.safe_load(Path(config_path).read_text(encoding="utf-8"))
     drafts_dir = Path(drafts_dir)
     drafts_dir.mkdir(parents=True, exist_ok=True)
+    # Hard gate：先 enforce 命名（自动 rename 非合规 → 合规），再扫描。
+    # 否则 prepare_file() 依赖 `drafts_dir_for(...)` 与物理目录错位的输入。
+    from .naming_enforce import enforce_raw_files, enforce_drafts_dirs
+    enforce_raw_files(raw_dir, dry_run=False)
+    enforce_drafts_dirs(drafts_dir, dry_run=False)
     if article:
         prepare_file(Path(article), cfg, drafts_dir)
         return
