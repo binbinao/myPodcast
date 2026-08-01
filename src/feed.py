@@ -5,6 +5,72 @@ manifest.json 记录每集首次生成的实际日期（之后 build 不覆盖�
 """
 from __future__ import annotations
 
+# --- SVG 图标库（P0 规则：emoji 不能作图标，统一 SVG，统一描边，统一 currentColor）---
+# Lucide 风格 24×24 stroke 图标。HTML 用 {mic} / {music} / {sparkle} / {hamburger} / {play}
+# 文本内嵌即可；CSS 用 width/height 控制大小，color/currentColor 控制着色。
+_ICON_LIB: dict[str, str] = {
+    "mic": (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" '
+        'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        '<rect x="9" y="2" width="6" height="12" rx="3"/>'
+        '<path d="M5 10v2a7 7 0 0 0 14 0v-2"/>'
+        '<line x1="12" y1="19" x2="12" y2="22"/>'
+        '</svg>'
+    ),
+    "music": (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" '
+        'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        '<path d="M9 18V5l12-2v13"/>'
+        '<circle cx="6" cy="18" r="3"/>'
+        '<circle cx="18" cy="16" r="3"/>'
+        '</svg>'
+    ),
+    "sparkle": (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" '
+        'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        '<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>'
+        '</svg>'
+    ),
+    "hamburger": (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" '
+        'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        '<line x1="4" y1="7" x2="20" y2="7"/>'
+        '<line x1="4" y1="12" x2="20" y2="12"/>'
+        '<line x1="4" y1="17" x2="20" y2="17"/>'
+        '</svg>'
+    ),
+    "play": (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" '
+        'viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" '
+        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        '<polygon points="7 5 19 12 7 19 7 5"/>'
+        '</svg>'
+    ),
+    "rss": (
+        # RSS 广播 logo: 三层弧 + 中心圆点
+        '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" '
+        'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" '
+        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        '<path d="M4 11a9 9 0 0 1 9 9"/>'
+        '<path d="M4 4a16 16 0 0 1 16 16"/>'
+        '<circle cx="5" cy="19" r="1.5" fill="currentColor"/>'
+        '</svg>'
+    ),
+    "podcast_icon": (
+        # 播客/耳机形 logo（Apple Podcasts / 小宇宙等订阅入口用）
+        '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" '
+        'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        '<path d="M3 14a9 9 0 0 1 18 0v3a3 3 0 0 1-3 3h-1v-7h4"/>'
+        '<path d="M3 14v3a3 3 0 0 0 3 3h1v-7H3"/>'
+        '</svg>'
+    ),
+}
+
 import json
 import re
 from datetime import date
@@ -84,7 +150,7 @@ def register_episode(out_dir: Path, meta: dict[str, Any], slug: str, duration: i
     if old and src_hash and old.get("source_hash") and old["source_hash"] != src_hash:
         from .log import logger as log
         log.warning(
-            f"⚠ raw 文章已变更但音频未更新: {slug} ep-{ep_index:02d} "
+            f"[warn] raw 文章已变更但音频未更新: {slug} ep-{ep_index:02d} "
             f"hash {old['source_hash']} → {src_hash}"
         )
     entry = {
@@ -244,6 +310,18 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
       Header → Hero(Featured Episode) → All Series Grid → Latest →
       About / Why listen → Subscribe / RSS → Footer
     """
+    # 解构 _ICON_LIB 到局部（让 f-string 子模板里 {mic}/{music}/{hamburger} 等能解析）
+    # P0: emoji 不可作图标，统一用 SVG 描边。
+    # 注意：不能用 key='podcast'，会覆盖函数参数 `podcast`（dict）。
+    mic, music, sparkle, hamburger, play, rss, podcast_icon = (
+        _ICON_LIB["mic"],
+        _ICON_LIB["music"],
+        _ICON_LIB["sparkle"],
+        _ICON_LIB["hamburger"],
+        _ICON_LIB["play"],
+        _ICON_LIB["rss"],
+        _ICON_LIB["podcast_icon"],
+    )
     data = load_manifest(out_dir)
     base = podcast.get("website", "").rstrip("/")
     title = podcast.get("title", "Podcast")
@@ -302,7 +380,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
         art_block = (
             f'<img class="hero-img" src="{cover_src}" alt="{escape(title)} 封面" loading="eager">'
             if cover_exists else
-            '<div class="hero-art" aria-hidden="true"><div class="art-gradient"></div><div class="art-glyph">🎙</div></div>'
+            '<div class="hero-art" aria-hidden="true"><div class="art-gradient"></div><div class="art-glyph">{mic}</div></div>'
         )
         hero_html = f"""<section class="hero">
   <div class="hero-media">
@@ -313,7 +391,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     <h1 class="hero-title">{escape(_display_title(featured))}</h1>
     <p class="hero-desc">{escape(featured.get('description',''))}</p>
     <div class="hero-cta">
-      <a class="btn btn-primary" href="{_audio_src(featured)}" data-action="play-now">▶ 现在就听</a>
+      <a class="btn btn-primary" href="{_audio_src(featured)}" data-action="play-now"><span class="btn-play">{play}</span><span>现在就听</span></a>
       {f'<a class="btn btn-ghost" href="#subscribe">订阅 RSS</a>' if subscribe_enabled else ''}
     </div>
     <p class="hero-quote">"{desc}"</p>
@@ -367,22 +445,22 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
   <p class="subscribe-lead">订阅 RSS / Apple Podcasts / 小宇宙 等任意平台，新一期会自动同步过去。</p>
   <div class="subscribe-grid">
     <a class="sub-card" href="feed.xml">
-      <span class="sub-icon" aria-hidden="true">📡</span>
+      <span class="sub-icon" aria-hidden="true">{rss}</span>
       <span class="sub-title">RSS / Atom</span>
       <span class="sub-desc">feed.xml — 任何播客客户端可订阅</span>
     </a>
     <a class="sub-card" href="{base}/feed.xml" target="_blank" rel="noopener">
-      <span class="sub-icon" aria-hidden="true">🍎</span>
+      <span class="sub-icon" aria-hidden="true">{podcast_icon}</span>
       <span class="sub-title">Apple Podcasts</span>
       <span class="sub-desc">把 RSS 链接粘贴到 Apple Podcasts</span>
     </a>
     <a class="sub-card" href="https://www.xiaoyuzhoufm.com/" target="_blank" rel="noopener">
-      <span class="sub-icon" aria-hidden="true">🌌</span>
+      <span class="sub-icon" aria-hidden="true">{sparkle}</span>
       <span class="sub-title">小宇宙</span>
       <span class="sub-desc">手动添加 RSS 订阅</span>
     </a>
     <a class="sub-card" href="https://music.163.com/" target="_blank" rel="noopener">
-      <span class="sub-icon" aria-hidden="true">🎵</span>
+      <span class="sub-icon" aria-hidden="true">{music}</span>
       <span class="sub-title">网易云音乐</span>
       <span class="sub-desc">搜索节目名订阅</span>
     </a>
@@ -415,7 +493,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     # Header
     header_html = f"""<header class="site-header">
   <a class="brand" href="#">
-    <span class="brand-mark" aria-hidden="true">🎙</span>
+    <span class="brand-mark" aria-hidden="true">{mic}</span>
     <span class="brand-text">{escape(title)}</span>
   </a>
   <nav class="site-nav" id="site-nav" aria-label="主导航">
@@ -425,7 +503,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     {f'<a href="#subscribe">订阅</a>' if subscribe_enabled else ''}
     <a class="nav-cta" href="feed.xml">RSS</a>
   </nav>
-  <button class="nav-toggle" aria-label="打开菜单" aria-expanded="false" aria-controls="site-nav">☰</button>
+  <button class="nav-toggle" aria-label="打开菜单" aria-expanded="false" aria-controls="site-nav">{hamburger}</button>
 </header>"""
 
     # All HTML
@@ -443,7 +521,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
 <link rel="alternate" type="application/rss+xml" title="{escape(title)}" href="feed.xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;700&display=swap" rel="stylesheet" media="(min-width: 1024px) and (prefers-reduced-motion: no-preference)">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
