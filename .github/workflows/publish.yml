@@ -32,10 +32,18 @@ jobs:
           python-version: "3.13"
           cache: pip
 
-      - name: Install dependencies
+      - name: Install ffmpeg + dependencies
+        # M1 暴露的真实 bug：CI 之前一直靠"所有集命中 manifest 跳过"掩盖 ffprobe 缺失；
+        # 重构加 exit code 契约后立刻翻车——新增一集即 FileNotFoundError。
+        # ubuntu-latest 不保证自带 ffmpeg，必须显式装。
         run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
           python -m pip install --upgrade pip
           pip install -r requirements.lock
+          # 启动期探测：ffmpeg / ffprobe 都得在
+          ffmpeg -version | head -1
+          ffprobe -version | head -1
 
       - name: Unit tests (守护 LLM 链路 + 命名 hard gate)
         run: |
