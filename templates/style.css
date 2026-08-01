@@ -254,3 +254,72 @@ section > p.lead { color: var(--text-soft); margin: 0 0 32px; font-size: 16px; m
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+/* M3: 吸底 mini player */
+.player {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  display: none;
+  align-items: center; gap: 12px;
+  padding: 12px 18px;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -8px 24px var(--color-shadow);
+  z-index: 50;
+  font-size: 13px;
+  color: var(--text);
+}
+.player.is-active { display: flex; }
+.player[hidden] { display: none !important; }
+.player-meta { flex: 1 1 auto; min-width: 0; }
+.player-text { display: flex; flex-direction: column; min-width: 0; }
+.player-series { font-size: 11px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-title { font-family: var(--font-display); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-btn {
+  display: inline-grid; place-items: center;
+  width: 36px; height: 36px;
+  background: transparent; border: 1px solid var(--border); border-radius: 50%;
+  color: var(--text); cursor: pointer;
+  flex: 0 0 auto;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.player-btn:hover { background: var(--color-accent-wash); border-color: var(--accent); color: var(--accent); }
+.player-btn[data-state="playing"] { background: var(--accent); color: var(--color-on-accent); border-color: var(--accent); }
+.player-btn[data-state="muted"] { color: var(--text-dim); }
+.player-times { font-variant-numeric: tabular-nums; color: var(--text-dim); flex: 0 0 auto; min-width: 80px; text-align: center; }
+.player-sep { margin: 0 4px; }
+.player-progress {
+  flex: 0 1 240px;
+  height: 6px; background: var(--border); border-radius: 3px;
+  cursor: pointer; position: relative;
+  outline: none;
+}
+.player-progress:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+.player-fill {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 0%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.1s linear;
+}
+.player-mute, .player-close { width: 32px; height: 32px; }
+@media (max-width: 640px) {
+  .player { padding: 10px 12px; gap: 8px; font-size: 12px; }
+  .player-progress { flex: 0 1 100px; }
+  .player-btn { width: 32px; height: 32px; }
+  .player-times { min-width: 64px; }
+}
+
+/* M3: ep-play 按钮（替代原生 audio） */
+.ep-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.ep-play {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px;
+  background: var(--accent); color: var(--color-on-accent);
+  border: 1px solid var(--accent); border-radius: 999px;
+  font-family: var(--font-body); font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+.ep-play:hover { background: var(--accent-hover); border-color: var(--accent-hover); transform: translateY(-1px); }
+.ep-play[data-state="playing"] { background: var(--color-on-accent); color: var(--accent); border-color: var(--accent); }
+.ep-play svg { width: 14px; height: 14px; fill: currentColor; }
+.ep-card.is-playing { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 4px 20px var(--color-accent-glow); }

@@ -432,19 +432,21 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
         total = e.get("total")
         ep_label = f"第 {ep_idx}/{total} 集" if ep_idx and total else ""
         cls = "ep-card compact" if compact else "ep-card"
-        return f"""<article class="{cls}" data-slug="{_hescape(e['slug'])}">
+        audio_src = _audio_src(e)
+        title = _hescape(_display_title(e))
+        series = _hescape(e.get("series", ""))
+        return f"""<article class="{cls}" data-slug="{_hescape(e['slug'])}" data-audio="{_hescape(audio_src)}" data-title="{title}" data-series="{series}" data-duration="{e.get('duration',0)}">
   <div class="ep-meta">
     <time datetime="{e.get('date','')}">{_hescape(e.get('date',''))}</time>
     {f'<span class="badge">{_hescape(ep_label)}</span>' if ep_label else ''}
     <span class="duration">{dur}</span>
   </div>
-  <h3 class="ep-title">{_hescape(_display_title(e))}</h3>
+  <h3 class="ep-title">{title}</h3>
   <p class="ep-desc">{_hescape(e.get('description',''))}</p>
-  <audio controls preload="none" src="{_audio_src(e)}"></audio>
-  <div class="ep-links">
-    <a href="{_audio_src(e)}">收听</a>
+  <div class="ep-actions">
+    <button type="button" class="ep-play" data-action="play-now" aria-label="立即播放 {title}">{_ICON_LIB["play"]}<span>听</span></button>
     <a href="{_ep_shownotes_src(e)}">Shownotes</a>
-    <a href="{_audio_src(e)}" download>下载</a>
+    <a href="{audio_src}" download>下载</a>
   </div>
 </article>"""
 
@@ -501,7 +503,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
                 f'<a class="series-ep-title" href="{_ep_shownotes_src(it)}" title="{_hescape(it.get("title",""))}">'
                 f'{_hescape(_display_title(it))}</a>'
                 f'<span class="series-ep-dur">{_fmt_dur(it.get("duration", 0))}</span>'
-                f'<a class="series-ep-play" href="{_audio_src(it)}" aria-label="听 {_hescape(_audio_label(it))}" download>{_ICON_LIB["play"]}</a>'
+                f'<button type="button" class="series-ep-play" data-action="play-now" data-audio="{_hescape(_audio_src(it))}" data-title="{_hescape(_display_title(it))}" data-series="{_hescape(it.get("series",""))}" data-duration="{it.get("duration",0)}" aria-label="听 {_hescape(_audio_label(it))}">{_ICON_LIB["play"]}</button>'
                 f'</li>'
             )
         # 该 series 的所有 ep 共享 series 描述（取第一集切片用作节目简介）
@@ -657,82 +659,39 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
 {subscribe_html}
 </main>
 {footer_html}
+<audio id="player-audio" preload="metadata" aria-hidden="true"></audio>
+<aside id="player" class="player" aria-label="音频播放器" role="region" hidden>
+  <div class="player-meta">
+    <div class="player-text">
+      <div class="player-series"></div>
+      <div class="player-title"></div>
+    </div>
+  </div>
+  <button type="button" class="player-btn player-toggle" data-action="toggle" aria-label="播放或暂停">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+  </button>
+  <div class="player-times"><span class="player-cur">0:00</span><span class="player-sep" aria-hidden="true">/</span><span class="player-dur">0:00</span></div>
+  <div class="player-progress" tabindex="0" role="slider" aria-label="播放进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+    <div class="player-fill"></div>
+  </div>
+  <button type="button" class="player-btn player-mute" data-action="mute" aria-label="静音">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+  </button>
+  <button type="button" class="player-btn player-close" data-action="close" aria-label="关闭播放器">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+  </button>
+</aside>
 <script>
-document.addEventListener('click', function(e) {{
-  var t = e.target;
-  if (t.matches && t.matches('[data-action="play-now"]')) {{
-    var a = document.querySelector('#latest audio, .hero audio');
-    if (a) {{ a.scrollIntoView({{block: 'center'}}); a.play().catch(function(){{}}); }}
-    e.preventDefault();
-  }}
-}});
-var nt = document.querySelector('.nav-toggle');
-if (nt) {{
-  nt.addEventListener('click', function() {{
-    var n = document.getElementById('site-nav');
-    var open = n.classList.toggle('nav-open');
-    nt.setAttribute('aria-expanded', open ? 'true' : 'false');
-  }});
-}}
-// 全局 audio 互斥：任一 audio 开始播放时暂停其他所有
-// 同时给当前播放的 audio 父卡片加 .is-playing 视觉反馈
-(function() {{
-  var audios = Array.prototype.slice.call(document.querySelectorAll('audio'));
-  function clearActive() {{
-    audios.forEach(function(a) {{
-      var card = a.closest('.ep-card, .hero');
-      if (card) card.classList.remove('is-playing');
-    }});
-  }}
-  // 监听 capture 阶段 play/pause/ended，确保捕获冒泡
-  document.addEventListener('play', function(e) {{
-    if (e.target.tagName !== 'AUDIO') return;
-    audios.forEach(function(a) {{
-      if (a !== e.target && !a.paused) a.pause();
-    }});
-    clearActive();
-    var card = e.target.closest('.ep-card, .hero');
-    if (card) card.classList.add('is-playing');
-  }}, true);
-  document.addEventListener('pause', function(e) {{
-    if (e.target.tagName !== 'AUDIO') return;
-    var card = e.target.closest('.ep-card, .hero');
-    if (card) card.classList.remove('is-playing');
-  }}, true);
-  document.addEventListener('ended', function(e) {{
-    if (e.target.tagName !== 'AUDIO') return;
-    var card = e.target.closest('.ep-card, .hero');
-    if (card) card.classList.remove('is-playing');
-  }}, true);
-  // 合集卡 EP 行的 play 按钮：找匹配的 audio 元素 .play()，滚动到该卡片
-  document.addEventListener('click', function(e) {{
-    var play = e.target.closest('.series-ep-play');
-    if (!play) return;
-    e.preventDefault();
-    var href = play.getAttribute('href');
-    if (!href) return;
-    var parts = href.match(/series\/([^/]+)\/ep-(\d+)\/episode\.mp3/);
-    if (!parts) return;
-    var slug = parts[1], epn = parseInt(parts[2], 10);
-    var epKey = 'series/' + slug + '/ep-' + (epn < 10 ? '0' + epn : epn) + '/episode.mp3';
-    var target = null;
-    document.querySelectorAll('audio').forEach(function(a) {{
-      if (!target && (a.getAttribute('src') || '').indexOf(epKey) !== -1) target = a;
-    }});
-    if (target) {{
-      target.currentTime = 0;
-      target.play().catch(function(){{}});
-      target.closest('.ep-card').scrollIntoView({{block: 'center', behavior: 'smooth'}});
-    }} else {{
-      // 找不到（ep 未 build）— fallback 链接，让浏览器当下载
-      window.location.href = href;
-    }}
-  }});
-}})();
+__PLAYER_JS__
 </script>
 </body>
 </html>
 """
+    # 注入 player.js 内容（构建期替换占位符）
+    player_js = (
+        Path(__file__).resolve().parent.parent / "templates" / "player.js"
+    ).read_text(encoding="utf-8")
+    html = html.replace("__PLAYER_JS__", player_js)
     path = Path(out_dir) / "index.html"
     path.write_text(html, encoding="utf-8")
     # 复制样式模板到 output 根（HTML 引用 /style.css）
