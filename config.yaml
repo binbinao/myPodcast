@@ -71,13 +71,23 @@ split:
   min_episode_chars: 600    # 小于此字数的章节合并进上一集
   max_episode_chars: 3000   # 单集上限，超出按 H3/段落继续切
 
-# 可选 LLM 润色（留空则跳过，直接使用脚本原稿）
-# 支持任何 OpenAI 兼容接口；不填 key 时流水线假设输入已是口播稿
+# 可选 LLM 润色（推荐开，走 MiniMax 兼容 OpenAI 的 chat 接口）
+# api_key 留空时会自动从 env LLM_API_KEY / MINIMAX_API_KEY / OPENAI_API_KEY 取
+# 端点检测到 "minimax" 字串时会自动加 thinking.disabled + reasoning_split，
+# 避免 MiniMax 模型把 tokens 全部烧在 reasoning 上导致 content 为空
 llm:
-  enable: false
-  base_url: "https://api.openai.com/v1"
+  enable: true
+  base_url: "https://api.minimaxi.com/v1"
   api_key: ""
-  model: "gpt-4o-mini"
+  model: "MiniMax-M2.5"
+  # 可调 max_tokens（防止文案过长截断，噪音遮盖口语度）
+  max_tokens: 1500
+  temperature: 0.7
+  # 润色提示词（把书面文改成口语播客稿）
+  prompt: |
+    你是一名播客文案编辑。把下面的书面内容改写成自然、口语化、适合双人播客朗读的脚本。
+    用 [host] 和 [guest] 标注说话人，交替发言。保留关键信息，去掉冗余书面词，
+    适当加入过渡句和互动。只输出脚本正文，不要解释。
   # 润色提示词（把书面文改成口语播客稿）
   prompt: |
     你是一名播客文案编辑。把下面的书面内容改写成自然、口语化、适合双人播客朗读的脚本。

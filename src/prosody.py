@@ -12,7 +12,7 @@ import math
 import re
 from typing import Any
 
-from .polish import llm_complete
+from .polish import llm_complete, resolve_api_key
 
 # 以这些标点/换行切句（中英文句末 + 分号 + 省略号）
 _SPLIT_RE = re.compile(r"(?<=[。！？!?；;…\.\n])")
@@ -120,7 +120,7 @@ def plan_sentences(text: str, cfg: dict[str, Any]) -> list[dict[str, str]]:
     """返回句片段列表：[{text, rate, pitch, break_ms}]。"""
     prosody_cfg = cfg.get("prosody", {})
     mode = str(prosody_cfg.get("mode", "heuristic")).lower()
-    if mode == "llm" and cfg.get("llm", {}).get("enable") and cfg["llm"].get("api_key"):
+    if mode == "llm" and cfg.get("llm", {}).get("enable") and resolve_api_key(cfg["llm"]):
         try:
             return _plan_llm(text, cfg)
         except Exception:

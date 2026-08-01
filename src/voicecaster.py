@@ -13,7 +13,7 @@ import re
 from typing import Any
 
 from .log import logger as log
-from .polish import llm_complete
+from .polish import llm_complete, resolve_api_key
 
 
 # 默认词典（config.yaml 没配 voicecaster.* 时使用）
@@ -171,7 +171,7 @@ def cast(article_text: str, cfg: dict[str, Any], explicit: str = "") -> str:
 
     vc = cfg.get("voicecaster", {})
     mode = str(vc.get("mode", "rule")).lower()
-    if mode == "llm" and cfg.get("llm", {}).get("enable") and cfg["llm"].get("api_key"):
+    if mode == "llm" and cfg.get("llm", {}).get("enable") and resolve_api_key(cfg["llm"]):
         v = _llm_cast(article_text, cfg)
         if v:
             return v

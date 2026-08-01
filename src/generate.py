@@ -11,7 +11,7 @@ from __future__ import annotations
 from typing import Any
 
 from .naming import draft_filename as _draft_filename, drafts_dir_for as _drafts_dir_for
-from .polish import llm_complete
+from .polish import llm_complete, resolve_api_key
 from .split import EpisodePlan, _strip_md
 
 
@@ -64,7 +64,7 @@ def _skeleton(plan: EpisodePlan, source: str | None = None) -> str:
 
 def generate_script(plan: EpisodePlan, cfg: dict[str, Any], source: str | None = None) -> str:
     llm = cfg.get("llm", {})
-    if llm.get("enable") and llm.get("api_key"):
+    if llm.get("enable") and resolve_api_key(llm):
         return _auto(plan, cfg, source)
     return _skeleton(plan, source)
 
