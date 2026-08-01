@@ -56,7 +56,10 @@ _PIPE_TABLE_RE = re.compile(r"(?m)^\s*\|?[\s\-:|]+\|[\s\-:|]+\s*$")
 _ASTERISK_ITALIC_RE = re.compile(r"(?<![*\w])\*[^*\n]{1,200}\*(?![*\w])")
 
 # Setext 标题（下划线 === / --- 整行）
-_SETEXT_HEADING_RE = re.compile(r"(?m)^(?:\[[^\]]+\]\s*)?[=\-]{3,}\s*$")
+# f357e7a 旧版写成了 (?:\[[^\]]+\]\s*)? 可选前缀，反而把 [host] ---
+# （节目脚本里 [host] 段后的分隔行，不是真 setext 下划线）也匹配上了，
+# 导致本来应有的脚本分隔行被 BLOCK 拦下。改用负向先行断言排除带 [role] 前缀的行。
+_SETEXT_HEADING_RE = re.compile(r"(?m)^(?!\[[^\]]+\])[=\-]{3,}\s*$")
 
 # Markdown 脚注引用 [^1] / [^note]
 _FOOTNOTE_RE = re.compile(r"\[\^[^\]]+\]")
