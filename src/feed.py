@@ -418,9 +418,10 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
 
     # Series 卡片网格 — 合集型：每卡展示一个 series 含旗下 ep 的紧凑列表
     # 区别于"全部单集"扁平流：合集卡看 series 全貌，单集流按发布时间刷新。
+    # 历史版本曾有 series-cover 大图（共用同一张 cover.jpg）+ 96px 大字母，
+    # 因所有 series 共图导致视觉噪声，决定纯文字排版——顶部 4px 强调色细条做系列标识。
     series_cards = []
     for g in groups:
-        cover_letter = (g["series"] or "?").strip()[0] if (g["series"] or "?").strip() else "?"
         dur_total = _fmt_dur(g["total_duration"])
         # 该 series 的 ep 紧凑行（编号 / 标题 / 时长 / play）
         ep_rows = []
@@ -439,13 +440,10 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
         # 单集描述如果以"（第"开头截掉避免噪音
         s_desc = s_desc.split("（第")[0].strip() if "（第" in s_desc else s_desc
         series_cards.append(f"""<article class="series-card" data-slug="{escape(g['slug'])}">
-  <div class="series-cover" aria-hidden="true" style="background-image:url('{cover_src}')">
-    <span class="cover-letter">{escape(cover_letter)}</span>
-  </div>
   <div class="series-body">
     <h3>{escape(g['series'])}</h3>
-    <p class="series-meta">{g['count']} 集 · 总时长 {dur_total}</p>
-    <p class="series-desc">{escape(s_desc)}</p>
+    <p class="series-meta"><span class="series-count">{g['count']} 集</span><span class="series-dot" aria-hidden="true">·</span><span>总时长 {dur_total}</span></p>
+    {f'<p class="series-desc">{escape(s_desc)}</p>' if s_desc else ''}
     <ol class="series-ep-list">
 {chr(10).join(ep_rows)}
     </ol>
