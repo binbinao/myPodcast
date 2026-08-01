@@ -1,13 +1,17 @@
 """脚本质量校验：build 入口处自动检测并 warn（不阻断）。
 
-检查项：
-1. emoji / 零宽字符：TTS 会念出奇怪字符
-2. markdown 残留：**加粗** / > 引用 / [text](url) 链接
-3. 长度：单集 > 10K 字符 warn（API 限速风险）
-4. 角色标签：必须含 [host] 或 [guest]，否则 build 无法工作
-5. frontmatter 必填字段：series_slug / episode / format
+检查项分成两类：
+- BLOCK（阻塞）：TTS 真的会念出奇怪字符或污染音频，下游必须拦截
+  - emoji / 零宽字符 / 代码块 / Markdown 标题残留 / HTML 标签 / pipe 表格 /
+    *斜体* / **加粗** / [link](url) / > 引用
+- WARN（警告）：heuristic 路径仍能工作，但有风险需要关注
+  - 长度 > 10K 字符（API 限速风险）
+  - 缺 [host] / [guest] 角色标签
+  - frontmatter 缺必填字段
 
-调用方：在 build.py 的 run_one() 入口处调用 validate_script(meta, body)。
+调用方：
+- src/build.py:42 入口仍调 validate_script（warn 收尾）
+- src/generate.py 出口拦截 BLOCK：命中则 heuristic 二次清洗，仍命中则降级 _skeleton
 """
 from __future__ import annotations
 
@@ -35,6 +39,25 @@ _MD_BOLD_RE = re.compile(r"\*\*[^*]+\*\*")
 _MD_LINK_RE = re.compile(r"\[[^\]]+\]\([^)]+\)")
 _MD_QUOTE_RE = re.compile(r"(?m)^>\s")  # 行首 > 引用
 
+# 代码块 fence（``` / ~~~）
+_MD_CODE_FENCE_RE = re.compile(r"```|~~~")
+
+# Markdown 标题残留（# / ## / ### ...）。LLM 输出常见的是行内残留：
+# `[host] ## 这是 H2 标题` —— 不在行首，但 TTS 会念'井号'，算 BLOCK。
+_MD_HEADING_RE = re.compile(r"#{1,6}\s+\S")
+
+# HTML 标签（如 <br>、<a href="...">）
+_HTML_TAG_RE = re.compile(r"<[a-zA-Z][a-zA-Z0-9_-]*(?:\s+[^>]*)?>")
+
+# pipe 表格分隔行（| --- | --- | 或多列 row）
+_PIPE_TABLE_RE = re.compile(r"(?m)^\s*\|?[\s\-:|]+\|[\s\-:|]+\s*$")
+
+# *斜体*（单星号且不在 ** 之中）
+_ASTERISK_ITALIC_RE = re.compile(r"(?<![*\w])\*[^*\n]{1,200}\*(?![*\w])")
+
+# BLOCK 级别违规的前缀
+_BLOCK_PREFIX = "[block] "
+
 
 def _strip_frontmatter(body: str) -> tuple[dict[str, Any], str]:
     """从脚本 markdown 抽出 frontmatter 和正文。复用 ingest.parse_script 逻辑。"""
@@ -43,49 +66,74 @@ def _strip_frontmatter(body: str) -> tuple[dict[str, Any], str]:
 
 
 def validate_script(meta: dict[str, Any], body: str) -> list[str]:
-    """返回 warn 列表（空 = 无问题）。"""
+    """返回 warn 列表（空 = 无问题）。
+
+    警告文本以 `[block]` 开头的属于 BLOCK 级别违规——
+    TTS 真会念出奇怪字符或污染音频，下游必须拦截。
+    `has_blocking(warnings)` 可筛选。
+    """
     warnings: list[str] = []
     text = body.strip()
     if not text:
         warnings.append("脚本正文为空")
         return warnings
 
-    # 1) emoji
+    # 1) emoji（BLOCK）
     emos = _EMOJI_RE.findall(text)
     if emos:
-        warnings.append(f"含 emoji 字符 {len(emos)} 处（TTS 会念出）: {emos[:5]}")
+        warnings.append(_BLOCK_PREFIX + f"含 emoji 字符 {len(emos)} 处: {emos[:5]}")
 
-    # 2) 零宽
+    # 2) 零宽字符（BLOCK）
     invis = _INVISIBLE_RE.findall(text)
     if invis:
-        warnings.append(f"含零宽字符 {len(invis)} 处")
+        warnings.append(_BLOCK_PREFIX + f"含零宽字符 {len(invis)} 处")
 
-    # 3) markdown 残留
+    # 3) markdown 残留（全部 BLOCK）
     bolds = _MD_BOLD_RE.findall(text)
     if bolds:
-        warnings.append(f"含 markdown 加粗 {len(bolds)} 处（TTS 会念'星号'）: {bolds[:3]}")
+        warnings.append(_BLOCK_PREFIX + f"含 markdown 加粗 {len(bolds)} 处: {bolds[:3]}")
     links = _MD_LINK_RE.findall(text)
     if links:
-        warnings.append(f"含 markdown 链接 {len(links)} 处（TTS 会念'括号 url 括号'）: {links[:3]}")
+        warnings.append(_BLOCK_PREFIX + f"含 markdown 链接 {len(links)} 处: {links[:3]}")
     quotes = _MD_QUOTE_RE.findall(text)
     if quotes:
-        warnings.append(f"含 markdown 引用 {len(quotes)} 处（TTS 会念'大于号'）")
+        warnings.append(_BLOCK_PREFIX + f"含 markdown 引用 {len(quotes)} 处")
+    fences = _MD_CODE_FENCE_RE.findall(text)
+    if fences:
+        warnings.append(_BLOCK_PREFIX + f"含代码块 fence {len(fences)} 处（TTS 会念'反引号'）")
+    headings = _MD_HEADING_RE.findall(text)
+    if headings:
+        warnings.append(_BLOCK_PREFIX + f"含 markdown 标题残留 {len(headings)} 处（TTS 会念'井号'）: {headings[:3]}")
+    htmls = _HTML_TAG_RE.findall(text)
+    if htmls:
+        warnings.append(_BLOCK_PREFIX + f"含 HTML 标签 {len(htmls)} 处: {htmls[:3]}")
+    pipes = _PIPE_TABLE_RE.findall(text)
+    if pipes:
+        warnings.append(_BLOCK_PREFIX + f"含 pipe 表格 {len(pipes)} 处（TTS 会念'竖线'）")
+    italics = _ASTERISK_ITALIC_RE.findall(text)
+    if italics:
+        warnings.append(_BLOCK_PREFIX + f"含 *斜体* 残留 {len(italics)} 处: {italics[:3]}")
 
-    # 4) 长度
+    # 4) 长度（WARN）
     if len(text) > 10000:
         warnings.append(f"单集脚本过长 {len(text)} 字符（API 限速风险，建议切多集）")
 
-    # 5) 角色标签
+    # 5) 角色标签（WARN）
     has_role = bool(re.search(r"^\[host\]|^\[guest\]", text, flags=re.M))
     if not has_role:
         warnings.append("脚本无 [host] / [guest] 角色标签，build 无法朗读")
 
-    # 6) frontmatter 必填
+    # 6) frontmatter 必填（WARN）
     for field in ("series_slug", "episode"):
         if not meta.get(field):
             warnings.append(f"frontmatter 缺必填字段: {field}")
 
     return warnings
+
+
+def has_blocking(warnings: list[str]) -> bool:
+    """返回 True 当 warn 列表中含 BLOCK 级别违规。generate.py 出口用此拦截。"""
+    return any(w.startswith(_BLOCK_PREFIX) for w in warnings)
 
 
 def report_and_warn(name: str, warnings: list[str]) -> None:

@@ -4,14 +4,18 @@
 - 半自动：只包成 [host] 骨架，留给人工润色（无需 API key）。
 输出带 frontmatter 的脚本 markdown，落到 drafts/ 待审。
 
+LLM 出口拦截：调 validate_script() 检查 BLOCK 残留（emoji / 代码块 /
+markdown 残留等），命中则 heuristic 二次清洗，仍命中才降级 _skeleton。
+
 命名：所有 draft 目录与文件名通过 src.naming 生成。
 """
 from __future__ import annotations
 
 from typing import Any
 
+from .log import logger as log
 from .naming import draft_filename as _draft_filename, drafts_dir_for as _drafts_dir_for
-from .polish import llm_complete, resolve_api_key
+from .polish import heuristic_clean, llm_complete, resolve_api_key
 from .split import EpisodePlan, _strip_md
 
 
@@ -36,6 +40,34 @@ def _wrap(plan: EpisodePlan, body_text: str, source: str | None = None) -> str:
     )
 
 
+def _ensure_clean_body(body: str, episode_label: str) -> str:
+    """对 LLM 输出的 body 做兜底：
+
+    1. validate_script 检查 BLOCK 违规
+    2. 命中则 heuristic_clean() 二次清洗
+    3. 仍命中则降级 strip 后直接使用（不再回退 skeleton，因为 _skeleton 完全
+       无 LLM 价值）
+
+    返回清理后的 body。
+    """
+    from .validate import has_blocking, validate_script
+    warnings = validate_script({}, body)
+    if not has_blocking(warnings):
+        return body
+    log.warning(
+        f"LLM 输出有 BLOCK 残留：{episode_label} hit "
+        f"{[w for w in warnings if w.startswith('[block]')][:3]}，heuristic 二次清洗"
+    )
+    cleaned = heuristic_clean(body)
+    warnings2 = validate_script({}, cleaned)
+    if has_blocking(warnings2):
+        log.warning(
+            f"heuristic 清洗后仍 BLOCK：{episode_label} hit "
+            f"{[w for w in warnings2 if w.startswith('[block]')][:3]}，使用脱敏版本"
+        )
+    return cleaned
+
+
 def _auto(plan: EpisodePlan, cfg: dict[str, Any], source: str | None = None) -> str:
     if plan.format == "solo":
         sys_prompt = (
@@ -49,7 +81,8 @@ def _auto(plan: EpisodePlan, cfg: dict[str, Any], source: str | None = None) -> 
             "用 [host] 和 [guest] 交替发言，像真实聊天，有来有回、有互动。"
             "保留关键信息，去掉书面冗余。只输出脚本正文，不要解释。"
         )
-    text = _strip_md(llm_complete(sys_prompt, plan.body, cfg))
+    raw = llm_complete(sys_prompt, plan.body, cfg)
+    text = _ensure_clean_body(_strip_md(raw), f"ep-{plan.index:02d} {plan.chapter}")
     return _wrap(plan, text, source)
 
 

@@ -51,6 +51,10 @@ def _heuristic(body: str) -> str:
     return "\n".join(out)
 
 
+# 公开别名：generate.py 在 LLM 出口处做二次清洗时调用。
+heuristic_clean = _heuristic
+
+
 def llm_complete(system_prompt: str, user_content: str, cfg: dict[str, Any]) -> str:
     """通用 LLM 调用（OpenAI 兼容）。用于润色与脚本生成。
 
