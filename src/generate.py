@@ -13,7 +13,8 @@ from .polish import llm_complete
 from .split import EpisodePlan, _strip_md
 
 
-def _wrap(plan: EpisodePlan, body_text: str) -> str:
+def _wrap(plan: EpisodePlan, body_text: str, source: str | None = None) -> str:
+    src_line = f'source: "{source}"\n' if source else ""
     return (
         f"---\n"
         f'title: "{plan.title}"\n'
@@ -23,12 +24,13 @@ def _wrap(plan: EpisodePlan, body_text: str) -> str:
         f"episode: {plan.index}\n"
         f"total: {plan.total}\n"
         f'chapter: "{plan.chapter}"\n'
+        f"{src_line}"
         f"---\n\n"
         f"{body_text.strip()}\n"
     )
 
 
-def _auto(plan: EpisodePlan, cfg: dict[str, Any]) -> str:
+def _auto(plan: EpisodePlan, cfg: dict[str, Any], source: str | None = None) -> str:
     if plan.format == "solo":
         sys_prompt = (
             "你是一名播客文案编辑。把下面的书面内容改写成自然、口语化、适合单人朗读的播客稿。"
@@ -42,23 +44,23 @@ def _auto(plan: EpisodePlan, cfg: dict[str, Any]) -> str:
             "保留关键信息，去掉书面冗余。只输出脚本正文，不要解释。"
         )
     text = _strip_md(llm_complete(sys_prompt, plan.body, cfg))
-    return _wrap(plan, text)
+    return _wrap(plan, text, source)
 
 
-def _skeleton(plan: EpisodePlan) -> str:
+def _skeleton(plan: EpisodePlan, source: str | None = None) -> str:
     lines = []
     for para in plan.body.split("\n\n"):
         p = _strip_md(para).strip()
         if p:
             lines.append(f"[host] {p}")
-    return _wrap(plan, "\n".join(lines))
+    return _wrap(plan, "\n".join(lines), source)
 
 
-def generate_script(plan: EpisodePlan, cfg: dict[str, Any]) -> str:
+def generate_script(plan: EpisodePlan, cfg: dict[str, Any], source: str | None = None) -> str:
     llm = cfg.get("llm", {})
     if llm.get("enable") and llm.get("api_key"):
-        return _auto(plan, cfg)
-    return _skeleton(plan)
+        return _auto(plan, cfg, source)
+    return _skeleton(plan, source)
 
 
 def draft_filename(plan: EpisodePlan) -> str:

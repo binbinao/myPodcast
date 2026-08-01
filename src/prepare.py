@@ -43,8 +43,13 @@ def prepare_file(path: Path, cfg: dict[str, Any], drafts_dir: Path) -> list[Path
     plans = plan_episodes(article, cfg, series_title, fmt, episodes)
     out_dir = Path(draft_dir_for(series_title, str(drafts_dir)))
     made: list[Path] = []
+    # 用相对路径写进 frontmatter，便于语音合成阶段定位 raw 原文做音色选型
+    try:
+        source_rel = str(path.resolve().relative_to(Path.cwd()))
+    except ValueError:
+        source_rel = str(path)
     for plan in plans:
-        script = generate_script(plan, cfg)
+        script = generate_script(plan, cfg, source_rel)
         f = out_dir / draft_filename(plan)
         f.write_text(script, encoding="utf-8")
         made.append(f)

@@ -168,12 +168,26 @@ async def generate_audio_minimax(
         for f in files:
             inputs += ["-i", str(f)]
         n = len(files)
-        chain = "".join(f"[{j}:a]" for j in range(n))
-        subprocess.run(
-            ["ffmpeg", "-y", *inputs, "-filter_complex", f"{chain}concat=n={n}:v=0:a=1[out]",
-             "-map", "[out]", str(out_path)],
-            capture_output=True, check=True,
+        # aformat 归一化每段（minimax mp3 mime 标签 mp4a → 段间采样率/codec 不一致）
+        # 再 aresample + asetnsamples，确保 concat 输出的音频能被 libmp3lame 编码
+        afmt = "aformat=sample_fmts=fltp:sample_rates=32000:channel_layouts=mono"
+        chain_fmt = "".join(f"[{j}:a]{afmt}[a{j}];" for j in range(n))
+        concat_part = "".join(f"[a{j}]" for j in range(n))
+        filter_desc = (
+            f"{chain_fmt}{concat_part}concat=n={n}:v=0:a=1[cat];"
+            f"[cat]aresample=32000[out]"
         )
+        # 末尾明确指定 mp3 编码参数（避免 libmp3lame 报 -22 Invalid argument）
+        encode_args = [
+            "-c:a", "libmp3lame", "-ar", "32000", "-ac", "1", "-b:a", "128k",
+        ]
+        r = subprocess.run(
+            ["ffmpeg", "-y", *inputs, "-filter_complex", filter_desc,
+             "-map", "[out]", *encode_args, str(out_path)],
+            capture_output=True, text=True,
+        )
+        if r.returncode != 0:
+            raise RuntimeError(f"ffmpeg concat 失败 (exit {r.returncode}): {r.stderr[-600:]}")
     return _dur(out_path)
 
 

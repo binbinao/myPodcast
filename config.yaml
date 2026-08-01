@@ -18,10 +18,18 @@ voices:
 # MiniMax 角色音色（speech-2.8-hd 推荐；详见 src/tts_minimax.py 的 COMMON_ZH_VOICES）
 # female-yujie 御姐 / female-shaonv 少女 / female-chengshu 成熟 / female-tianmei 甜美
 # male-qn-qingse 青涩青年 / male-qn-jingying 精英青年 / male-qn-badao 霸道青年 / male-qn-daxuesheng 大学生
+# audiobook_male_1/2 男性有声书 / audiobook_female_1/2 女性有声书（适合反思/独白）
 voices_minimax:
-  host: "female-yujie"       # 御姐，沉稳科普向，适合长文单人
-  guest: "male-qn-qingse"    # 青涩青年，活泼
-  default: "female-yujie"
+  host: "audiobook_male_1"   # 单人/host：默认有声书男声，沉稳不抢情绪
+  guest: "male-qn-qingse"    # 嘉宾：青涩青年（duo 节目用）
+  default: "audiobook_male_1"
+
+# 音色智能选型（基于文章内容自动选 voice_id）
+# 优先级：frontmatter voice 字段 > LLM 推断(mode=llm 且 api_key 配了) > 启发式规则 > default_voice
+# 文章类型 → 音色映射见 src/voicecaster.py 的 ARTICLE_TYPES
+voicecaster:
+  mode: rule                 # rule（零依赖，默认） | llm
+  default_voice: "audiobook_male_1"  # 兜底音色
 
 # TTS 参数
 tts:

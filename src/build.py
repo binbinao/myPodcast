@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -15,6 +16,7 @@ from .feed import build_feed, build_index, register_episode, write_shownotes
 from .ingest import parse_script, slugify
 from .polish import polish
 from .tts import build_episode_audio
+from .voicecaster import cast as vc_cast
 
 
 def run_one(episode_path: Path, out_dir: Path, cfg: dict[str, Any]) -> None:
@@ -30,9 +32,25 @@ def run_one(episode_path: Path, out_dir: Path, cfg: dict[str, Any]) -> None:
     title = meta.get("title") or Path(episode_path).stem
     print(f"      共 {len(segments)} 段，标题《{title}》")
 
-    print(f"[3/5] 生成音频 (backend={cfg.get('tts', {}).get('backend', 'edge-tts')})")
-    voice_key = "voices_minimax" if cfg.get("tts", {}).get("backend", "edge-tts").lower() == "minimax" else "voices"
-    voice_map = cfg.get(voice_key, {})
+    backend = cfg.get("tts", {}).get("backend", "edge-tts").lower()
+    print(f"[3/5] 生成音频 (backend={backend})")
+    voice_key = "voices_minimax" if backend == "minimax" else "voices"
+    voice_map = dict(cfg.get(voice_key, {}))  # 拷贝，避免改全局配置
+
+    # 音色选型：仅 minimax backend 用 voicecaster；duo 节目保留 host/guest 映射
+    fmt = str(meta.get("format", "")).lower()
+    if backend == "minimax" and fmt != "duo":
+        explicit = meta.get("voice")  # frontmatter 显式 voice 字段
+        source_rel = meta.get("source")
+        article_text = raw
+        if source_rel:
+            src_path = Path(source_rel)
+            if src_path.exists():
+                article_text = src_path.read_text(encoding="utf-8")
+        chosen = vc_cast(article_text, cfg, explicit=explicit)
+        voice_map["default"] = chosen
+        print(f"      voicecaster → {chosen}")
+
     mp3, duration = build_episode_audio(segments, voice_map, cfg, out_dir, title)
     ep_dir = mp3.parent
     size = mp3.stat().st_size
