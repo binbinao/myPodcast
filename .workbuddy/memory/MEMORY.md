@@ -7,7 +7,16 @@
 - 运行环境：managed Python 3.13 venv = `/Users/jiduobin/.workbuddy/binaries/python/envs/default`
 - **绝不引入 pydub**（3.13 无 audioop）。音频拼接一律用 ffmpeg concat + filter_complex。
 - TTS 用 edge-tts，端点偶发抖动，`src/tts.py _speak` 内置 3 次重试。
+- **edge-tts 的 `Communicate(text=...)` 只接受纯文本，绝不能传完整 `<speak>` SSML**——实测会被错误合成成超长音频（单句 5 字变 36s）。逐句韵律必须用「每句一次 `Communicate(text=单句, rate=, pitch=)`，ffmpeg 拼 + 句间静音」实现。
 - 脚本格式：markdown frontmatter + `[host]`/`[guest]` 角色标签，见 README。
+
+## 单人播客语调单调问题（档 A 已落地）
+- 根因：旧 `tts.py` 整段用同一全局 rate/pitch，无句间起伏。
+- 档 A（已做，零成本）：新增 `src/prosody.py` 韵律规划器 + `tts.py` 改逐句 `Communicate` 带各自 rate/pitch，句间/段间静音用 ffmpeg。
+  - heuristic 模式（默认零依赖）：问句升调略慢、感叹加重、省略放慢、分号紧凑、连续句号句叠加轻微正弦波形(-4%~+4% rate / ±3Hz pitch)避免全平。
+  - llm 模式：`config.yaml prosody.mode=llm` + `llm.enable=true` + api_key，调 LLM 给每句打情绪标签(neutral/happy/excited/...)→映射 prosody。
+  - 必须清洗 emoji/零宽字符（否则被 TTS 念出/乱读）。
+- 待评估档 B（治本）：换 **Fish Audio**（中文 TTS-Arena 2026 #1，文本内 `(excited)(whisper)` 行内切情绪，50+ 情绪，$11/月），只改 tts.py backend 抽象，接口不变。相比 edge-tts 能在句内前半严肃后半激动。
 
 ## 流水线设计决策（斌哥拍板）
 - 文章→播客：长文按 H2 章节拆多集，短文单集，支持 solo/duo。

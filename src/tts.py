@@ -1,4 +1,9 @@
-"""TTS：edge-tts 逐段生成 + ffmpeg 拼接，支持多角色音色与停顿。"""
+"""TTS：edge-tts 逐句生成(可带逐句 rate/pitch) + ffmpeg 拼接，缓解单人播客单调。
+
+注意：edge-tts 的 Communicate 只接受纯文本(text=)，传完整 <speak> SSML 会被错误
+合成成超长音频（实测单句 5 字变成 36s）。因此逐句韵律通过「每句一次 Communicate
+调用 + 各自的 rate/pitch 构造参数」实现，句间/段间停顿用 ffmpeg 生成静音拼接。
+"""
 from __future__ import annotations
 
 import asyncio
@@ -10,6 +15,7 @@ from typing import Any
 import edge_tts
 
 from .ingest import slugify
+from .prosody import plan_sentences
 
 
 def _run(cmd: list[str]) -> None:
@@ -18,18 +24,19 @@ def _run(cmd: list[str]) -> None:
         raise RuntimeError(f"ffmpeg 失败: {r.stderr[-500:]}")
 
 
-async def _speak(text: str, voice: str, out_path: Path, tts_cfg: dict[str, Any]) -> None:
-    comm = edge_tts.Communicate(
-        text,
-        voice,
-        rate=tts_cfg.get("rate", "+0%"),
-        volume=tts_cfg.get("volume", "+0%"),
-        pitch=tts_cfg.get("pitch", "+0Hz"),
-    )
+async def _speak(
+    text: str,
+    voice: str,
+    out_path: Path,
+    rate: str,
+    pitch: str,
+    volume: str,
+) -> None:
     # 端点偶发抖动(NoAudioReceived)，重试 3 次
     last: Exception | None = None
     for _ in range(3):
         try:
+            comm = edge_tts.Communicate(text, voice, rate=rate, volume=volume, pitch=pitch)
             await comm.save(str(out_path))
             return
         except Exception as e:  # noqa: BLE001
@@ -61,24 +68,46 @@ def _duration(path: Path) -> int:
 async def generate_audio(
     segments: list[dict[str, str]],
     voice_map: dict[str, str],
-    tts_cfg: dict[str, Any],
+    cfg: dict[str, Any],
     out_path: Path,
 ) -> int:
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
+    tts_cfg = cfg.get("tts", {})
     pause = tts_cfg.get("pause_ms", 600)
+    volume = tts_cfg.get("volume", "+0%")
     default_voice = voice_map.get("default", "zh-CN-XiaoxiaoNeural")
+    use_prosody = bool(cfg.get("prosody", {}).get("enable", True))
 
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         files: list[Path] = []
         for i, seg in enumerate(segments):
             voice = voice_map.get(seg["role"], default_voice)
-            seg_path = tmp / f"{i:03d}.mp3"
-            await _speak(seg["text"], voice, seg_path, tts_cfg)
-            files.append(seg_path)
+            if use_prosody:
+                sents = plan_sentences(seg["text"], cfg)
+            else:
+                sents = [{
+                    "text": seg["text"],
+                    "rate": tts_cfg.get("rate", "+0%"),
+                    "pitch": tts_cfg.get("pitch", "+0Hz"),
+                    "break_ms": 0,
+                }]
+            for j, s in enumerate(sents):
+                seg_path = tmp / f"{i:03d}_{j:03d}.mp3"
+                await _speak(
+                    s["text"], voice, seg_path,
+                    s["rate"], s["pitch"], volume,
+                )
+                files.append(seg_path)
+                # 句间停顿（末句交给段间停顿）
+                if j < len(sents) - 1 and int(s["break_ms"]) > 0:
+                    sil = tmp / f"b{i}_{j}.mp3"
+                    _make_silence(sil, int(s["break_ms"]))
+                    files.append(sil)
+            # 段间停顿
             if i < len(segments) - 1:
-                sil = tmp / f"sil{i}.mp3"
+                sil = tmp / f"s{i}.mp3"
                 _make_silence(sil, pause)
                 files.append(sil)
 
@@ -96,7 +125,7 @@ async def generate_audio(
 def build_episode_audio(
     segments: list[dict[str, str]],
     voice_map: dict[str, str],
-    tts_cfg: dict[str, Any],
+    cfg: dict[str, Any],
     out_dir: Path,
     title: str,
 ) -> tuple[Path, int]:
@@ -105,5 +134,5 @@ def build_episode_audio(
     ep_dir = out_dir / slug
     ep_dir.mkdir(parents=True, exist_ok=True)
     mp3 = ep_dir / "episode.mp3"
-    duration = asyncio.run(generate_audio(segments, voice_map, tts_cfg, mp3))
+    duration = asyncio.run(generate_audio(segments, voice_map, cfg, mp3))
     return mp3, duration

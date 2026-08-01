@@ -18,10 +18,17 @@ voices:
 
 # TTS 参数
 tts:
-  rate: "+0%"      # 语速：+10% 更快 / -10% 更慢
+  rate: "+0%"      # 语速：+10% 更快 / -10% 更慢（仅当韵律规划关闭时作为整段全局值）
   volume: "+0%"    # 音量
   pitch: "+0Hz"
   pause_ms: 600    # 每段之间的停顿(毫秒)
+
+# 韵律规划：缓解单人播客语调单调
+# enable: 是否按句注入 prosody（关则退化为旧版整段全局参数）
+# mode:   heuristic(零依赖,按标点规则) | llm(调 LLM 给每句打情绪标签,需 llm.api_key)
+prosody:
+  enable: true
+  mode: heuristic
 
 # 默认单/双人形式：solo(单人) / duo(双人)。每篇文章可用 frontmatter 的 format 覆盖。
 format: "duo"

@@ -32,7 +32,7 @@ def run_one(episode_path: Path, out_dir: Path, cfg: dict[str, Any]) -> None:
 
     print("[3/5] 生成音频 (edge-tts)")
     voice_map = cfg.get("voices", {})
-    mp3, duration = build_episode_audio(segments, voice_map, cfg.get("tts", {}), out_dir, title)
+    mp3, duration = build_episode_audio(segments, voice_map, cfg, out_dir, title)
     ep_dir = mp3.parent
     size = mp3.stat().st_size
     print(f"      → {mp3}  ({duration // 60}分{duration % 60}秒, {size // 1024}KB)")
