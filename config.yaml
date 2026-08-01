@@ -8,6 +8,7 @@ podcast:
   language: "zh-CN"
   website: "https://example.com"   # 改成你的节目站地址
   description: "把文章、白皮书、长文，变成能听的电台。"
+  cover: "cover.jpg"               # 节目封面图（og:image）
 
 # edge-tts 角色音色（zh-CN-XiaoxiaoNeural=女温暖, zh-CN-YunxiNeural=男活力, zh-CN-YunyangNeural=男新闻, zh-CN-XiaoyiNeural=女温柔）
 voices:
