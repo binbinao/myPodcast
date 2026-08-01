@@ -9,6 +9,8 @@ podcast:
   website: "https://binbinao.github.io/myPodcast"   # 节目站地址（RSS 绝对链接 / Apple 订阅用）
   description: "把文章、白皮书、长文，变成能听的电台。"
   cover: "cover.jpg"               # 节目封面图（og:image）
+  subscribe:                      # 站点"在更多地方听"订阅区块；enabled: false = 隐藏
+    enabled: false
 
 # edge-tts 角色音色（zh-CN-XiaoxiaoNeural=女温暖, zh-CN-YunxiNeural=男活力, zh-CN-YunyangNeural=男新闻, zh-CN-XiaoyiNeural=女温柔）
 voices:

@@ -251,6 +251,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     author = podcast.get("author", "")
     language = podcast.get("language", "zh-CN")
     cover = podcast.get("cover", "/cover.jpg")
+    subscribe_enabled = podcast.get("subscribe", {}).get("enabled", True)
 
     episodes = data["episodes"]
     groups = _group_by_series(episodes)
@@ -313,7 +314,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     <p class="hero-desc">{escape(featured.get('description',''))}</p>
     <div class="hero-cta">
       <a class="btn btn-primary" href="{_audio_src(featured)}" data-action="play-now">▶ 现在就听</a>
-      <a class="btn btn-ghost" href="#subscribe">订阅 RSS</a>
+      {f'<a class="btn btn-ghost" href="#subscribe">订阅 RSS</a>' if subscribe_enabled else ''}
     </div>
     <p class="hero-quote">"{desc}"</p>
   </div>
@@ -360,7 +361,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
   </ul>
 </section>"""
 
-    # Subscribe
+    # Subscribe（可用 config subscribe.enabled 关闭）
     subscribe_html = f"""<section class="subscribe" id="subscribe">
   <h2>在更多地方听</h2>
   <p class="subscribe-lead">订阅 RSS / Apple Podcasts / 小宇宙 等任意平台，新一期会自动同步过去。</p>
@@ -386,7 +387,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
       <span class="sub-desc">搜索节目名订阅</span>
     </a>
   </div>
-</section>"""
+</section>""" if subscribe_enabled else ""
 
     # Footer
     footer_html = f"""<footer class="site-footer">
@@ -421,7 +422,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     <a href="#series">节目</a>
     <a href="#latest">最新</a>
     <a href="#about">关于</a>
-    <a href="#subscribe">订阅</a>
+    {f'<a href="#subscribe">订阅</a>' if subscribe_enabled else ''}
     <a class="nav-cta" href="feed.xml">RSS</a>
   </nav>
   <button class="nav-toggle" aria-label="打开菜单" aria-expanded="false" aria-controls="site-nav">☰</button>
