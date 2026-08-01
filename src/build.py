@@ -8,7 +8,10 @@ from __future__ import annotations
 
 import argparse
 import re
+import sys
 from pathlib import Path
+
+from .core import EXIT_GATE_VIOLATION, EXIT_PIPELINE_FAIL, GateViolation, PipelineError
 from typing import Any
 
 import yaml
@@ -30,18 +33,29 @@ def run_one(episode_path: Path, out_dir: Path, cfg: dict[str, Any]) -> None:
     log.info("[2/5] 解析分段")
     meta, segments = parse_script(polished)
     if not segments:
-        raise SystemExit("✗ 没有可朗读的内容，检查脚本格式或 frontmatter。")
+        raise PipelineError(
+            "没有可朗读的内容，检查脚本格式或 frontmatter。",
+            hint="脚本是否只有 frontmatter 没有 [host]/[guest] 段？",
+        )
     title = meta.get("title") or Path(episode_path).stem
     log.info(f"      共 {len(segments)} 段，标题《{title}》")
 
-    # 脚本质量校验（warn 不阻断）
-    from .validate import validate_script, report_and_warn
+    # 脚本质量校验：BLOCK 硬门 + WARN 软告警（Phase 3 落地重构路线图 P0-B）
+    # 重构前只 report_and_warn，emoji/井号直接进 TTS 烧钱；
+    # 现在 has_blocking → raise PipelineError，让 run() 计入 failed 列表并 sys.exit(1)。
+    from .validate import has_blocking, report_and_warn, validate_script
     # 把 frontmatter 与正文分离
     import re as _re
     fm_match = _re.match(r"^---\n.*?\n---\n(.*)$", polished, flags=_re.S)
     body_text = fm_match.group(1) if fm_match else polished
     warnings = validate_script(meta, body_text)
     report_and_warn(episode_path.name, warnings)
+    if has_blocking(warnings):
+        from .validate import blocking_summary
+        raise PipelineError(
+            f"脚本质量 BLOCK（{episode_path.name}）",
+            hint=blocking_summary(warnings),
+        )
 
     backend = cfg.get("tts", {}).get("backend", "edge-tts").lower()
     log.info(f"[3/5] 生成音频 (backend={backend})")
@@ -132,7 +146,10 @@ def run(
             p for p in target.glob("**/*.md") if re.match(r"^ep-\d+\.md$", p.name)
         )
         if not scripts:
-            raise SystemExit(f"✗ 目录 {target} 下没有 ep-XX.md 脚本")
+            raise PipelineError(
+                f"目录 {target} 下没有 ep-XX.md 脚本",
+                hint="确认 drafts/<series>/ep-XX.md 嵌套结构存在；README/笔记不被识别。",
+            )
     else:
         scripts = [target]  # 单文件路径（local 调试用）
 
@@ -140,11 +157,14 @@ def run(
     if only:
         scripts = [s for s in scripts if s.stem == only]
         if not scripts:
-            raise SystemExit(f"✗ --only {only} 找不到对应 draft（如 ep-01）")
+            raise PipelineError(
+                f"--only {only} 找不到对应 draft",
+                hint="ep 文件名应为 ep-01.md / ep-02.md 形式。",
+            )
     if from_ep:
         idx = next((i for i, s in enumerate(scripts) if s.stem == from_ep), None)
         if idx is None:
-            raise SystemExit(f"✗ --from {from_ep} 找不到")
+            raise PipelineError(f"--from {from_ep} 找不到")
         scripts = scripts[idx:]
 
     # 读 manifest（断点续传参考）
@@ -191,12 +211,16 @@ def run(
                 raise  # --only/--from 模式下任何失败立即停
 
     log.info(
-        f"\n✓ 完成 · 运行 {n_run} / 跳过 {len(skipped)} / 失败 {len(failed)}"
+        f"\n完成 · 运行 {n_run} / 跳过 {len(skipped)} / 失败 {len(failed)}"
     )
     if skipped:
         log.info(f"  跳过: {', '.join(skipped)}")
     if failed:
-        log.warning(f"  失败: {', '.join(failed)}")
+        log.error(f"  失败: {', '.join(failed)}")
+
+    # 退出码契约：失败非空 → sys.exit(1)，不重建 RSS/index（避免发布残缺站点）。
+    if failed:
+        sys.exit(EXIT_PIPELINE_FAIL)
 
     feed = build_feed(out_dir, cfg.get("podcast", {}))
     index = build_index(out_dir, cfg.get("podcast", {}))
@@ -226,13 +250,19 @@ def main() -> None:
     args = ap.parse_args()
     configure(level=args.log_level, log_file=args.log_file)
     SKIP_AUDIO = args.skip_audio
-    run(
-        Path(args.episode), Path(args.out), Path(args.config),
-        only=args.only,
-        from_ep=args.from_ep,
-        retry_failed=args.retry_failed,
-        force=args.force,
-    )
+    try:
+        run(
+            Path(args.episode), Path(args.out), Path(args.config),
+            only=args.only,
+            from_ep=args.from_ep,
+            retry_failed=args.retry_failed,
+            force=args.force,
+        )
+    except PipelineError as e:
+        log.error(f"\n✗ 流水线失败: {e}")
+        if e.hint:
+            log.error(f"  提示: {e.hint}")
+        sys.exit(e.code)
 
 
 if __name__ == "__main__":

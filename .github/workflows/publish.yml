@@ -41,11 +41,13 @@ jobs:
         run: |
           python -m unittest discover -s tests -v
 
-      - name: Naming hard gate (ci 失败即 fail)
+      - name: Naming hard gate (dry-run, 违规即 fail)
         # raw/ drafts/ output/series/ 三层扫描，违规 → exit 2 → workflow fail。
+        # **必须用 --dry-run**：naming_enforce.py:244-246 只在 dry_run 且有违规时才 return 2；
+        # 不带 --dry-run 会真在 CI workspace shutil.move 改文件 → main 与 gh-pages 静默分叉。
         # 修复方法：在本地执行 `python -m src.naming_enforce` 自动改名后 commit。
         run: |
-          python -m src.naming_enforce --log-level INFO
+          python -m src.naming_enforce --dry-run --log-level INFO
 
       - name: Render index + feed (use existing mp3, no TTS)
         # CI 走 --skip-audio 模式：mp3 资产随 git 走（output/ 入 git）；

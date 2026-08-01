@@ -74,9 +74,10 @@ _ICON_LIB: dict[str, str] = {
 import json
 import re
 from datetime import date
+from html import escape as _html_escape_text  # only used inside element bodies (no attrs)
 from pathlib import Path
 from typing import Any
-from xml.sax.saxutils import escape
+from xml.sax.saxutils import escape as escape
 
 MANIFEST = "manifest.json"
 
@@ -186,6 +187,7 @@ def build_feed(out_dir: Path, podcast: dict[str, Any]) -> Path:
     base = podcast.get("website", "https://example.com").rstrip("/")
     items = []
     for e in data["episodes"]:
+        _enc_url = f"{base}/{e['url']}"
         items.append(
             "    <item>\n"
             f"      <title>{escape(e['title'])}</title>\n"
@@ -193,7 +195,7 @@ def build_feed(out_dir: Path, podcast: dict[str, Any]) -> Path:
             f"      <pubDate>{e['date']}</pubDate>\n"
             + (f"      <itunes:episode>{e['episode']}</itunes:episode>\n" if e.get("episode") else "")
             + (f"      <itunes:season>1</itunes:season>\n" if e.get("series") else "")
-            + f'      <enclosure url="{base}/{e["url"]}" type="audio/mpeg" length="{e["size"]}"/>\n'
+            + f'      <enclosure url="{_hescape(_enc_url)}" type="audio/mpeg" length="{_hescape(str(e["size"]))}"/>\n'
             f"      <itunes:duration>{e['duration']}</itunes:duration>\n"
             "    </item>"
         )
@@ -215,6 +217,17 @@ def build_feed(out_dir: Path, podcast: dict[str, Any]) -> Path:
 
 
 # ---------- helpers ----------
+
+def _hescape(s: Any) -> str:
+    """HTML 转义：覆盖 & < > " ' 五个字符。
+
+    `xml.sax.saxutils.escape` 默认不转义引号 → 标题含 `"` 时属性被击穿（PoC 复现）。
+    所有用于 HTML 输出（属性值或元素内容）必须走本函数。RSS XML 仍走 `escape()`。
+    """
+    if s is None:
+        return ""
+    return _html_escape_text(str(s), quote=True)
+
 
 def _fmt_dur(d: int) -> str:
     """把秒数格式化为 MM:SS。"""
@@ -334,12 +347,11 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     episodes = data["episodes"]
     groups = _group_by_series(episodes)
 
-    # Featured：第一组第一集
-    featured = groups[0]["items"][0] if groups else None
-    featured_slug = featured["slug"] if featured else None
-    # Latest：全部单集按日期倒序
+    # Featured / Latest：统一取全局最新单集（按 date 倒序）。修复 Hero「标签/内容/播放」三方矛盾（P0-J）：
+    # 原 `groups[0]["items"][0]` 取的是最新 series 的 EP01，但 #latest 按全局日期倒序 → CTA 播的是 EP03。
     latest = list(episodes)
     latest.sort(key=lambda x: x.get("date", ""), reverse=True)
+    featured = latest[0] if latest else None
 
     def _audio_src(e: dict[str, Any]) -> str:
         # 站点内音频用相对路径：index.html 与各集子目录同处站点根目录，
@@ -363,14 +375,14 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
         total = e.get("total")
         ep_label = f"第 {ep_idx}/{total} 集" if ep_idx and total else ""
         cls = "ep-card compact" if compact else "ep-card"
-        return f"""<article class="{cls}" data-slug="{escape(e['slug'])}">
+        return f"""<article class="{cls}" data-slug="{_hescape(e['slug'])}">
   <div class="ep-meta">
-    <time datetime="{e.get('date','')}">{e.get('date','')}</time>
-    {f'<span class="badge">{escape(ep_label)}</span>' if ep_label else ''}
+    <time datetime="{e.get('date','')}">{_hescape(e.get('date',''))}</time>
+    {f'<span class="badge">{_hescape(ep_label)}</span>' if ep_label else ''}
     <span class="duration">{dur}</span>
   </div>
-  <h3 class="ep-title">{escape(_display_title(e))}</h3>
-  <p class="ep-desc">{escape(e.get('description',''))}</p>
+  <h3 class="ep-title">{_hescape(_display_title(e))}</h3>
+  <p class="ep-desc">{_hescape(e.get('description',''))}</p>
   <audio controls preload="none" src="{_audio_src(e)}"></audio>
   <div class="ep-links">
     <a href="{_audio_src(e)}">收听</a>
@@ -389,18 +401,18 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     og_image = f"{base}/{cover_src}" if (base and cover_src) else cover_src
     if featured:
         art_block = (
-            f'<img class="hero-img" src="{cover_src}" alt="{escape(title)} 封面" loading="eager">'
+            f'<img class="hero-img" src="{cover_src}" alt="{_hescape(title)} 封面" loading="eager">'
             if cover_exists else
-            '<div class="hero-art" aria-hidden="true"><div class="art-gradient"></div><div class="art-glyph">{mic}</div></div>'
+            f'<div class="hero-art" aria-hidden="true"><div class="art-gradient"></div><div class="art-glyph">{_ICON_LIB["mic"]}</div></div>'
         )
         hero_html = f"""<section class="hero">
   <div class="hero-media">
     {art_block}
   </div>
   <div class="hero-content">
-    <p class="hero-eyebrow">最新一期 · <time datetime="{featured.get('date','')}">{featured.get('date','')}</time></p>
-    <h1 class="hero-title">{escape(_display_title(featured))}</h1>
-    <p class="hero-desc">{escape(featured.get('description',''))}</p>
+    <p class="hero-eyebrow">最新一期 · <time datetime="{_hescape(featured.get('date',''))}">{_hescape(featured.get('date',''))}</time></p>
+    <h1 class="hero-title">{_hescape(_display_title(featured))}</h1>
+    <p class="hero-desc">{_hescape(featured.get('description',''))}</p>
     <div class="hero-cta">
       <a class="btn btn-primary" href="{_audio_src(featured)}" data-action="play-now"><span class="btn-play">{play}</span><span>现在就听</span></a>
       {f'<a class="btn btn-ghost" href="#subscribe">订阅 RSS</a>' if subscribe_enabled else ''}
@@ -411,8 +423,8 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     else:
         hero_html = f"""<section class="hero">
   <div class="hero-content">
-    <h1 class="hero-title">{escape(title)}</h1>
-    <p class="hero-desc">{escape(desc)}</p>
+    <h1 class="hero-title">{_hescape(title)}</h1>
+    <p class="hero-desc">{_hescape(desc)}</p>
   </div>
 </section>"""
 
@@ -429,21 +441,21 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
             ep_rows.append(
                 f'<li class="series-ep-item">'
                 f'<span class="series-ep-num">EP {int(it.get("ep_index", it.get("episode", 1)) or 1):02d}</span>'
-                f'<a class="series-ep-title" href="{_ep_shownotes_src(it)}" title="{escape(it.get("title",""))}">'
-                f'{escape(_display_title(it))}</a>'
+                f'<a class="series-ep-title" href="{_ep_shownotes_src(it)}" title="{_hescape(it.get("title",""))}">'
+                f'{_hescape(_display_title(it))}</a>'
                 f'<span class="series-ep-dur">{_fmt_dur(it.get("duration", 0))}</span>'
-                f'<a class="series-ep-play" href="{_audio_src(it)}" aria-label="听 {_audio_label(it)}" download>▶</a>'
+                f'<a class="series-ep-play" href="{_audio_src(it)}" aria-label="听 {_hescape(_audio_label(it))}" download>{_ICON_LIB["play"]}</a>'
                 f'</li>'
             )
         # 该 series 的所有 ep 共享 series 描述（取第一集切片用作节目简介）
         s_desc = g.get("description", "")
         # 单集描述如果以"（第"开头截掉避免噪音
         s_desc = s_desc.split("（第")[0].strip() if "（第" in s_desc else s_desc
-        series_cards.append(f"""<article class="series-card" data-slug="{escape(g['slug'])}">
+        series_cards.append(f"""<article class="series-card" data-slug="{_hescape(g['slug'])}">
   <div class="series-body">
-    <h3>{escape(g['series'])}</h3>
+    <h3>{_hescape(g['series'])}</h3>
     <p class="series-meta"><span class="series-count">{g['count']} 集</span><span class="series-dot" aria-hidden="true">·</span><span>总时长 {dur_total}</span></p>
-    {f'<p class="series-desc">{escape(s_desc)}</p>' if s_desc else ''}
+    {f'<p class="series-desc">{_hescape(s_desc)}</p>' if s_desc else ''}
     <ol class="series-ep-list">
 {chr(10).join(ep_rows)}
     </ol>
@@ -455,8 +467,8 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
 
     # About
     about_html = f"""<section class="about">
-  <h2>关于 {escape(title)}</h2>
-  <p>{escape(desc)}</p>
+  <h2>关于 {_hescape(title)}</h2>
+  <p>{_hescape(desc)}</p>
   <ul class="about-points">
     <li><strong>{len(groups)}</strong> 个节目系列</li>
     <li><strong>{len(episodes)}</strong> 集已上线</li>
@@ -497,12 +509,12 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     footer_html = f"""<footer class="site-footer">
   <div class="footer-grid">
     <div class="footer-brand">
-      <h3>{escape(title)}</h3>
-      <p>{escape(desc)}</p>
+      <h3>{_hescape(title)}</h3>
+      <p>{_hescape(desc)}</p>
     </div>
     <div class="footer-col">
       <h4>节目</h4>
-      <ul>{''.join(f'<li><a href="#series">{escape(g["series"])}</a></li>' for g in groups[:6])}</ul>
+      <ul>{''.join(f'<li><a href="#series">{_hescape(g["series"])}</a></li>' for g in groups[:6])}</ul>
     </div>
     <div class="footer-col">
       <h4>订阅</h4>
@@ -513,14 +525,14 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
       </ul>
     </div>
   </div>
-  <p class="footer-bottom">© {date.today().year} {escape(author or title)} · 由 <code>myPodcast</code> 自动生成</p>
+  <p class="footer-bottom">© {date.today().year} {_hescape(author or title)} · 由 <code>myPodcast</code> 自动生成</p>
 </footer>"""
 
     # Header
     header_html = f"""<header class="site-header">
   <a class="brand" href="#">
     <span class="brand-mark" aria-hidden="true">{mic}</span>
-    <span class="brand-text">{escape(title)}</span>
+    <span class="brand-text">{_hescape(title)}</span>
   </a>
   <nav class="site-nav" id="site-nav" aria-label="主导航">
     <a href="#series">节目</a>
@@ -538,16 +550,16 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{escape(title)}</title>
-<meta name="description" content="{escape(desc)}">
-<meta property="og:title" content="{escape(title)}">
-<meta property="og:description" content="{escape(desc)}">
+<title>{_hescape(title)}</title>
+<meta name="description" content="{_hescape(desc)}">
+<meta property="og:title" content="{_hescape(title)}">
+<meta property="og:description" content="{_hescape(desc)}">
 <meta property="og:type" content="website">
-<meta property="og:image" content="{og_image}">
-<link rel="alternate" type="application/rss+xml" title="{escape(title)}" href="feed.xml">
+<meta property="og:image" content="{_hescape(og_image)}">
+<link rel="alternate" type="application/rss+xml" title="{_hescape(title)}" href="feed.xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;700&display=swap" rel="stylesheet" media="(min-width: 1024px) and (prefers-reduced-motion: no-preference)">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>

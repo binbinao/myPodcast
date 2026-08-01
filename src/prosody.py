@@ -18,8 +18,10 @@ from .polish import llm_complete, resolve_api_key
 _SPLIT_RE = re.compile(r"(?<=[。！？!?；;…\.\n])")
 
 # 移除 emoji / 零宽字符 / 变体选择符 / 组合符（避免被 TTS 念出或乱读）
+# 注意：U+1F000 及以上必须用 \U0001F000 8 位形式。**曾踩坑**：用 \u1F000 实际只匹配 4 位 → 生成
+# U+0030–U+1FAF 区间，实测会把英文句子里的 ASCII 字母数字全部吞掉（GPT-4 2025 → 2025 被吃空）。
 _EMOJI_RE = re.compile(
-    "[\u2600-\u27BF\u2B00-\u2BFF\u1F000-\u1FAFF\u2190-\u21FF"
+    "[\u2600-\u27BF\u2B00-\u2BFF\U0001F000-\U0001FAFF\u2190-\u21FF"
     "\uFE00-\uFE0F\u200B-\u200D\u20E3]"
 )
 

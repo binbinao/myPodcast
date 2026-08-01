@@ -1,0 +1,145 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "$meta": {
+    "name": "小搭电台 Design Tokens",
+    "version": "1.0.0",
+    "owner": "designer",
+    "status": "FROZEN — 变量名冻结，改名需 designer 会签",
+    "iconLibrary": "Lucide (24×24 grid / 2px stroke / round cap) — 单一来源 src/feed.py::_ICON_LIB，禁止字符图标",
+    "layers": "A1=品牌核心 / A2=有默认值 / B=别名槽 / C=品牌扩展",
+    "note": "accent 透明度一律由 --accent-rgb 通道派生，CSS 内不得出现裸 rgba()"
+  },
+
+  "color": {
+    "bg":            { "value": "#0b0c10", "type": "color", "$layer": "A1", "$was": "--bg" },
+    "surface":       { "value": "#181a23", "type": "color", "$layer": "A1", "$was": "--bg-card" },
+    "surface-sunken":{ "value": "#15161d", "type": "color", "$layer": "B",  "$was": "--bg-soft", "$use": "about / footer 通栏底" },
+    "fg":            { "value": "#f4f4f6", "type": "color", "$layer": "A1", "$was": "--text" },
+    "fg-2":          { "value": "#b6b8c4", "type": "color", "$layer": "B",  "$was": "--text-soft" },
+    "muted":         { "value": "#9a9eae", "type": "color", "$layer": "A1", "$was": "--text-dim" },
+    "border":        { "value": "#262833", "type": "color", "$layer": "A1" },
+    "border-soft":   { "value": "rgb(255 255 255 / 0.06)", "type": "color", "$layer": "B", "$use": "卡内分隔线" },
+
+    "accent":        { "value": "#ff7a59", "type": "color", "$layer": "A1" },
+    "accent-rgb":    { "value": "255 122 89", "type": "string", "$layer": "A1",
+                       "$use": "通道三元组，唯一透明度来源：rgb(var(--accent-rgb) / 0.08)" },
+    "accent-on":     { "value": "#0b0c10", "type": "color", "$layer": "A2",
+                       "$note": "命名为 accent-on 而非 on-accent —— 与 accent-hover/accent-active 同前缀，便于排序与检索" },
+    "accent-hover":  { "value": "#ff8d6f", "type": "color", "$layer": "A2", "$was": "裸值 style.css:74" },
+    "accent-active": { "value": "#e86847", "type": "color", "$layer": "A2", "$note": "新增，原缺失" },
+    "link":          { "value": "#ffb59a", "type": "color", "$layer": "A2" },
+
+    "accent-wash":   { "value": "rgb(var(--accent-rgb) / 0.08)", "type": "color", "$layer": "C", "$use": "列表行 hover 底" },
+    "accent-glow":   { "value": "rgb(var(--accent-rgb) / 0.16)", "type": "color", "$layer": "C",
+                       "$use": "badge 底 + is-playing 光晕", "$merged": "原 0.15 与 0.18 两档合并为一档" },
+    "accent-veil":   { "value": "rgb(var(--accent-rgb) / 0.35)", "type": "color", "$layer": "C",
+                       "$use": "series 顶条渐隐 + 无封面兜底 art", "$merged": "原 0.35 与 0.45 两档合并为一档" },
+
+    "accent-2":      { "value": "#7c5cff", "type": "color", "$layer": "C",
+                       "$use": "仅限无封面兜底 .art-gradient。不得进入常规界面——原为唯一裸紫值，收编为 token 而非删除，因兜底分支需保留" },
+
+    "scrim":         { "value": "rgb(11 12 16 / 0.78)", "type": "color", "$layer": "C", "$use": "sticky header 毛玻璃底" },
+    "shadow-color":  { "value": "rgb(0 0 0 / 0.4)", "type": "color", "$layer": "C" },
+
+    "success":       { "value": "#4ade80", "type": "color", "$layer": "A2", "$contrast": "8.9:1 on surface" },
+    "warn":          { "value": "#fbbf24", "type": "color", "$layer": "A2", "$contrast": "10.4:1 on surface" },
+    "danger":        { "value": "#f87171", "type": "color", "$layer": "A2", "$contrast": "6.1:1 on surface" }
+  },
+
+  "font": {
+    "display": { "value": "\"Fraunces\", \"Newsreader\", \"Source Serif Pro\", \"PingFang SC\", serif", "type": "fontFamily", "$layer": "A1" },
+    "body":    { "value": "\"DM Sans\", \"IBM Plex Sans\", \"PingFang SC\", \"Helvetica Neue\", sans-serif", "type": "fontFamily", "$layer": "A1" },
+    "mono":    { "value": "\"JetBrains Mono\", ui-monospace, SFMono-Regular, Menlo, monospace", "type": "fontFamily", "$layer": "A2", "$use": "时长 / 集数 / footer code" }
+  },
+
+  "text": {
+    "$note": "14 档收敛为 8 档。10px/11px 已废除（低于最小可读）。",
+    "xs":   { "value": "12px", "type": "dimension", "$absorbs": "10, 11, 12, 13" },
+    "sm":   { "value": "14px", "type": "dimension", "$absorbs": "13, 14" },
+    "base": { "value": "16px", "type": "dimension", "$absorbs": "15, 16" },
+    "md":   { "value": "18px", "type": "dimension", "$absorbs": "17, 18" },
+    "lg":   { "value": "20px", "type": "dimension" },
+    "xl":   { "value": "24px", "type": "dimension", "$absorbs": "24, 28" },
+    "2xl":  { "value": "clamp(26px, 3vw, 36px)", "type": "dimension", "$use": "section h2" },
+    "3xl":  { "value": "clamp(28px, 4vw, 44px)", "type": "dimension", "$use": "hero h1" }
+  },
+
+  "leading": {
+    "tight": { "value": "1.25", "type": "number", "$use": "h1 / h3" },
+    "snug":  { "value": "1.35", "type": "number", "$use": "ep-title" },
+    "body":  { "value": "1.55", "type": "number", "$use": "正文" }
+  },
+
+  "tracking": {
+    "caps":    { "value": "0.08em", "type": "dimension", "$use": "ALL CAPS eyebrow / footer h4，原为 1px 绝对值，改 em 随字号缩放" },
+    "tight":   { "value": "-0.01em", "type": "dimension", "$use": "h2 / h3" },
+    "tighter": { "value": "-0.02em", "type": "dimension", "$use": "hero h1" }
+  },
+
+  "weight": {
+    "read":     { "value": "400", "type": "number" },
+    "emphasize":{ "value": "500", "type": "number" },
+    "announce": { "value": "600", "type": "number" },
+    "display":  { "value": "700", "type": "number", "$use": "仅 display 字体标题" }
+  },
+
+  "space": {
+    "$note": "4px 网格白名单。原散落值 2/6/10/14/18/22 全部映射到最近合法档。",
+    "1":  { "value": "4px",  "type": "dimension", "$absorbs": "2, 4, 6" },
+    "2":  { "value": "8px",  "type": "dimension", "$absorbs": "6, 8, 10" },
+    "3":  { "value": "12px", "type": "dimension", "$absorbs": "10, 12, 14" },
+    "4":  { "value": "16px", "type": "dimension", "$absorbs": "14, 16, 18" },
+    "5":  { "value": "20px", "type": "dimension", "$absorbs": "18, 20, 22" },
+    "6":  { "value": "24px", "type": "dimension", "$absorbs": "22, 24, 26" },
+    "8":  { "value": "32px", "type": "dimension" },
+    "10": { "value": "40px", "type": "dimension" },
+    "12": { "value": "48px", "type": "dimension" },
+    "16": { "value": "64px", "type": "dimension" },
+    "20": { "value": "80px", "type": "dimension" }
+  },
+
+  "radius": {
+    "sm":   { "value": "8px",    "type": "dimension", "$absorbs": "4, 6, 8" },
+    "md":   { "value": "12px",   "type": "dimension", "$absorbs": "10, 12" },
+    "lg":   { "value": "16px",   "type": "dimension", "$absorbs": "14 (原 --radius)" },
+    "xl":   { "value": "20px",   "type": "dimension", "$use": "仅 hero-media 大方图，原 24px 收窄", "$note": "卡片类一律 ≤ lg" },
+    "pill": { "value": "9999px", "type": "dimension" },
+    "full": { "value": "50%",    "type": "dimension", "$use": "圆形按钮" }
+  },
+
+  "elevation": {
+    "flat":  { "value": "none", "type": "boxShadow" },
+    "ring":  { "value": "0 0 0 1px var(--border)", "type": "boxShadow" },
+    "hero":  { "value": "0 20px 60px var(--shadow-color)", "type": "boxShadow" },
+    "playing": { "value": "0 0 0 1px var(--accent), 0 4px 20px var(--accent-glow)", "type": "boxShadow" }
+  },
+
+  "motion": {
+    "fast":  { "value": "150ms", "type": "duration", "$use": "hover / 状态确认" },
+    "base":  { "value": "200ms", "type": "duration", "$use": "卡片位移 / 展开" },
+    "ease":  { "value": "cubic-bezier(0.16, 1, 0.3, 1)", "type": "cubicBezier", "$note": "沿用现有，无回弹，合规" }
+  },
+
+  "icon": {
+    "$note": "Lucide 单一来源。三档，禁止其它尺寸。",
+    "sm": { "value": "16px", "type": "dimension", "$use": "行内 / 按钮前缀" },
+    "md": { "value": "20px", "type": "dimension", "$use": "nav-toggle" },
+    "lg": { "value": "24px", "type": "dimension", "$use": "brand / sub-icon" }
+  },
+
+  "layout": {
+    "container-max":   { "value": "1100px", "type": "dimension" },
+    "gutter-desktop":  { "value": "24px", "type": "dimension" },
+    "gutter-phone":    { "value": "20px", "type": "dimension" },
+    "section-desktop": { "value": "80px", "type": "dimension" },
+    "section-phone":   { "value": "40px", "type": "dimension" },
+    "tap-min":         { "value": "44px", "type": "dimension", "$use": "最小命中区，见 DESIGN.md 触摸目标策略" }
+  },
+
+  "breakpoint": {
+    "$note": "原仅单断点 760px，760–1100 区间 series 两列时 ep 行仅剩 ~180px。新增 md 补齐。",
+    "sm": { "value": "640px",  "type": "dimension" },
+    "md": { "value": "900px",  "type": "dimension", "$new": true },
+    "lg": { "value": "1100px", "type": "dimension" }
+  }
+}

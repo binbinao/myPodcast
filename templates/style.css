@@ -146,6 +146,7 @@ section > p.lead { color: var(--text-soft); margin: 0 0 32px; font-size: 16px; m
   place-items: center;
   width: 28px;
   height: 28px;
+  position: relative;  /* 命中区扩展到 44×44（WCAG AA+）*/
   border: 1px solid var(--border);
   border-radius: 50%;
   color: var(--accent);
@@ -154,7 +155,13 @@ section > p.lead { color: var(--text-soft); margin: 0 0 32px; font-size: 16px; m
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 .series-ep-play:hover { background: var(--accent); color: #0b0c10; border-color: var(--accent); text-decoration: none; }
-.series-ep-play::before { content: "▶"; font-size: 10px; }
+.series-ep-play::after {
+  /* 隐形扩展命中区到 44×44，视觉尺寸保持 28×28 不变 */
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+.series-ep-play svg { width: 14px; height: 14px; display: block; }
 .series-cta { font-size: 13px; color: var(--accent); margin: 12px 0 0; }
 
 /* Latest episodes */

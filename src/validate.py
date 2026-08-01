@@ -55,6 +55,24 @@ _PIPE_TABLE_RE = re.compile(r"(?m)^\s*\|?[\s\-:|]+\|[\s\-:|]+\s*$")
 # *斜体*（单星号且不在 ** 之中）
 _ASTERISK_ITALIC_RE = re.compile(r"(?<![*\w])\*[^*\n]{1,200}\*(?![*\w])")
 
+# Setext 标题（下划线 === / --- 整行）
+_SETEXT_HEADING_RE = re.compile(r"(?m)^[=\-]{3,}\s*$")
+
+# Markdown 脚注引用 [^1] / [^note]
+_FOOTNOTE_RE = re.compile(r"\[\^[^\]]+\]")
+
+# 行内 `code`（TTS 会念'反引号'）
+_INLINE_CODE_RE = re.compile(r"`[^`\n]{1,200}`")
+
+# 裸 URL（http(s):// 或 www. 开头）—— TTS 会逐字念出
+_BARE_URL_RE = re.compile(r"(?:https?://|www\.)[^\s)]+")
+
+# 全角竖线（｜）—— 中文写作常用，但 TTS 不会自动转语义
+_FULLWIDTH_PIPE_RE = re.compile(r"｜")
+
+# Emoji 键帽 0-9（U+0030..U+0039 + U+20E3）
+_KEYCAP_RE = re.compile(r"[\u0030-\u0039]\u20E3")
+
 # BLOCK 级别违规的前缀
 _BLOCK_PREFIX = "[block] "
 
@@ -114,6 +132,26 @@ def validate_script(meta: dict[str, Any], body: str) -> list[str]:
     if italics:
         warnings.append(_BLOCK_PREFIX + f"含 *斜体* 残留 {len(italics)} 处: {italics[:3]}")
 
+    # 3b) 漏网补充 BLOCK
+    setext = _SETEXT_HEADING_RE.findall(text)
+    if setext:
+        warnings.append(_BLOCK_PREFIX + f"含 setext 标题下划线 {len(setext)} 处（TTS 会念'等号'/'减号'）")
+    notes = _FOOTNOTE_RE.findall(text)
+    if notes:
+        warnings.append(_BLOCK_PREFIX + f"含 markdown 脚注 {len(notes)} 处: {notes[:3]}")
+    inlines = _INLINE_CODE_RE.findall(text)
+    if inlines:
+        warnings.append(_BLOCK_PREFIX + f"含行内代码 {len(inlines)} 处（TTS 会念'反引号'）")
+    urls = _BARE_URL_RE.findall(text)
+    if urls:
+        warnings.append(_BLOCK_PREFIX + f"含裸 URL {len(urls)} 处: {urls[:3]}")
+    fw_pipes = _FULLWIDTH_PIPE_RE.findall(text)
+    if fw_pipes:
+        warnings.append(_BLOCK_PREFIX + f"含全角竖线 {len(fw_pipes)} 处")
+    keycaps = _KEYCAP_RE.findall(text)
+    if keycaps:
+        warnings.append(_BLOCK_PREFIX + f"含 emoji 键帽 {len(keycaps)} 处: {keycaps[:3]}")
+
     # 4) 长度（WARN）
     if len(text) > 10000:
         warnings.append(f"单集脚本过长 {len(text)} 字符（API 限速风险，建议切多集）")
@@ -134,6 +172,14 @@ def validate_script(meta: dict[str, Any], body: str) -> list[str]:
 def has_blocking(warnings: list[str]) -> bool:
     """返回 True 当 warn 列表中含 BLOCK 级别违规。generate.py 出口用此拦截。"""
     return any(w.startswith(_BLOCK_PREFIX) for w in warnings)
+
+
+def blocking_summary(warnings: list[str]) -> str:
+    """把 BLOCK 行抽出来拼成单行摘要，供 PipelineError.hint 给人类看。"""
+    blocks = [w[len(_BLOCK_PREFIX):] for w in warnings if w.startswith(_BLOCK_PREFIX)]
+    if not blocks:
+        return ""
+    return "BLOCK 项：\n  - " + "\n  - ".join(blocks)
 
 
 def report_and_warn(name: str, warnings: list[str]) -> None:
