@@ -10,7 +10,7 @@ from typing import Any
 
 from .ingest import slugify
 from .polish import llm_complete
-from .split import EpisodePlan
+from .split import EpisodePlan, _strip_md
 
 
 def _wrap(plan: EpisodePlan, body_text: str) -> str:
@@ -41,14 +41,14 @@ def _auto(plan: EpisodePlan, cfg: dict[str, Any]) -> str:
             "用 [host] 和 [guest] 交替发言，像真实聊天，有来有回、有互动。"
             "保留关键信息，去掉书面冗余。只输出脚本正文，不要解释。"
         )
-    text = llm_complete(sys_prompt, plan.body, cfg)
+    text = _strip_md(llm_complete(sys_prompt, plan.body, cfg))
     return _wrap(plan, text)
 
 
 def _skeleton(plan: EpisodePlan) -> str:
     lines = []
     for para in plan.body.split("\n\n"):
-        p = para.strip()
+        p = _strip_md(para).strip()
         if p:
             lines.append(f"[host] {p}")
     return _wrap(plan, "\n".join(lines))

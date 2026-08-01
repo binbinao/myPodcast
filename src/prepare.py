@@ -19,7 +19,7 @@ from .split import plan_episodes
 H1_RE = re.compile(r"^#\s+(.+)$", re.M)
 
 
-def _article_meta(article: str, path: Path, fmt_default: str) -> tuple[str, str]:
+def _article_meta(article: str, path: Path, fmt_default: str) -> tuple[str, str, int | None]:
     meta, _ = parse_script(article)
     title = meta.get("title") or (H1_RE.search(article) and H1_RE.search(article).group(1).strip())
     if not title:
@@ -27,14 +27,20 @@ def _article_meta(article: str, path: Path, fmt_default: str) -> tuple[str, str]
     fmt = str(meta.get("format", fmt_default)).lower()
     if fmt not in ("solo", "duo"):
         fmt = fmt_default
-    return title, fmt
+    episodes = meta.get("episodes")
+    if episodes is not None:
+        try:
+            episodes = int(episodes)
+        except (TypeError, ValueError):
+            episodes = None
+    return title, fmt, episodes
 
 
 def prepare_file(path: Path, cfg: dict[str, Any], drafts_dir: Path) -> list[Path]:
     article = path.read_text(encoding="utf-8")
     fmt_default = str(cfg.get("format", "duo")).lower()
-    series_title, fmt = _article_meta(article, path, fmt_default)
-    plans = plan_episodes(article, cfg, series_title, fmt)
+    series_title, fmt, episodes = _article_meta(article, path, fmt_default)
+    plans = plan_episodes(article, cfg, series_title, fmt, episodes)
     out_dir = Path(draft_dir_for(series_title, str(drafts_dir)))
     made: list[Path] = []
     for plan in plans:
