@@ -101,7 +101,14 @@ def _ffprobe_duration(mp3: Path) -> int:
         return 0
 
 
-def run(target: Path, out_dir: Path, config_path: Path) -> None:
+def run(
+    target: Path, out_dir: Path, config_path: Path,
+    *,
+    only: str | None = None,
+    from_ep: str | None = None,
+    retry_failed: bool = False,
+    force: bool = False,
+) -> None:
     cfg = yaml.safe_load(Path(config_path).read_text(encoding="utf-8"))
     out_dir = Path(out_dir)
 
@@ -112,15 +119,67 @@ def run(target: Path, out_dir: Path, config_path: Path) -> None:
     else:
         scripts = [target]
 
-    n = len(scripts)
-    log.info(f"处理 {n} 个脚本…\n")
+    # 过滤脚本列表（断点续传）
+    if only:
+        scripts = [s for s in scripts if s.stem == only]
+        if not scripts:
+            raise SystemExit(f"✗ --only {only} 找不到对应 draft（如 ep-01）")
+    if from_ep:
+        idx = next((i for i, s in enumerate(scripts) if s.stem == from_ep), None)
+        if idx is None:
+            raise SystemExit(f"✗ --from {from_ep} 找不到")
+        scripts = scripts[idx:]
+
+    # 读 manifest（断点续传参考）
+    from .feed import load_manifest
+    manifest = load_manifest(out_dir)
+    existing_keys = {e.get("_key"): e for e in manifest.get("episodes", [])}
+
+    n_total = len(scripts)
+    skipped: list[str] = []
+    failed: list[str] = []
+    n_run = 0
     for i, s in enumerate(scripts, 1):
-        log.info(f"===== [{i}/{n}] {s.name} =====")
-        run_one(s, out_dir, cfg)
+        # 预解析 frontmatter 拿 series_slug + ep_index 算 _key
+        from .ingest import parse_script
+        meta_pre, _ = parse_script(s.read_text(encoding="utf-8"))
+        series_slug = meta_pre.get("series_slug", "")
+        ep_idx = int(meta_pre.get("episode", 1) or 1)
+        key = f"{series_slug}::ep-{ep_idx:02d}"
+
+        # 断点续传：已成功且 source_hash 未变 → 跳过
+        if not force and not retry_failed and key in existing_keys:
+            old = existing_keys[key]
+            from .feed import _hash_source
+            src_h = _hash_source(meta_pre.get("source", ""))
+            if src_h and old.get("source_hash") == src_h:
+                # 检查 mp3 是否真存在
+                mp3 = out_dir / "series" / series_slug / f"ep-{ep_idx:02d}" / "episode.mp3"
+                if mp3.exists():
+                    skipped.append(s.name)
+                    log.info(f"  [{i}/{n_total}] ⊝ 跳过 {s.name} (manifest 已注册)")
+                    continue
+
+        log.info(f"===== [{i}/{n_total}] {s.name} =====")
+        try:
+            run_one(s, out_dir, cfg)
+            n_run += 1
+        except Exception as e:  # noqa: BLE001
+            failed.append(s.name)
+            log.error(f"  ✗ {s.name} 失败: {e}")
+            if force or from_ep:
+                raise  # --only/--from 模式下任何失败立即停
+
+    log.info(
+        f"\n✓ 完成 · 运行 {n_run} / 跳过 {len(skipped)} / 失败 {len(failed)}"
+    )
+    if skipped:
+        log.info(f"  跳过: {', '.join(skipped)}")
+    if failed:
+        log.warning(f"  失败: {', '.join(failed)}")
 
     feed = build_feed(out_dir, cfg.get("podcast", {}))
     index = build_index(out_dir, cfg.get("podcast", {}))
-    log.info("\n✓ 全部完成")
     log.info(f"  RSS : {feed}")
     log.info(f"  站点: {index}")
 
@@ -134,12 +193,26 @@ def main() -> None:
     ap.add_argument("--config", default="config.yaml", help="配置文件 (默认 config.yaml)")
     ap.add_argument("--skip-audio", action="store_true",
                     help="跳过 TTS 生成，仅用现有 mp3 重渲 shownotes/RSS/index（命名重构后修复 manifest 用）")
+    ap.add_argument("--only", default=None, metavar="ep-XX",
+                    help="只处理单集（如 ep-01），常配合 --force 调试")
+    ap.add_argument("--from", dest="from_ep", default=None, metavar="ep-XX",
+                    help="从指定集开始（断点续传）。失败时立即停")
+    ap.add_argument("--retry-failed", action="store_true",
+                    help="只跑上次失败的集（manifest 没 source_hash 的视为失败）")
+    ap.add_argument("--force", action="store_true",
+                    help="强制重生成已有 mp3，忽略 source_hash")
     ap.add_argument("--log-file", default=None, help="追加日志到此文件（默认仅 stdout）")
     ap.add_argument("--log-level", default="INFO", help="DEBUG/INFO/WARNING/ERROR（默认 INFO）")
     args = ap.parse_args()
     configure(level=args.log_level, log_file=args.log_file)
     SKIP_AUDIO = args.skip_audio
-    run(Path(args.episode), Path(args.out), Path(args.config))
+    run(
+        Path(args.episode), Path(args.out), Path(args.config),
+        only=args.only,
+        from_ep=args.from_ep,
+        retry_failed=args.retry_failed,
+        force=args.force,
+    )
 
 
 if __name__ == "__main__":
