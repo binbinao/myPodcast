@@ -1,27 +1,26 @@
-"""音色规划器：基于文章内容选择合适的 TTS 音色。
+"""音色选型：按文章类型自动选 voice_id。
 
-优先级（高 → 低）：
-1. frontmatter 显式 voice: <voice_id>    （作者指定，最高优先）
-2. LLM 推断模式（mode=llm 且 llm.api_key 配了）→ 返回 voice_id
-3. 启发式规则：5 类文章信号关键词计分，取最高分类
-4. 兜底：config.yaml tts.minimax.default_voice（默认 audiobook_male_1）
+策略：
+- frontmatter `voice:` 显式 > LLM 推断（mode=llm 且 llm.api_key 配了）> 启发式规则 > default_voice
 
-模型与 prosody.py 同构：rule/llm 双模式，LLM 失败自动回退 rule。
+5 类文章类型：reflective / tutorial / business / casual / interview。
+关键词词典和音色映射可在 config.yaml 的 `voicecaster.keywords` 与
+`voicecaster.voices` 段自定义；未配时使用下方的 DEFAULT_*。
 """
 from __future__ import annotations
 
 import re
 from typing import Any
 
+from .log import logger as log
 from .polish import llm_complete
 
-# 文章类型 -> (候选音色, 关键词权重表)
-# 候选音色用列表：按文章内容偏好顺序，越靠前越适合
-ARTICLE_TYPES: dict[str, dict[str, Any]] = {
+
+# 默认词典（config.yaml 没配 voicecaster.* 时使用）
+DEFAULT_ARTICLE_TYPES: dict[str, dict[str, Any]] = {
     "reflective": {  # 反思/独白/心路历程
-        "voices": ["audiobook_male_1", "female-chengshu", "audiobook_female_1"],
+        "voices": ["audiobook_male_1", "female-chengshu", "audiobook_male_2"],
         "keywords": [
-            # 强信号：自我叙事/反思动词
             "反思", "复盘", "那年", "当时", "事后看", "回头看", "回过头", "回想",
             "被碾压", "被折叠", "被淘汰", "心路", "心路历程", "当时我", "后来我才",
             "感悟", "感概", "感触", "体会", "感受", "个人的一点", "个人的一些",
@@ -33,7 +32,7 @@ ARTICLE_TYPES: dict[str, dict[str, Any]] = {
         "keywords": [
             "架构", "性能", "算法", "原理", "对比", "测评", "评测", "实测",
             "教程", "指南", "如何", "怎么", "步骤", "实现", "源码", "代码",
-            "为什么", "区别", "选型", "对比", "分析", "解析", "底层", "机制",
+            "为什么", "区别", "选型", "分析", "解析", "底层", "机制",
             "协议", "接口", "API", "SDK", "版本", "升级", "迁移",
         ],
     },
@@ -66,11 +65,37 @@ ARTICLE_TYPES: dict[str, dict[str, Any]] = {
 _TITLE_BOOST = 2
 
 
-def _score_article(text: str) -> dict[str, int]:
+def _load_types(cfg: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """从 cfg.voicecaster.keywords / voices 合并默认词典。
+
+    合并策略：config 配的覆盖默认；未配项保留默认。
+    """
+    vc_cfg = cfg.get("voicecaster", {})
+    custom_kw = vc_cfg.get("keywords", {})
+    custom_voices = vc_cfg.get("voices", {})
+
+    merged: dict[str, dict[str, Any]] = {}
+    for typ, defaults in DEFAULT_ARTICLE_TYPES.items():
+        d = dict(defaults)
+        if typ in custom_kw:
+            d["keywords"] = list(custom_kw[typ])
+        if typ in custom_voices:
+            d["voices"] = list(custom_voices[typ])
+        merged[typ] = d
+    # 用户自定义的额外类型（如 "engineering"）也加入
+    for typ in custom_kw.keys() | custom_voices.keys():
+        if typ not in merged:
+            merged[typ] = {
+                "voices": list(custom_voices.get(typ, ["female-yujie"])),
+                "keywords": list(custom_kw.get(typ, [])),
+            }
+    return merged
+
+
+def _score_article(text: str, types: dict[str, dict[str, Any]]) -> dict[str, int]:
     """返回 {article_type: score}。"""
     title = ""
     body = text
-    # 简单抽出 frontmatter 与首个 # 标题（如果有）
     fm = re.search(r"^---\n(.*?)\n---\n", text, flags=re.S | re.M)
     if fm:
         body = text[fm.end():]
@@ -80,9 +105,9 @@ def _score_article(text: str) -> dict[str, int]:
         body = (body[:h1.start()] + body[h1.end():])
 
     scores: dict[str, int] = {}
-    for typ, cfg in ARTICLE_TYPES.items():
+    for typ, tcfg in types.items():
         s = 0
-        for kw in cfg["keywords"]:
+        for kw in tcfg["keywords"]:
             if not kw:
                 continue
             s += body.count(kw)
@@ -95,69 +120,69 @@ def _score_article(text: str) -> dict[str, int]:
 def _best_type(scores: dict[str, int]) -> str | None:
     if not scores or max(scores.values()) == 0:
         return None
-    # 排序：分数高的优先；并列时按字典序稳定
     ranked = sorted(scores.items(), key=lambda kv: (-kv[1], kv[0]))
     return ranked[0][0]
 
 
 def _rule_cast(article_text: str, cfg: dict[str, Any]) -> str | None:
-    """启发式规则：扫正文，按评分最高的文章类型返回首选 voice_id。"""
-    scores = _score_article(article_text)
+    types = _load_types(cfg)
+    scores = _score_article(article_text, types)
     typ = _best_type(scores)
     if not typ:
         return None
-    return ARTICLE_TYPES[typ]["voices"][0]
+    log.debug(f"voicecaster rule: type={typ} scores={scores}")
+    return types[typ]["voices"][0]
 
 
 def _llm_cast(article_text: str, cfg: dict[str, Any]) -> str | None:
-    """LLM 推断：让 LLM 给文章类型打标签，从映射表返回 voice_id。失败回退 rule。"""
-    types = " | ".join(ARTICLE_TYPES.keys())
+    types = _load_types(cfg)
+    types_str = " | ".join(types.keys())
     voices = "; ".join(
-        f"{t}={'/'.join(cfg_['voices'])}"
-        for t, cfg_ in ARTICLE_TYPES.items()
+        f"{t}={'/'.join(tcfg['voices'])}" for t, tcfg in types.items()
     )
     sys_prompt = (
         "你是播客音色规划器。下面给一段文章，请判断它属于哪一类，"
-        f"只能从 [{types}] 中选一个，输出英文标签即可，不要解释。\n"
+        f"只能从 [{types_str}] 中选一个，输出英文标签即可，不要解释。\n"
         f"音色映射参考：{voices}。"
     )
-    # 截断到前 2000 字避免 token 浪费
     snippet = article_text[:2000]
     try:
         label = llm_complete(sys_prompt, snippet, cfg).strip().lower()
-        # 容错：去掉句末标点 + 取最后一个 token
-        label = re.sub(r"[^a-z_]", "", label)
-        if label in ARTICLE_TYPES:
-            return ARTICLE_TYPES[label]["voices"][0]
-    except Exception:
-        pass
-    return _rule_cast(article_text, cfg)
+    except Exception as e:  # noqa: BLE001
+        log.warning(f"voicecaster LLM 失败，回退 rule: {e}")
+        return _rule_cast(article_text, cfg)
+    if label not in types:
+        log.warning(f"voicecaster LLM 返回未知类型 '{label}'，回退 rule")
+        return _rule_cast(article_text, cfg)
+    return types[label]["voices"][0]
 
 
-def cast(article_text: str, cfg: dict[str, Any], explicit: str | None = None) -> str:
-    """选择最终 voice_id。
+def cast(article_text: str, cfg: dict[str, Any], explicit: str = "") -> str:
+    """主入口：返回 voice_id。
 
-    参数:
-        article_text: 原始文章正文（带 frontmatter）
-        cfg: 整体配置
-        explicit: frontmatter 显式 voice 字段（最高优先）
-
-    返回:
-        voice_id 字符串
+    优先级：
+      1) frontmatter 显式 voice 字段（explicit 参数）
+      2) voicecaster.mode == "llm" 时调 LLM
+      3) 启发式规则
+      4) config voicecaster.default_voice / voices_minimax.default
     """
     if explicit:
         return explicit
+
     vc = cfg.get("voicecaster", {})
-    default = (
+    mode = str(vc.get("mode", "rule")).lower()
+    if mode == "llm" and cfg.get("llm", {}).get("enable") and cfg["llm"].get("api_key"):
+        v = _llm_cast(article_text, cfg)
+        if v:
+            return v
+
+    v = _rule_cast(article_text, cfg)
+    if v:
+        return v
+
+    # 兜底
+    return (
         vc.get("default_voice")
-        or cfg.get("tts", {}).get("minimax", {}).get("default_voice")
         or cfg.get("voices_minimax", {}).get("default")
         or "audiobook_male_1"
     )
-    mode = str(vc.get("mode", "rule")).lower()
-    if mode == "llm" and cfg.get("llm", {}).get("enable") and cfg["llm"].get("api_key"):
-        picked = _llm_cast(article_text, cfg)
-        if picked:
-            return picked
-    picked = _rule_cast(article_text, cfg)
-    return picked or default

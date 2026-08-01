@@ -33,6 +33,15 @@ def run_one(episode_path: Path, out_dir: Path, cfg: dict[str, Any]) -> None:
     title = meta.get("title") or Path(episode_path).stem
     log.info(f"      共 {len(segments)} 段，标题《{title}》")
 
+    # 脚本质量校验（warn 不阻断）
+    from .validate import validate_script, report_and_warn
+    # 把 frontmatter 与正文分离
+    import re as _re
+    fm_match = _re.match(r"^---\n.*?\n---\n(.*)$", polished, flags=_re.S)
+    body_text = fm_match.group(1) if fm_match else polished
+    warnings = validate_script(meta, body_text)
+    report_and_warn(episode_path.name, warnings)
+
     backend = cfg.get("tts", {}).get("backend", "edge-tts").lower()
     log.info(f"[3/5] 生成音频 (backend={backend})")
     voice_key = "voices_minimax" if backend == "minimax" else "voices"
