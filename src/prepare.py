@@ -3,23 +3,30 @@
 用法:
     python -m src.prepare                 # 处理 raw/ 下所有文章
     python -m src.prepare --article raw/foo.md
+
+命名规则（src/naming.py）：
+  raw:      YYYY-MM-DD-slug.md
+  drafts:   drafts/<YYYY-MM-DD-slug>/ep-XX.md
 """
 from __future__ import annotations
 
 import argparse
 import re
+from datetime import date
 from pathlib import Path
 
 import yaml
 
 from .generate import draft_dir_for, draft_filename, generate_script
-from .ingest import parse_script, slugify
+from .ingest import parse_script
+from .naming import chinese_to_ascii
 from .split import plan_episodes
 
 H1_RE = re.compile(r"^#\s+(.+)$", re.M)
 
 
-def _article_meta(article: str, path: Path, fmt_default: str) -> tuple[str, str, int | None]:
+def _article_meta(article: str, path: Path, fmt_default: str) -> tuple[str, str, int | None, str, str]:
+    """返回 (title, format, episodes_n, article_date, explicit_slug)。"""
     meta, _ = parse_script(article)
     title = meta.get("title") or (H1_RE.search(article) and H1_RE.search(article).group(1).strip())
     if not title:
@@ -33,17 +40,37 @@ def _article_meta(article: str, path: Path, fmt_default: str) -> tuple[str, str,
             episodes = int(episodes)
         except (TypeError, ValueError):
             episodes = None
-    return title, fmt, episodes
+    # 日期：优先 frontmatter date → 否则从 raw 文件名 YYYY-MM-DD- 抽 → 否则今日
+    art_date = str(meta.get("date") or "")
+    if not art_date:
+        m = re.match(r"^(\d{4}-\d{2}-\d{2})-", path.stem)
+        if m:
+            art_date = m.group(1)
+    if not art_date:
+        art_date = date.today().isoformat()
+    # slug 优先 frontmatter series_slug → 否则 slug → 否则从标题生成
+    explicit_slug = (
+        str(meta.get("series_slug") or "").strip()
+        or str(meta.get("slug") or "").strip()
+    )
+    return title, fmt, episodes, art_date, explicit_slug
 
 
 def prepare_file(path: Path, cfg: dict[str, Any], drafts_dir: Path) -> list[Path]:
     article = path.read_text(encoding="utf-8")
     fmt_default = str(cfg.get("format", "duo")).lower()
-    series_title, fmt, episodes = _article_meta(article, path, fmt_default)
-    plans = plan_episodes(article, cfg, series_title, fmt, episodes)
-    out_dir = Path(draft_dir_for(series_title, str(drafts_dir)))
+    series_title, fmt, episodes, art_date, explicit_slug = _article_meta(
+        article, path, fmt_default
+    )
+    # series_slug：frontmatter series_slug 优先，否则从 series_title 生成
+    meta, _ = parse_script(article)
+    series_slug = str(meta.get("series_slug") or "").strip() or chinese_to_ascii(series_title)
+    plans = plan_episodes(
+        article, cfg, series_title, fmt, episodes,
+        series_slug=series_slug, article_date=art_date,
+    )
+    out_dir = Path(draft_dir_for(art_date, series_title, explicit_slug, str(drafts_dir)))
     made: list[Path] = []
-    # 用相对路径写进 frontmatter，便于语音合成阶段定位 raw 原文做音色选型
     try:
         source_rel = str(path.resolve().relative_to(Path.cwd()))
     except ValueError:

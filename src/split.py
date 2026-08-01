@@ -31,9 +31,11 @@ class EpisodePlan:
     total: int
     title: str        # 集标题（系列 + 章节）
     series: str       # 系列 / 节目名
+    series_slug: str  # 系列英文 slug（用于 output 路径）
     chapter: str      # 章节名
     body: str         # 待转口播的正文
     format: str = "duo"  # solo / duo
+    article_date: str = ""   # 文章日期（YYYY-MM-DD），用于 drafts 目录
 
 
 # ---------- 清洗 ----------
@@ -170,6 +172,8 @@ def plan_episodes(
     series_title: str,
     fmt: str,
     episodes: int | None = None,
+    series_slug: str = "",
+    article_date: str = "",
 ) -> list[EpisodePlan]:
     split_cfg = cfg.get("split", {})
     min_c = split_cfg.get("min_episode_chars", 600)
@@ -225,9 +229,11 @@ def plan_episodes(
                 total=total,
                 title=f"{series_title} · {name}" if total > 1 else series_title,
                 series=series_title,
+                series_slug=series_slug,
                 chapter=name,
                 body=text,
                 format=fmt,
+                article_date=article_date,
             )
         )
     return plans

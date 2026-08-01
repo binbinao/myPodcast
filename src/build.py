@@ -51,17 +51,53 @@ def run_one(episode_path: Path, out_dir: Path, cfg: dict[str, Any]) -> None:
         voice_map["default"] = chosen
         print(f"      voicecaster → {chosen}")
 
-    mp3, duration = build_episode_audio(segments, voice_map, cfg, out_dir, title)
-    ep_dir = mp3.parent
-    size = mp3.stat().st_size
-    print(f"      → {mp3}  ({duration // 60}分{duration % 60}秒, {size // 1024}KB)")
+    series_slug = meta.get("series_slug", "")
+    series_title_v = meta.get("series", "")
+    ep_index = int(meta.get("episode", 1) or 1)
+
+    if SKIP_AUDIO:
+        # 跳过 TTS 生成：用现有 mp3 元数据（用于纯重渲 index/feed/shownotes）
+        from .naming import ep_output_dir as _ep_out_dir
+        ep_dir = Path(_ep_out_dir(str(out_dir), series_title_v, ep_index, series_slug))
+        mp3 = ep_dir / "episode.mp3"
+        if not mp3.exists():
+            raise SystemExit(f"✗ --skip-audio 但 {mp3} 不存在；先跑一次非 skip-audio build")
+        duration = _ffprobe_duration(mp3)
+        size = mp3.stat().st_size
+        print(f"      → (skip) {mp3}  ({duration // 60}分{duration % 60}秒, {size // 1024}KB)")
+    else:
+        mp3, duration = build_episode_audio(
+            segments, voice_map, cfg, out_dir, title,
+            series_title=series_title_v,
+            series_slug=series_slug,
+            ep_index=ep_index,
+        )
+        ep_dir = mp3.parent
+        size = mp3.stat().st_size
+        print(f"      → {mp3}  ({duration // 60}分{duration % 60}秒, {size // 1024}KB)")
 
     print("[4/5] 写 shownotes")
     write_shownotes(ep_dir, meta, segments, duration)
 
     print("[5/5] 更新 RSS / 节目站")
-    slug = slugify(title)
+    slug = meta.get("series_slug") or slugify(meta.get("series") or title)
     register_episode(out_dir, meta, slug, duration, size)
+
+
+SKIP_AUDIO = False
+
+
+def _ffprobe_duration(mp3: Path) -> int:
+    import subprocess
+    r = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+         "-of", "default=nw=1:nk=1", str(mp3)],
+        capture_output=True, text=True,
+    )
+    try:
+        return int(float(r.stdout.strip()))
+    except ValueError:
+        return 0
 
 
 def run(target: Path, out_dir: Path, config_path: Path) -> None:
@@ -89,11 +125,15 @@ def run(target: Path, out_dir: Path, config_path: Path) -> None:
 
 
 def main() -> None:
+    global SKIP_AUDIO
     ap = argparse.ArgumentParser(description="myPodcast 文字转语音流水线")
     ap.add_argument("episode", help="播客脚本 markdown 路径，或含多个脚本的目录（如 drafts/xxx）")
     ap.add_argument("--out", default="output", help="输出目录 (默认 output)")
     ap.add_argument("--config", default="config.yaml", help="配置文件 (默认 config.yaml)")
+    ap.add_argument("--skip-audio", action="store_true",
+                    help="跳过 TTS 生成，仅用现有 mp3 重渲 shownotes/RSS/index（命名重构后修复 manifest 用）")
     args = ap.parse_args()
+    SKIP_AUDIO = args.skip_audio
     run(Path(args.episode), Path(args.out), Path(args.config))
 
 

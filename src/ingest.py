@@ -7,6 +7,8 @@ from typing import Any
 
 import yaml
 
+from .naming import ascii_slug, chinese_to_ascii
+
 FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n(.*)$", re.DOTALL)
 TAG_RE = re.compile(r"^\[([^\]]+)\]\s*(.*)$")
 
@@ -46,7 +48,7 @@ def load_episode(path: str | Path) -> tuple[dict[str, Any], list[dict[str, str]]
     return parse_script(Path(path).read_text(encoding="utf-8"))
 
 
+# 兼容旧 import：返回 ASCII kebab-case slug（不再保留中文）
 def slugify(title: str) -> str:
-    """生成文件名安全 slug（保留中文）。"""
-    s = re.sub(r"[^\w一-龥]+", "-", title).strip("-")
-    return s[:60] or "episode"
+    """ASCII kebab-case slug。中文标题会转拼音（无 pypinyin 时降级）。"""
+    return chinese_to_ascii(title)

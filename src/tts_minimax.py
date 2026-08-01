@@ -197,11 +197,18 @@ def build_episode_audio_minimax(
     cfg: dict[str, Any],
     out_dir: Path,
     title: str,
+    series_title: str = "",
+    series_slug: str = "",
+    ep_index: int = 1,
 ) -> tuple[Path, int]:
-    from .ingest import slugify
+    from .naming import ep_output_dir as _ep_output_dir, chinese_to_ascii
 
     out_dir = Path(out_dir)
-    ep_dir = out_dir / slugify(title)
+    if series_title and series_slug:
+        ep_dir = Path(_ep_output_dir(str(out_dir), series_title, ep_index, series_slug))
+    else:
+        s_slug = chinese_to_ascii(series_title or title)
+        ep_dir = Path(_ep_output_dir(str(out_dir), series_title or title, ep_index, s_slug))
     ep_dir.mkdir(parents=True, exist_ok=True)
     mp3 = ep_dir / "episode.mp3"
     duration = asyncio.run(generate_audio_minimax(segments, voice_map, cfg, mp3))

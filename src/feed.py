@@ -56,15 +56,23 @@ def write_shownotes(ep_dir: Path, meta: dict[str, Any], segments: list[dict[str,
 
 
 def register_episode(out_dir: Path, meta: dict[str, Any], slug: str, duration: int, size: int) -> None:
-    """注册一集到 manifest。已存在则保留原 date（首次 build 写入的日期）。"""
+    """注册一集到 manifest。已存在则保留原 date（首次 build 写入的日期）。
+
+    slug = series_slug（用于构建 output/series/<slug>/ep-XX/episode.mp3 URL）。
+    """
     data = load_manifest(out_dir)
     eps = data["episodes"]
-    # 找旧条目（如有）保留 date
-    old = next((e for e in eps if e["slug"] == slug), None)
+    ep_index = int(meta.get("episode", 1) or 1)
+    series = meta.get("series", "")
+    # 唯一键：series_slug + ep-XX（同一系列不同集各自独立）
+    key = f"{slug}::ep-{ep_index:02d}"
+    old = next((e for e in eps if e.get("_key") == key), None)
     today = date.today().isoformat()
     entry = {
+        "_key": key,
         "slug": slug,
-        "title": meta.get("title", slug),
+        "ep_index": ep_index,
+        "title": meta.get("title", series),
         "subtitle": meta.get("subtitle", ""),
         "description": meta.get("description", ""),
         # 保留旧日期，不被新 build 覆盖
@@ -73,15 +81,15 @@ def register_episode(out_dir: Path, meta: dict[str, Any], slug: str, duration: i
         "updated": today,
         "duration": duration,
         "size": size,
-        "url": f"{slug}/episode.mp3",
-        "series": meta.get("series", ""),
-        "episode": meta.get("episode", ""),
+        "url": f"series/{slug}/ep-{ep_index:02d}/episode.mp3",
+        "series": series,
+        "episode": ep_index,
         "total": meta.get("total", ""),
         "format": meta.get("format", "solo"),
         "chapter": meta.get("chapter", ""),
-        "voice": meta.get("voice", ""),  # frontmatter 显式 voice 可写入
+        "voice": meta.get("voice", ""),
     }
-    eps = [e for e in eps if e["slug"] != slug]
+    eps = [e for e in eps if e.get("_key") != key]
     eps.insert(0, entry)
     data["episodes"] = eps
     save_manifest(out_dir, data)
@@ -129,26 +137,29 @@ def _fmt_dur(d: int) -> str:
 
 
 def _slugify_series(title: str) -> str:
-    return re.sub(r"[^\w\u4e00-\u9fff\-]+", "-", str(title)).strip("-")
+    """兼容保留：中文 → kebab-case（不再保留中文）。实际应由 manifest 的 slug 字段提供。"""
+    from .naming import chinese_to_ascii
+    return chinese_to_ascii(title)
 
 
 def _group_by_series(eps: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """episodes → 按 series 分组（series 为空/单集也算独立组）。"""
+    """episodes → 按 series_slug 分组（series 为空/单集也算独立组）。"""
     series_map: dict[str, list[dict[str, Any]]] = {}
     singletons: list[dict[str, Any]] = []
     for e in eps:
-        s = e.get("series") or ""
-        if s:
-            series_map.setdefault(s, []).append(e)
+        slug = e.get("slug") or ""
+        if slug:
+            series_map.setdefault(slug, []).append(e)
         else:
             singletons.append(e)
     groups = []
-    for series_title, items in series_map.items():
-        items.sort(key=lambda x: x.get("episode", 1) or 1)
+    for series_slug, items in series_map.items():
+        items.sort(key=lambda x: int(x.get("ep_index", x.get("episode", 1)) or 1))
         total_dur = sum(x.get("duration", 0) for x in items)
+        series_title = items[0].get("series", series_slug)
         groups.append({
             "series": series_title,
-            "slug": _slugify_series(series_title),
+            "slug": series_slug,
             "items": items,
             "total_duration": total_dur,
             "count": len(items),

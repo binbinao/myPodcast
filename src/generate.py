@@ -3,24 +3,30 @@
 - 全自动：调 OpenAI 兼容接口，按 solo/duo 把书面正文改写成口播脚本。
 - 半自动：只包成 [host] 骨架，留给人工润色（无需 API key）。
 输出带 frontmatter 的脚本 markdown，落到 drafts/ 待审。
+
+命名：所有 draft 目录与文件名通过 src.naming 生成。
 """
 from __future__ import annotations
 
 from typing import Any
 
-from .ingest import slugify
+from .naming import draft_filename as _draft_filename, drafts_dir_for as _drafts_dir_for
 from .polish import llm_complete
 from .split import EpisodePlan, _strip_md
 
 
 def _wrap(plan: EpisodePlan, body_text: str, source: str | None = None) -> str:
     src_line = f'source: "{source}"\n' if source else ""
+    series_slug_line = (
+        f'series_slug: "{plan.series_slug}"\n' if getattr(plan, "series_slug", "") else ""
+    )
     return (
         f"---\n"
         f'title: "{plan.title}"\n'
         f'description: "《{plan.series}》{plan.chapter}（第 {plan.index}/{plan.total} 集）"\n'
         f"format: {plan.format}\n"
         f'series: "{plan.series}"\n'
+        f"{series_slug_line}"
         f"episode: {plan.index}\n"
         f"total: {plan.total}\n"
         f'chapter: "{plan.chapter}"\n'
@@ -63,12 +69,19 @@ def generate_script(plan: EpisodePlan, cfg: dict[str, Any], source: str | None =
     return _skeleton(plan, source)
 
 
+# ----- 命名代理（保持旧 import 兼容） -----
+
 def draft_filename(plan: EpisodePlan) -> str:
-    return f"ep-{plan.index:02d}.md"
+    return _draft_filename(plan.index)
 
 
-def draft_dir_for(series_title: str, drafts_dir: str) -> str:
+def draft_dir_for(
+    article_date: str,
+    title: str,
+    explicit_slug: str | None,
+    drafts_dir: str = "drafts",
+) -> str:
     from pathlib import Path
-    d = Path(drafts_dir) / slugify(series_title)
+    d = Path(_drafts_dir_for(article_date, title, explicit_slug, drafts_dir))
     d.mkdir(parents=True, exist_ok=True)
     return str(d)
