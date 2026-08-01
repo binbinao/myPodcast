@@ -15,49 +15,6 @@ series_slug: "ai-infra-redefined"
 
 ---
 
-## 目录
-
-- [第一部分：引言 - AI Infra的认知误区](#第一部分引言---ai-infra的认知误区)
-- [第二部分：AI Infra六层架构全景](#第二部分ai-infra六层架构全景)
-- [第三部分：分层深度解析](#第三部分分层深度解析)
-  - [3.1 硬件层 - 算力底座](#31-硬件层---算力底座)
-  - [3.2 虚拟化与资源管理层](#32-虚拟化与资源管理层)
-  - [3.3 框架与运行时层](#33-框架与运行时层)
-  - [3.4 调度与编排层](#34-调度与编排层)
-  - [3.5 数据管理层](#35-数据管理层)
-  - [3.6 观测与优化层](#36-观测与优化层)
-- [第四部分：典型架构模式对比](#第四部分典型架构模式对比)
-- [第五部分：行业趋势与未来展望](#第五部分行业趋势与未来展望)
-- [第六部分：AI Infra投资决策框架](#第六部分ai-infra投资决策框架)
-- [第七部分：结语](#第七部分结语)
-
----
-
-> **说明**：本文完整版包含7大部分、约30,000字。各分节文件保存在 `docs/writing/drafts/2026-03-09-ai-infra-redefined/` 目录下，按如下索引组织：
-
-| 章节 | 文件名 | 内容概要 |
-|------|--------|---------|
-| **第一部分** | `section-1-intro.md` | AI Infra的认知误区、训练vs推理的本质差异 |
-| **第二部分** | `section-2-architecture-overview.md` | 六层架构全景、分层优化、责任边界 |
-| **第三部分 3.1** | `section-3-1-hardware.md` | 硬件层：GPU选型、NVIDIA中国定制版、国产GPU、存储、网络 |
-| **第三部分 3.2** | `section-3-2-virtualization.md` | 虚拟化层：MIG/MPS、多租户、Serverless推理 |
-| **第三部分 3.3** | `section-3-3-framework.md` | 框架层：DeepSpeed/Megatron/FSDP、vLLM/TensorRT-LLM、量化 |
-| **第三部分 3.4** | `section-3-4-scheduler.md` | 调度层：Slurm/Volcano、弹性训练、KServe/Triton |
-| **第三部分 3.5** | `section-3-5-data.md` | 数据层：3FS、DVC、KV Cache、向量数据库 |
-| **第三部分 3.6** | `section-3-6-observability.md` | 观测层：MFU详解、W&B/MLflow、成本追踪 |
-| **第四部分** | `section-4-architecture-patterns.md` | 四种架构模式：万卡训练/成本优化/实时推理/边缘 |
-| **第五部分** | `section-5-trends.md` | 六大行业趋势、训练vs推理双轨演进 |
-| **第六部分** | `section-6-investment.md` | 投资决策框架、TCO分析、技术选型Checklist |
-| **第七部分** | `section-7-conclusion.md` | 核心观点回顾、关键建议、未来展望 |
-
----
-
-以下为完整正文内容：
-
----
-
-# 第一部分：引言 - AI Infra的认知误区
-
 ## 1.1 现象：GPU抢购狂潮背后的认知盲区
 
 2024年，全球AI硬件市场规模达到593亿美元，预计2034年将增长至2963亿美元，年复合增长率高达18%。在这场AI军备竞赛中，GPU成为了最炙手可热的战略资源。各大科技公司动辄宣布采购数万甚至数十万块GPU：Meta计划购买35万块H100，Inflection AI搭建了包含22,000个H100的超级计算机集群，微软、谷歌、亚马逊等云厂商更是持续加码数据中心建设。
@@ -153,12 +110,6 @@ series_slug: "ai-infra-redefined"
 后续章节将沿着这六层架构，分别深入探讨训练和推理两种场景下的技术选型和最佳实践。
 
 ---
-
-> **注：第三部分至第七部分的完整正文内容请参阅各分节文件，文件清单见上方目录表。以下为各章节的核心内容摘要。**
-
----
-
-# 第三部分：分层深度解析（详见各分节文件）
 
 ## 3.1 硬件层 - 算力底座
 
@@ -308,10 +259,6 @@ MFU（Model FLOPS Utilization，模型算力利用率）是训练场景的核心
 
 ---
 
-## 第五部分：行业趋势与未来展望
-
-> 详见 `section-5-trends.md`
-
 ## 六大趋势总览
 
 
@@ -401,50 +348,3 @@ MFU（Model FLOPS Utilization，模型算力利用率）是训练场景的核心
 理解分层架构、区分训练推理、建立成本意识、保持技术前瞻性——是在这场AI基础设施竞赛中获胜的关键。
 
 **愿每一位AI从业者都能构建出高效、可靠、可持续的AI基础设施，让算力真正成为推动创新的生产力。**
-
----
-
-
-| 项目 | 数据 |
-|------|------|
-| **总字数** | 约30,000字 |
-| **章节数** | 7大部分，含6层架构详解 |
-| **核心图表** | 20+张对比表格和架构图 |
-| **案例数量** | 10+个（OpenAI、Character.AI、华为、寒武纪等） |
-| **技术点** | 覆盖AI Infra全栈技术 |
-
-
-**最终稿**：
-- `docs/writing/2026-03-09-ai-infra-redefined-final.md`（本文件）
-
-**分章节完整文件（含全部正文）**：
-- `docs/writing/drafts/2026-03-09-ai-infra-redefined/section-1-intro.md`
-- `docs/writing/drafts/2026-03-09-ai-infra-redefined/section-2-architecture-overview.md`
-- `docs/writing/drafts/2026-03-09-ai-infra-redefined/section-3-1-hardware.md`
-- `docs/writing/drafts/2026-03-09-ai-infra-redefined/section-3-2-virtualization.md`
-- `docs/writing/drafts/2026-03-09-ai-infra-redefined/section-3-3-framework.md`
-- `docs/writing/drafts/2026-03-09-ai-infra-redefined/section-3-4-scheduler.md`
-- `docs/writing/drafts/2026-03-09-ai-infra-redefined/section-3-5-data.md`
-- `docs/writing/drafts/2026-03-09-ai-infra-redefined/section-3-6-observability.md`
-- `docs/writing/drafts/2026-03-09-ai-infra-redefined/section-4-architecture-patterns.md`
-- `docs/writing/drafts/2026-03-09-ai-infra-redefined/section-5-trends.md`
-- `docs/writing/drafts/2026-03-09-ai-infra-redefined/section-6-investment.md`
-- `docs/writing/drafts/2026-03-09-ai-infra-redefined/section-7-conclusion.md`
-
-**审核报告**：
-- `docs/writing/2026-03-09-ai-infra-redefined-review.md`
-
----
-
-**文档生成完成！**
-
-根据 **document-superpowers** 的完整流程，本文已完成：
-1. ✅ Stage 0: Reference Materials（参考材料检查）
-2. ✅ Stage 1: Brainstorming（头脑风暴）
-3. ✅ Stage 2: Planning（大纲规划）
-4. ✅ Stage 2.5: Research（资料调研）
-5. ✅ Stage 3: Execution（执行写作）
-6. ✅ Stage 4: Review（四遍审核）
-7. ✅ Final Draft（最终定稿）
-
-**文章已准备就绪，可以发布或交付！**
