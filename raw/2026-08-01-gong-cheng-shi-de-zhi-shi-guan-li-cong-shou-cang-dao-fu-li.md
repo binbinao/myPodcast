@@ -1,4 +1,9 @@
-# 工程师的知识管理：从收藏到复利
+---
+slug: "gong-cheng-shi-de-zhi-shi-guan-li-cong-shou-cang-dao-fu-li"
+series_slug: "knowledge-management"
+title: "工程师的知识管理：从收藏到复利"
+date: 2026-08-01
+---
 
 很多人以为知识管理就是找个好用的笔记软件，把看到的好文章塞进去。三个月后打开收藏夹，全是没读过的链接。这篇文章想说清楚一件事：收藏不是管理，能复用才算。
 

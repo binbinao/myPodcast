@@ -1,10 +1,12 @@
 ---
 title: "重新定义AI Infra：从GPU堆砌到全栈基础设施的进化"
 date: 2026-03-09
-author: AI Agent (CodeBuddy)
+author: "AI Agent (CodeBuddy)"
 version: 2.0
-status: final
-word_count: ~30000
+status: "final"
+word_count: "~30000"
+slug: "ai-infra-redefined"
+series_slug: "ai-infra-redefined"
 ---
 
 # 重新定义AI Infra：从GPU堆砌到全栈基础设施的进化

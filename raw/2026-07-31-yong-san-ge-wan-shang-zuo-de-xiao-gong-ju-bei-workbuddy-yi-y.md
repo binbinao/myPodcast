@@ -1,15 +1,17 @@
 ---
-title: 用三个晚上做的小工具，被 WorkBuddy 一夜归零了
+title: "用三个晚上做的小工具，被 WorkBuddy 一夜归零了"
 date: 2026-07-31
-status: final
+status: "final"
 word_count: 2920
 target_word_count: 2950
 sections: 7
-format: solo
+format: "solo"
 episodes: 3
-reviewed: true
+reviewed: True
 review_date: 2026-07-31
-review_log: docs/writing/2026-07-31-when-platform-absorbs-you-review.md
+review_log: "docs/writing/2026-07-31-when-platform-absorbs-you-review.md"
+slug: "when-platform-absorbs-you"
+series_slug: "when-platform-absorbs-you"
 ---
 
 ## Metadata

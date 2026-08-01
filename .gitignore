@@ -1,9 +1,8 @@
-# 忽略生成产物与缓存
-output/
-drafts/
+# 缓存与临时产物
 __pycache__/
 *.pyc
 .venv/
+output/manifest.json.bak
 
 # 系统 / 助手内部状态
 .DS_Store
