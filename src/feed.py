@@ -592,6 +592,61 @@ if (nt) {{
     nt.setAttribute('aria-expanded', open ? 'true' : 'false');
   }});
 }}
+// 全局 audio 互斥：任一 audio 开始播放时暂停其他所有
+// 同时给当前播放的 audio 父卡片加 .is-playing 视觉反馈
+(function() {{
+  var audios = Array.prototype.slice.call(document.querySelectorAll('audio'));
+  function clearActive() {{
+    audios.forEach(function(a) {{
+      var card = a.closest('.ep-card, .hero');
+      if (card) card.classList.remove('is-playing');
+    }});
+  }}
+  // 监听 capture 阶段 play/pause/ended，确保捕获冒泡
+  document.addEventListener('play', function(e) {{
+    if (e.target.tagName !== 'AUDIO') return;
+    audios.forEach(function(a) {{
+      if (a !== e.target && !a.paused) a.pause();
+    }});
+    clearActive();
+    var card = e.target.closest('.ep-card, .hero');
+    if (card) card.classList.add('is-playing');
+  }}, true);
+  document.addEventListener('pause', function(e) {{
+    if (e.target.tagName !== 'AUDIO') return;
+    var card = e.target.closest('.ep-card, .hero');
+    if (card) card.classList.remove('is-playing');
+  }}, true);
+  document.addEventListener('ended', function(e) {{
+    if (e.target.tagName !== 'AUDIO') return;
+    var card = e.target.closest('.ep-card, .hero');
+    if (card) card.classList.remove('is-playing');
+  }}, true);
+  // 合集卡 EP 行的 play 按钮：找匹配的 audio 元素 .play()，滚动到该卡片
+  document.addEventListener('click', function(e) {{
+    var play = e.target.closest('.series-ep-play');
+    if (!play) return;
+    e.preventDefault();
+    var href = play.getAttribute('href');
+    if (!href) return;
+    var parts = href.match(/series\/([^/]+)\/ep-(\d+)\/episode\.mp3/);
+    if (!parts) return;
+    var slug = parts[1], epn = parseInt(parts[2], 10);
+    var epKey = 'series/' + slug + '/ep-' + (epn < 10 ? '0' + epn : epn) + '/episode.mp3';
+    var target = null;
+    document.querySelectorAll('audio').forEach(function(a) {{
+      if (!target && (a.getAttribute('src') || '').indexOf(epKey) !== -1) target = a;
+    }});
+    if (target) {{
+      target.currentTime = 0;
+      target.play().catch(function(){{}});
+      target.closest('.ep-card').scrollIntoView({{block: 'center', behavior: 'smooth'}});
+    }} else {{
+      // 找不到（ep 未 build）— fallback 链接，让浏览器当下载
+      window.location.href = href;
+    }}
+  }});
+}})();
 </script>
 </body>
 </html>
