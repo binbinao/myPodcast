@@ -1,5 +1,7 @@
 # myPodcast
 
+[![GitHub Pages](https://img.shields.io/badge/GitHub_Pages-Live-1f425f?logo=githubpages&logoColor=white)](https://binbinao.github.io/myPodcast/)
+
 把文章、白皮书、长文，自动变成能听的播客。文章 → 分集切分 → 脚本生成 → TTS → RSS/节目站，一条命令跑通。
 
 支持：**长文按章节拆多集、短文单集、单人/双人形式可配**。
