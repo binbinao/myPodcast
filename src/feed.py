@@ -100,23 +100,78 @@ def save_manifest(out_dir: Path, data: dict[str, Any]) -> None:
 
 
 def write_shownotes(ep_dir: Path, meta: dict[str, Any], segments: list[dict[str, str]], duration: int) -> Path:
+    """写 shownotes.md。
+
+    M2-4 结构化（之前是裸文本）：
+    1. 头加 frontmatter（title/series/date/audio/duration）— 机器可读
+    2. 章节锚点：从 segments 抽带"第 X 章"/Chapter 作 `<a id="...">` 锚
+    3. 末尾加订阅小节
+    """
     ep_dir = Path(ep_dir)
-    lines = [
-        f"# {meta.get('title', '未命名')}",
+    ep_index = int(meta.get("episode", 1) or 1)
+    slug = meta.get("series_slug", meta.get("slug", ""))
+    audio_url = f"series/{slug}/ep-{ep_index:02d}/episode.mp3"
+    series_title = meta.get("series", "")
+    title = meta.get("title", "未命名")
+    desc = meta.get("description", "")
+    host = meta.get("host", "小搭")
+    guest = meta.get("guest", "")
+    date_str = meta.get("date", date.today().isoformat())
+
+    lines: list[str] = [
+        "---",
+        f'title: "{title}"',
+        f'series: "{series_title}"',
+        f"date: {date_str}",
+        f"duration: {duration}",
+        f"audio: {audio_url}",
+        "---",
         "",
-        f"> {meta.get('description', '')}",
+        f"# {title}",
         "",
-        f"- 主播：{meta.get('host', '小搭')}"
-        + (f" / 嘉宾：{meta.get('guest', '')}" if meta.get("guest") else ""),
-        f"- 时长：{duration // 60} 分 {duration % 60} 秒",
-        f"- 日期：{meta.get('date', date.today().isoformat())}",
+        f"> {desc}" if desc else f"> {series_title} · 第 {ep_index} 集",
         "",
-        "## 正文",
+        f"听：{audio_url} · 时长 {duration // 60} 分 {duration % 60} 秒 · {date_str}"
+        + (f" · 嘉宾：{guest}" if guest else f" · 主播：{host}"),
         "",
     ]
+
+    # 章节锚点：识别"第 X 章"/Chapter 作 H2 锚
+    chapter_idx = 0
+    has_chapter = False
+    for seg in segments:
+        text = seg.get("text", "").strip()
+        if not text:
+            continue
+        is_chapter = (
+            (text.startswith("第") and "章" in text[:8])
+            or text.lower().startswith("chapter ")
+        )
+        if is_chapter:
+            chapter_idx += 1
+            has_chapter = True
+            anchor = f"ep-{ep_index:02d}-ch-{chapter_idx}"
+            lines.append(f'<a id="{anchor}"></a>')
+            lines.append(f"## 章节 {chapter_idx}：{text}")
+            lines.append("")
+
+    if has_chapter:
+        lines.append("## 完整正文")
+        lines.append("")
+
     for seg in segments:
         lines.append(f"**[{seg['role']}]** {seg['text']}")
         lines.append("")
+
+    # 订阅小节
+    lines.extend([
+        "## 订阅",
+        "",
+        "- [RSS / Atom](https://binbinao.github.io/myPodcast/feed.xml)",
+        "- 在 [Apple Podcasts](https://podcasts.apple.com/)、[小宇宙](https://www.xiaoyuzhoufm.com/) 等客户端粘贴 RSS 链接",
+        "",
+    ])
+
     path = ep_dir / "shownotes.md"
     path.write_text("\n".join(lines), encoding="utf-8")
     return path
@@ -339,6 +394,8 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     base = podcast.get("website", "").rstrip("/")
     title = podcast.get("title", "Podcast")
     desc = podcast.get("description", "")
+    tagline = podcast.get("tagline", desc)  # M2-3：短文案，若未设则回退到 description
+    about_text = podcast.get("about", "")    # M2-3：About 段人味（多行）
     author = podcast.get("author", "")
     language = podcast.get("language", "zh-CN")
     cover = podcast.get("cover", "/cover.jpg")
@@ -417,14 +474,14 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
       <a class="btn btn-primary" href="{_audio_src(featured)}" data-action="play-now"><span class="btn-play">{play}</span><span>现在就听</span></a>
       {f'<a class="btn btn-ghost" href="#subscribe">订阅 RSS</a>' if subscribe_enabled else ''}
     </div>
-    <p class="hero-quote">"{desc}"</p>
+    <p class="hero-quote">"{_hescape(tagline)}"</p>
   </div>
 </section>"""
     else:
         hero_html = f"""<section class="hero">
   <div class="hero-content">
     <h1 class="hero-title">{_hescape(title)}</h1>
-    <p class="hero-desc">{_hescape(desc)}</p>
+    <p class="hero-desc">{_hescape(tagline)}</p>
   </div>
 </section>"""
 
@@ -462,18 +519,33 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
   </div>
 </article>""")
 
-    # Latest 单集（featured 之外的全部，显示最近 6 个）
-    latest_html = "\n".join(_ep_card(e, compact=True) for e in latest)
+    # Latest 精简单集（M2-2 解构 #series/#latest 100% 重复）：
+    # - #series 已是合集型（每张卡含旗下 ep 列表）→ 不再重复
+    # - #latest 降为"最近 3 张" — 顶部"继续听 / 最新更新"功能
+    #   不含 featured（避免和 Hero 重复）
+    latest_short = [e for e in latest[1:4] if e]  # 取 featured 之后 3 张
+    latest_html = "\n".join(_ep_card(e, compact=True) for e in latest_short)
 
-    # About
+    # About（M2-3：人味 + tagline 收敛）
+    about_text_str = (about_text or "").strip()
+    if about_text_str:
+        # 按双换行分段；单段含单换行则用 <br> 替代
+        paragraphs = [p.strip() for p in about_text_str.split("\n\n") if p.strip()]
+        para_html = "\n".join(
+            f'    <p>{_hescape(p.replace(chr(10), "<br>"))}</p>' for p in paragraphs
+        )
+    else:
+        para_html = f'    <p>{_hescape(tagline)}</p>'
     about_html = f"""<section class="about">
   <h2>关于 {_hescape(title)}</h2>
-  <p>{_hescape(desc)}</p>
+  <div class="about-body">
+{para_html}
+  </div>
   <ul class="about-points">
     <li><strong>{len(groups)}</strong> 个节目系列</li>
     <li><strong>{len(episodes)}</strong> 集已上线</li>
     <li><strong>{_fmt_dur(sum(e.get('duration',0) for e in episodes))}</strong> 总时长</li>
-    <li><strong>{language}</strong></li>
+    <li><strong>{_hescape(author)}</strong></li>
   </ul>
 </section>"""
 
@@ -510,7 +582,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
   <div class="footer-grid">
     <div class="footer-brand">
       <h3>{_hescape(title)}</h3>
-      <p>{_hescape(desc)}</p>
+      <p>{_hescape(tagline)}</p>
     </div>
     <div class="footer-col">
       <h4>节目</h4>
@@ -536,7 +608,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
   </a>
   <nav class="site-nav" id="site-nav" aria-label="主导航">
     <a href="#series">节目</a>
-    <a href="#latest">最新</a>
+    <a href="#latest">继续听</a>
     <a href="#about">关于</a>
     {f'<a href="#subscribe">订阅</a>' if subscribe_enabled else ''}
     <a class="nav-cta" href="feed.xml">RSS</a>
@@ -575,8 +647,8 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
   </div>
 </section>
 <section id="latest">
-  <h2>全部单集</h2>
-  <p class="lead">所有已上线单集，按发布日期倒序。</p>
+  <h2>继续听</h2>
+  <p class="lead">最近更新的 3 集（不包含 Hero 那一期）。完整列表在 <a href="#series">节目</a> 里按系列看。</p>
   <div class="ep-grid">
 {latest_html}
   </div>

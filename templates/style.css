@@ -2,6 +2,7 @@
 /* Edit this file; build.py copies it to output/style.css on every build. */
 
 :root {
+  /* 原始色 token（保留别名以避免全文件替换） */
   --bg: #0b0c10;
   --bg-soft: #15161d;
   --bg-card: #181a23;
@@ -10,13 +11,37 @@
   --text-soft: #b6b8c4;
   --text-dim: #9a9eae;
   --accent: #ff7a59;
+  --accent-rgb: 255 122 89;        /* DTCG 通道三元组：唯一透明度来源 */
   --accent-glow: rgba(255,122,89,0.18);
+  --accent-hover: #ff8d6f;         /* 修复 P0-3 硬编码 style.css:74 */
+  --accent-active: #e86847;        /* 设计师新加 */
+  --accent-2: #7c5cff;             /* 仅无封面兜底 art-gradient */
   --link: #ffb59a;
   --radius: 14px;
   --max: 1100px;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --font-display: "Fraunces", "Newsreader", "Source Serif Pro", "PingFang SC", serif;
   --font-body: "DM Sans", "IBM Plex Sans", "PingFang SC", "Helvetica Neue", sans-serif;
+
+  /* DTCG 风格 token（与 templates/design-tokens.json 同步） */
+  --color-bg: var(--bg);
+  --color-surface: var(--bg-card);
+  --color-surface-sunken: var(--bg-soft);
+  --color-fg: var(--text);
+  --color-fg-2: var(--text-soft);
+  --color-muted: var(--text-dim);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-active: var(--accent-active);
+  --color-accent-rgb: var(--accent-rgb);
+  --color-accent-glow: rgb(var(--accent-rgb) / 0.16);   /* 设计师 0.15+0.18 合并 */
+  --color-accent-veil: rgb(var(--accent-rgb) / 0.35);   /* series 顶条 */
+  --color-accent-wash: rgb(var(--accent-rgb) / 0.08);   /* 行 hover */
+  --color-link: var(--link);
+  --color-scrim: rgba(11,12,16,0.78);                   /* fixed scrim */
+  --color-shadow: rgba(0,0,0,0.4);                       /* hero 阴影 */
+  --color-on-accent: #0b0c10;                            /* 按钮文字压在橙底 */
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--font-body); -webkit-font-smoothing: antialiased; line-height: 1.55; }

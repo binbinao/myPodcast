@@ -7,7 +7,13 @@ podcast:
   author: "小搭 & 斌哥"
   language: "zh-CN"
   website: "https://binbinao.github.io/myPodcast"   # 节目站地址（RSS 绝对链接 / Apple 订阅用）
-  description: "把文章、白皮书、长文，变成能听的电台。"
+  description: "把文章、白皮书、长文，变成能听的电台。"   # 全局描述（meta/og/RSS）
+  tagline: "把文章变成能听的电台。"                       # 站点 1-2 处的核心 slogan（M2-3 收敛）
+  about: |                                              # M2-3 增 About 人味：主播自述/缘起/节奏
+    小搭电台是「小搭」和「斌哥」自用的个人播客流水线 —— 我们读文章、做笔记，
+    然后让 AI 把值得反复听的部分讲出来，放到这里。不追热点，不做新闻，
+    节奏是「每周或每两周一期」，来源是我们最近在读、值得慢下来读的东西。
+    如果你也喜欢把文章听进去，欢迎订阅。
   cover: "cover.jpg"               # 节目封面图（og:image）
   subscribe:                      # 站点"在更多地方听"订阅区块；enabled: false = 隐藏
     enabled: false
