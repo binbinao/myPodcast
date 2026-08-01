@@ -1,0 +1,22 @@
+<audio id="player-audio" preload="metadata" aria-hidden="true"></audio>
+<aside id="player" class="player" aria-label="音频播放器" role="region" hidden>
+  <div class="player-meta">
+    <div class="player-text">
+      <div class="player-series"></div>
+      <div class="player-title"></div>
+    </div>
+  </div>
+  <button type="button" class="player-btn player-toggle" data-action="toggle" aria-label="播放或暂停">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+  </button>
+  <div class="player-times"><span class="player-cur">0:00</span><span class="player-sep" aria-hidden="true">/</span><span class="player-dur">0:00</span></div>
+  <div class="player-progress" tabindex="0" role="slider" aria-label="播放进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+    <div class="player-fill"></div>
+  </div>
+  <button type="button" class="player-btn player-mute" data-action="mute" aria-label="静音">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+  </button>
+  <button type="button" class="player-btn player-close" data-action="close" aria-label="关闭播放器">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+  </button>
+</aside>

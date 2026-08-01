@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="{{ language | default('zh-CN') }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }} — {{ tagline }}</title>
+<meta name="description" content="{{ description }}">
+<meta property="og:title" content="{{ title }}">
+<meta property="og:description" content="{{ description }}">
+<meta property="og:type" content="website">
+<meta property="og:image" content="{{ base }}{{ cover }}">
+<meta property="og:url" content="{{ base }}/">
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="alternate" type="application/rss+xml" title="{{ title }}" href="feed.xml">
+</head>
+<body>
+{% include "site/partials/header.html" %}
+<main>
+{{ hero | safe }}
+{% include "site/partials/series.html" %}
+{% include "site/partials/latest.html" %}
+{{ about | safe }}
+{{ subscribe | safe }}
+</main>
+{% include "site/partials/footer.html" %}
+{% include "site/partials/player.html" %}
+<script>
+{{ player_js | safe }}
+</script>
+</body>
+</html>

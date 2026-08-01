@@ -1,0 +1,22 @@
+<section id="latest">
+  <h2>继续听</h2>
+  <p class="lead">最近更新的 3 集（不包含 Hero 那一期）。完整列表在 <a href="#series">节目</a> 里按系列看。</p>
+  <div class="ep-grid">
+  {% for e in latest %}
+    <article class="ep-card" data-slug="{{ e.slug | e }}" data-audio="{{ e.audio_src | e }}" data-title="{{ e.title | e }}" data-series="{{ e.series | e }}" data-duration="{{ e.duration }}">
+      <div class="ep-meta">
+        <time datetime="{{ e.date | e }}">{{ e.date | e }}</time>
+        {% if e.ep_label %}<span class="badge">{{ e.ep_label | e }}</span>{% endif %}
+        <span class="duration">{{ e.dur_str }}</span>
+      </div>
+      <h3 class="ep-title">{{ e.title | e }}</h3>
+      <p class="ep-desc">{{ e.description | e }}</p>
+      <div class="ep-actions">
+        <button type="button" class="ep-play" data-action="play-now" aria-label="立即播放 {{ e.title | e }}">{{ e.play_icon | safe }}<span>听</span></button>
+        <a href="{{ e.shownotes_src | e }}">Shownotes</a>
+        <a href="{{ e.audio_src | e }}" download>下载</a>
+      </div>
+    </article>
+  {% endfor %}
+  </div>
+</section>

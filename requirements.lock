@@ -1,5 +1,6 @@
-# 自动生成：pip freeze | grep -iE "edge-tts|requests|pypinyin|pyyaml"
+# 自动生成：pip freeze | grep -iE "edge-tts|requests|pypinyin|pyyaml|jinja2"
 # 重新生成：pip freeze > requirements.lock
+Jinja2==3.1.6
 PyYAML==6.0.3
 edge-tts==7.2.8
 pypinyin==0.55.0

@@ -1,0 +1,18 @@
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="site-brand" href="#top">
+      <span class="site-brand-mark">{{ title[0] if title else "播" }}</span>
+      <span class="site-brand-name">{{ title }}</span>
+    </a>
+    <button type="button" class="nav-toggle" aria-label="打开导航" aria-controls="site-nav" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+    <nav id="site-nav" class="site-nav" aria-label="主导航">
+      <a href="#series">节目</a>
+      <a href="#latest">继续听</a>
+      <a href="#about">关于</a>
+      <a class="nav-cta" href="feed.xml">RSS</a>
+    </nav>
+  </div>
+</header>
+<a id="top"></a>

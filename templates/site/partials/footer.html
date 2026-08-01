@@ -1,0 +1,24 @@
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <h3>{{ title | e }}</h3>
+      <p>{{ tagline | e }}</p>
+    </div>
+    <div class="footer-col">
+      <h4>节目</h4>
+      <ul>
+      {% for g in groups[:6] %}
+        <li><a href="#series">{{ g.series | e }}</a></li>
+      {% endfor %}
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>订阅</h4>
+      <ul>
+        <li><a href="feed.xml">RSS / Atom</a></li>
+        <li><a href="#latest">继续听</a></li>
+      </ul>
+    </div>
+  </div>
+  <p class="footer-credit">由 {{ author | e }} 用 <a href="https://github.com/binbinao/myPodcast">myPodcast</a> 流水线制作。</p>
+</footer>

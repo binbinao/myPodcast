@@ -1,0 +1,25 @@
+<section id="series">
+  <h2>节目</h2>
+  <p class="lead">每个系列含旗下所有集，按发布日期倒序。</p>
+  <div class="series-grid">
+  {% for g in groups %}
+    <article class="series-card" data-slug="{{ g.slug | e }}">
+      <div class="series-body">
+        <h3>{{ g.series | e }}</h3>
+        <p class="series-meta"><span class="series-count">{{ g.count }} 集</span><span class="series-dot" aria-hidden="true">·</span><span>总时长 {{ g.dur_total }}</span></p>
+        {% if g.description %}<p class="series-desc">{{ g.description | e }}</p>{% endif %}
+        <ol class="series-ep-list">
+        {% for it in g.episodes %}
+          <li class="series-ep-item">
+            <span class="series-ep-num">EP {{ "%02d" | format(it.ep_index | int) }}</span>
+            <a class="series-ep-title" href="{{ it.shownotes_src | e }}" title="{{ it.title | e }}">{{ it.display_title | e }}</a>
+            <span class="series-ep-dur">{{ it.dur_str }}</span>
+            <button type="button" class="series-ep-play" data-action="play-now" data-audio="{{ it.audio_src | e }}" data-title="{{ it.title | e }}" data-series="{{ it.series | e }}" data-duration="{{ it.duration }}" aria-label="听 {{ it.audio_label | e }}">{{ it.play_icon | safe }}</button>
+          </li>
+        {% endfor %}
+        </ol>
+      </div>
+    </article>
+  {% endfor %}
+  </div>
+</section>

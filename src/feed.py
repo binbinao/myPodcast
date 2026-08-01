@@ -371,174 +371,87 @@ def _group_by_series(eps: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 # ---------- main: build_index ----------
 
-def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
-    """生成暗色主题的节目站 index.html。
 
-    sections（按 landing-page guideline）：
-      Header → Hero(Featured Episode) → All Series Grid → Latest →
-      About / Why listen → Subscribe / RSS → Footer
-    """
-    # 解构 _ICON_LIB 到局部（让 f-string 子模板里 {mic}/{music}/{hamburger} 等能解析）
-    # P0: emoji 不可作图标，统一用 SVG 描边。
-    # 注意：不能用 key='podcast'，会覆盖函数参数 `podcast`（dict）。
-    mic, music, sparkle, hamburger, play, rss, podcast_icon = (
-        _ICON_LIB["mic"],
-        _ICON_LIB["music"],
-        _ICON_LIB["sparkle"],
-        _ICON_LIB["hamburger"],
-        _ICON_LIB["play"],
-        _ICON_LIB["rss"],
-        _ICON_LIB["podcast_icon"],
-    )
-    data = load_manifest(out_dir)
-    base = podcast.get("website", "").rstrip("/")
-    title = podcast.get("title", "Podcast")
-    desc = podcast.get("description", "")
-    tagline = podcast.get("tagline", desc)  # M2-3：短文案，若未设则回退到 description
-    about_text = podcast.get("about", "")    # M2-3：About 段人味（多行）
-    author = podcast.get("author", "")
-    language = podcast.get("language", "zh-CN")
-    cover = podcast.get("cover", "/cover.jpg")
-    subscribe_enabled = podcast.get("subscribe", {}).get("enabled", True)
+def _audio_src(e: dict[str, Any]) -> str:
+    # 站点内音频用相对路径：index.html 与各集子目录同处站点根目录，
+    # 部署到 gh-pages 子路径(/myPodcast/)也能正确解析，避免占位 example.com 域名 404
+    return e["url"]
 
-    episodes = data["episodes"]
-    groups = _group_by_series(episodes)
 
-    # Featured / Latest：统一取全局最新单集（按 date 倒序）。修复 Hero「标签/内容/播放」三方矛盾（P0-J）：
-    # 原 `groups[0]["items"][0]` 取的是最新 series 的 EP01，但 #latest 按全局日期倒序 → CTA 播的是 EP03。
-    latest = list(episodes)
-    latest.sort(key=lambda x: x.get("date", ""), reverse=True)
-    featured = latest[0] if latest else None
+def _ep_shownotes_src(e: dict[str, Any]) -> str:
+    # shownotes 路径：series/<slug>/ep-<NN>/shownotes.md (与 mp3 同 ep_dir)
+    slug = e.get("slug", "")
+    ep_idx = e.get("episode") or e.get("ep_index") or 1
+    return f"series/{slug}/ep-{ep_idx:02d}/shownotes.md"
 
-    def _audio_src(e: dict[str, Any]) -> str:
-        # 站点内音频用相对路径：index.html 与各集子目录同处站点根目录，
-        # 部署到 gh-pages 子路径(/myPodcast/)也能正确解析，避免占位 example.com 域名 404
-        return e["url"]
 
-    def _ep_shownotes_src(e: dict[str, Any]) -> str:
-        # shownotes 路径：series/<slug>/ep-<NN>/shownotes.md (与 mp3 同 ep_dir)
-        slug = e.get("slug", "")
-        ep_idx = e.get("episode") or e.get("ep_index") or 1
-        return f"series/{slug}/ep-{ep_idx:02d}/shownotes.md"
+def _audio_label(e: dict[str, Any]) -> str:
+    # aria-label 给听按钮用（"听 第 1 部分"）
+    title = (e.get("title") or "").split("·")[-1].strip() or e.get("title", "这一集")
+    return title[:24] + ("…" if len(title) > 24 else "")
 
-    def _audio_label(e: dict[str, Any]) -> str:
-        # aria-label 给听按钮用（"听 第 1 部分"）
-        title = (e.get("title") or "").split("·")[-1].strip() or e.get("title", "这一集")
-        return title[:24] + ("…" if len(title) > 24 else "")
+def _hero_html(
+    out_dir: Path,
+    title: str,
+    tagline: str,
+    cover: str,
+    base: str,
+    featured: dict | None,
+    subscribe_enabled: bool,
+    ICON_LIB: dict[str, str],
 
-    def _ep_card(e: dict[str, Any], compact: bool = False) -> str:
-        dur = _fmt_dur(e.get("duration", 0))
-        ep_idx = e.get("episode")
-        total = e.get("total")
-        ep_label = f"第 {ep_idx}/{total} 集" if ep_idx and total else ""
-        cls = "ep-card compact" if compact else "ep-card"
-        audio_src = _audio_src(e)
-        title = _hescape(_display_title(e))
-        series = _hescape(e.get("series", ""))
-        return f"""<article class="{cls}" data-slug="{_hescape(e['slug'])}" data-audio="{_hescape(audio_src)}" data-title="{title}" data-series="{series}" data-duration="{e.get('duration',0)}">
-  <div class="ep-meta">
-    <time datetime="{e.get('date','')}">{_hescape(e.get('date',''))}</time>
-    {f'<span class="badge">{_hescape(ep_label)}</span>' if ep_label else ''}
-    <span class="duration">{dur}</span>
-  </div>
-  <h3 class="ep-title">{title}</h3>
-  <p class="ep-desc">{_hescape(e.get('description',''))}</p>
-  <div class="ep-actions">
-    <button type="button" class="ep-play" data-action="play-now" aria-label="立即播放 {title}">{_ICON_LIB["play"]}<span>听</span></button>
-    <a href="{_ep_shownotes_src(e)}">Shownotes</a>
-    <a href="{audio_src}" download>下载</a>
-  </div>
-</article>"""
 
-    # Hero（featured episode）
+) -> str:
+    """Hero 段：含封面 + featured 播放 CTA。独立函数，<50 行。"""
     cover_abs = (Path(out_dir) / Path(cover).name).resolve() if cover else None
     cover_exists = cover_abs.exists() if cover_abs else False
-    # cover 图用相对文件名：index.html 与 cover.jpg 同处站点根目录，
-    # 相对路径在 gh-pages 子路径(/myPodcast/)也能正确解析，避免 /cover.jpg 域根 404
-    cover_src = Path(cover).name if cover_exists else ""
-    # og:image 需要绝对地址才利于社交卡片抓取；base 为空时退回相对
-    og_image = f"{base}/{cover_src}" if (base and cover_src) else cover_src
-    if featured:
-        art_block = (
-            f'<img class="hero-img" src="{cover_src}" alt="{_hescape(title)} 封面" loading="eager">'
-            if cover_exists else
-            f'<div class="hero-art" aria-hidden="true"><div class="art-gradient"></div><div class="art-glyph">{_ICON_LIB["mic"]}</div></div>'
-        )
-        hero_html = f"""<section class="hero">
-  <div class="hero-media">
-    {art_block}
-  </div>
-  <div class="hero-content">
-    <p class="hero-eyebrow">最新一期 · <time datetime="{_hescape(featured.get('date',''))}">{_hescape(featured.get('date',''))}</time></p>
-    <h1 class="hero-title">{_hescape(_display_title(featured))}</h1>
-    <p class="hero-desc">{_hescape(featured.get('description',''))}</p>
-    <div class="hero-cta">
-      <a class="btn btn-primary" href="{_audio_src(featured)}" data-action="play-now"><span class="btn-play">{play}</span><span>现在就听</span></a>
-      {f'<a class="btn btn-ghost" href="#subscribe">订阅 RSS</a>' if subscribe_enabled else ''}
-    </div>
-    <p class="hero-quote">"{_hescape(tagline)}"</p>
-  </div>
-</section>"""
-    else:
-        hero_html = f"""<section class="hero">
+    if not cover_exists:
+        # 兜底：art-gradient + mic icon（hero-art 视觉）
+        return f"""<section class="hero">
   <div class="hero-content">
     <h1 class="hero-title">{_hescape(title)}</h1>
-    <p class="hero-desc">{_hescape(tagline)}</p>
+    <p class="hero-quote">"{_hescape(tagline)}"</p>
+    <div class="hero-cta">
+      {f'<a class="btn btn-ghost" href="#subscribe">订阅 RSS</a>' if subscribe_enabled else ''}
+    </div>
+  </div>
+  <div class="hero-art" aria-hidden="true">
+    <div class="art-gradient"></div>
+    <div class="art-glyph">{ICON_LIB["mic"]}</div>
   </div>
 </section>"""
 
-    # Series 卡片网格 — 合集型：每卡展示一个 series 含旗下 ep 的紧凑列表
-    # 区别于"全部单集"扁平流：合集卡看 series 全貌，单集流按发布时间刷新。
-    # 历史版本曾有 series-cover 大图（共用同一张 cover.jpg）+ 96px 大字母，
-    # 因所有 series 共图导致视觉噪声，决定纯文字排版——顶部 4px 强调色细条做系列标识。
-    series_cards = []
-    for g in groups:
-        dur_total = _fmt_dur(g["total_duration"])
-        # 该 series 的 ep 紧凑行（编号 / 标题 / 时长 / play）
-        ep_rows = []
-        for it in g.get("items", []):
-            ep_rows.append(
-                f'<li class="series-ep-item">'
-                f'<span class="series-ep-num">EP {int(it.get("ep_index", it.get("episode", 1)) or 1):02d}</span>'
-                f'<a class="series-ep-title" href="{_ep_shownotes_src(it)}" title="{_hescape(it.get("title",""))}">'
-                f'{_hescape(_display_title(it))}</a>'
-                f'<span class="series-ep-dur">{_fmt_dur(it.get("duration", 0))}</span>'
-                f'<button type="button" class="series-ep-play" data-action="play-now" data-audio="{_hescape(_audio_src(it))}" data-title="{_hescape(_display_title(it))}" data-series="{_hescape(it.get("series",""))}" data-duration="{it.get("duration",0)}" aria-label="听 {_hescape(_audio_label(it))}">{_ICON_LIB["play"]}</button>'
-                f'</li>'
-            )
-        # 该 series 的所有 ep 共享 series 描述（取第一集切片用作节目简介）
-        s_desc = g.get("description", "")
-        # 单集描述如果以"（第"开头截掉避免噪音
-        s_desc = s_desc.split("（第")[0].strip() if "（第" in s_desc else s_desc
-        series_cards.append(f"""<article class="series-card" data-slug="{_hescape(g['slug'])}">
-  <div class="series-body">
-    <h3>{_hescape(g['series'])}</h3>
-    <p class="series-meta"><span class="series-count">{g['count']} 集</span><span class="series-dot" aria-hidden="true">·</span><span>总时长 {dur_total}</span></p>
-    {f'<p class="series-desc">{_hescape(s_desc)}</p>' if s_desc else ''}
-    <ol class="series-ep-list">
-{chr(10).join(ep_rows)}
-    </ol>
+    audio_src = _audio_src(featured) if featured else ""
+    shownotes_src = _ep_shownotes_src(featured) if featured else ""
+    featured_title = _hescape(featured.get("title", "")) if featured else ""
+    featured_series = _hescape(featured.get("series", "")) if featured else ""
+    featured_dur = _fmt_dur(featured.get("duration", 0)) if featured else ""
+    return f"""<section class="hero">
+  <div class="hero-media">
+    <img class="hero-img" src="{_hescape(cover)}" alt="{featured_title} 封面" width="800" height="800" loading="eager">
   </div>
-</article>""")
+  <div class="hero-content">
+    <h1 class="hero-title">{_hescape(title)}</h1>
+    <p class="hero-quote">"{_hescape(tagline)}"</p>
+    <div class="hero-cta">
+      {f'<a class="btn btn-primary" href="{audio_src}" data-action="play-now" data-audio="{_hescape(audio_src)}" data-title="{featured_title}" data-series="{featured_series}" data-duration="{featured.get("duration",0) if featured else 0}">{ICON_LIB["play"]}<span>听最新一期</span></a>' if featured else ''}
+      {f'<a class="btn btn-ghost" href="#subscribe">订阅 RSS</a>' if subscribe_enabled else ''}
+    </div>
+  </div>
+</section>"""
 
-    # Latest 精简单集（M2-2 解构 #series/#latest 100% 重复）：
-    # - #series 已是合集型（每张卡含旗下 ep 列表）→ 不再重复
-    # - #latest 降为"最近 3 张" — 顶部"继续听 / 最新更新"功能
-    #   不含 featured（避免和 Hero 重复）
-    latest_short = [e for e in latest[1:4] if e]  # 取 featured 之后 3 张
-    latest_html = "\n".join(_ep_card(e, compact=True) for e in latest_short)
 
-    # About（M2-3：人味 + tagline 收敛）
+def _about_html(title: str, tagline: str, about_text: str, groups: list, episodes: list, author: str, language: str) -> str:
+    """About 段：M2-3 人味 + tagline 收敛。"""
     about_text_str = (about_text or "").strip()
     if about_text_str:
-        # 按双换行分段；单段含单换行则用 <br> 替代
         paragraphs = [p.strip() for p in about_text_str.split("\n\n") if p.strip()]
         para_html = "\n".join(
             f'    <p>{_hescape(p.replace(chr(10), "<br>"))}</p>' for p in paragraphs
         )
     else:
         para_html = f'    <p>{_hescape(tagline)}</p>'
-    about_html = f"""<section class="about">
+    return f"""<section class="about">
   <h2>关于 {_hescape(title)}</h2>
   <div class="about-body">
 {para_html}
@@ -551,152 +464,144 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
   </ul>
 </section>"""
 
-    # Subscribe（可用 config subscribe.enabled 关闭）
-    subscribe_html = f"""<section class="subscribe" id="subscribe">
+
+def _subscribe_html(IconLib: dict[str, str], base: str) -> str:
+    """Subscribe 段：feature flag 控制。"""
+    return f"""<section id="subscribe" class="subscribe">
   <h2>在更多地方听</h2>
-  <p class="subscribe-lead">订阅 RSS / Apple Podcasts / 小宇宙 等任意平台，新一期会自动同步过去。</p>
+  <p class="lead">把 RSS 链接粘贴到任何播客客户端。</p>
   <div class="subscribe-grid">
-    <a class="sub-card" href="feed.xml">
-      <span class="sub-icon" aria-hidden="true">{rss}</span>
-      <span class="sub-title">RSS / Atom</span>
-      <span class="sub-desc">feed.xml — 任何播客客户端可订阅</span>
+    <a class="sub-card" href="{base}/feed.xml">
+      <span class="sub-icon">{IconLib["rss"]}</span>
+      <span class="sub-name">RSS / Atom</span>
     </a>
-    <a class="sub-card" href="{base}/feed.xml" target="_blank" rel="noopener">
-      <span class="sub-icon" aria-hidden="true">{podcast_icon}</span>
-      <span class="sub-title">Apple Podcasts</span>
-      <span class="sub-desc">把 RSS 链接粘贴到 Apple Podcasts</span>
+    <a class="sub-card" href="https://podcasts.apple.com/">
+      <span class="sub-icon">{IconLib["podcast_icon"]}</span>
+      <span class="sub-name">Apple Podcasts</span>
     </a>
-    <a class="sub-card" href="https://www.xiaoyuzhoufm.com/" target="_blank" rel="noopener">
-      <span class="sub-icon" aria-hidden="true">{sparkle}</span>
-      <span class="sub-title">小宇宙</span>
-      <span class="sub-desc">手动添加 RSS 订阅</span>
+    <a class="sub-card" href="https://www.xiaoyuzhoufm.com/">
+      <span class="sub-icon">{IconLib["music"]}</span>
+      <span class="sub-name">小宇宙</span>
     </a>
-    <a class="sub-card" href="https://music.163.com/" target="_blank" rel="noopener">
-      <span class="sub-icon" aria-hidden="true">{music}</span>
-      <span class="sub-title">网易云音乐</span>
-      <span class="sub-desc">搜索节目名订阅</span>
+    <a class="sub-card" href="https://www.google.com/podcasts">
+      <span class="sub-icon">{IconLib["sparkle"]}</span>
+      <span class="sub-name">Google Podcasts</span>
     </a>
   </div>
-</section>""" if subscribe_enabled else ""
+</section>"""
 
-    # Footer
-    footer_html = f"""<footer class="site-footer">
-  <div class="footer-grid">
-    <div class="footer-brand">
-      <h3>{_hescape(title)}</h3>
-      <p>{_hescape(tagline)}</p>
-    </div>
-    <div class="footer-col">
-      <h4>节目</h4>
-      <ul>{''.join(f'<li><a href="#series">{_hescape(g["series"])}</a></li>' for g in groups[:6])}</ul>
-    </div>
-    <div class="footer-col">
-      <h4>订阅</h4>
-      <ul>
-        <li><a href="feed.xml">RSS</a></li>
-        <li><a href="https://www.xiaoyuzhoufm.com/">小宇宙</a></li>
-        <li><a href="https://podcasts.apple.com/">Apple Podcasts</a></li>
-      </ul>
-    </div>
-  </div>
-  <p class="footer-bottom">© {date.today().year} {_hescape(author or title)} · 由 <code>myPodcast</code> 自动生成</p>
-</footer>"""
 
-    # Header
-    header_html = f"""<header class="site-header">
-  <a class="brand" href="#">
-    <span class="brand-mark" aria-hidden="true">{mic}</span>
-    <span class="brand-text">{_hescape(title)}</span>
-  </a>
-  <nav class="site-nav" id="site-nav" aria-label="主导航">
-    <a href="#series">节目</a>
-    <a href="#latest">继续听</a>
-    <a href="#about">关于</a>
-    {f'<a href="#subscribe">订阅</a>' if subscribe_enabled else ''}
-    <a class="nav-cta" href="feed.xml">RSS</a>
-  </nav>
-  <button class="nav-toggle" aria-label="打开菜单" aria-expanded="false" aria-controls="site-nav">{hamburger}</button>
-</header>"""
+def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
+    """M5 改造：Jinja2 拆 658 行 → 数据组装 + 模板渲染 ≤200 行。
 
-    # All HTML
-    html = f"""<!doctype html>
-<html lang="{language}">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{_hescape(title)}</title>
-<meta name="description" content="{_hescape(desc)}">
-<meta property="og:title" content="{_hescape(title)}">
-<meta property="og:description" content="{_hescape(desc)}">
-<meta property="og:type" content="website">
-<meta property="og:image" content="{_hescape(og_image)}">
-<link rel="alternate" type="application/rss+xml" title="{_hescape(title)}" href="feed.xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<a class="skip" href="#main">跳到主内容</a>
-{header_html}
-<main id="main">
-{hero_html}
-<section id="series">
-  <h2>节目</h2>
-  <p class="lead">{len(groups)} 个系列 · 按发布时间倒序。每个系列从首页第一行起编号。</p>
-  <div class="series-grid">
-{chr(10).join(series_cards)}
-  </div>
-</section>
-<section id="latest">
-  <h2>继续听</h2>
-  <p class="lead">最近更新的 3 集（不包含 Hero 那一期）。完整列表在 <a href="#series">节目</a> 里按系列看。</p>
-  <div class="ep-grid">
-{latest_html}
-  </div>
-</section>
-{about_html}
-{subscribe_html}
-</main>
-{footer_html}
-<audio id="player-audio" preload="metadata" aria-hidden="true"></audio>
-<aside id="player" class="player" aria-label="音频播放器" role="region" hidden>
-  <div class="player-meta">
-    <div class="player-text">
-      <div class="player-series"></div>
-      <div class="player-title"></div>
-    </div>
-  </div>
-  <button type="button" class="player-btn player-toggle" data-action="toggle" aria-label="播放或暂停">
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
-  </button>
-  <div class="player-times"><span class="player-cur">0:00</span><span class="player-sep" aria-hidden="true">/</span><span class="player-dur">0:00</span></div>
-  <div class="player-progress" tabindex="0" role="slider" aria-label="播放进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-    <div class="player-fill"></div>
-  </div>
-  <button type="button" class="player-btn player-mute" data-action="mute" aria-label="静音">
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
-  </button>
-  <button type="button" class="player-btn player-close" data-action="close" aria-label="关闭播放器">
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-  </button>
-</aside>
-<script>
-__PLAYER_JS__
-</script>
-</body>
-</html>
-"""
-    # 注入 player.js 内容（构建期替换占位符）
-    player_js = (
-        Path(__file__).resolve().parent.parent / "templates" / "player.js"
-    ).read_text(encoding="utf-8")
-    html = html.replace("__PLAYER_JS__", player_js)
-    path = Path(out_dir) / "index.html"
+    拆解：
+    - _hero_html / _about_html / _subscribe_html：3 个 section 独立函数
+    - templates/site/base.html：根模板
+    - templates/site/partials/{header,series,latest,footer,player}.html：5 个 partial
+    - 站点级数据全走 ctx 字典
+    """
+    out_dir = Path(out_dir)
+    data = load_manifest(out_dir)
+    base = podcast.get("website", "").rstrip("/")
+    title = podcast.get("title", "Podcast")
+    desc = podcast.get("description", "")
+    tagline = podcast.get("tagline", desc)
+    about_text = podcast.get("about", "")
+    author = podcast.get("author", "")
+    language = podcast.get("language", "zh-CN")
+    cover = podcast.get("cover", "/cover.jpg")
+    subscribe_enabled = podcast.get("subscribe", {}).get("enabled", True)
+
+    episodes = data["episodes"]
+    groups = _group_by_series(episodes)
+
+    # Featured / Latest 排序
+    latest = list(episodes)
+    latest.sort(key=lambda x: x.get("date", ""), reverse=True)
+    featured = latest[0] if latest else None
+    latest_short = [e for e in latest[1:4] if e]
+
+    # 给每集补 audio_src / shownotes_src / display_title / dur_str / play_icon
+    def _enrich(eps: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        out = []
+        for e in eps:
+            out.append({
+                **e,
+                "audio_src": _audio_src(e),
+                "shownotes_src": _ep_shownotes_src(e),
+                "display_title": _display_title(e),
+                "title": _hescape(_display_title(e)),  # for template attr injection
+                "series": _hescape(e.get("series", "")),
+                "description": _hescape(e.get("description", "")),
+                "slug": _hescape(e.get("slug", "")),
+                "date": _hescape(e.get("date", "")),
+                "dur_str": _fmt_dur(e.get("duration", 0)),
+                "ep_label": (
+                    f"第 {e.get('episode')}/{e.get('total')} 集"
+                    if e.get("episode") and e.get("total")
+                    else ""
+                ),
+                "play_icon": _ICON_LIB["play"],
+                "audio_label": _audio_label(e),
+            })
+        return out
+
+    groups_ctx = []
+    for g in groups:
+        items = _enrich(g.get("items", []))
+        s_desc = (g.get("description", "") or "").split("（第")[0].strip()
+        groups_ctx.append({
+            "slug": _hescape(g["slug"]),
+            "series": _hescape(g["series"]),
+            "count": g["count"],
+            "dur_total": _fmt_dur(g["total_duration"]),
+            "description": _hescape(s_desc) if s_desc else "",
+            "items": items,
+        })
+
+    latest_ctx = _enrich(latest_short)
+
+    # 4 个 section 独立生成
+    hero_html = _hero_html(
+        out_dir, title, tagline, cover, base, featured, subscribe_enabled,
+        _ICON_LIB,
+    )
+    about_html = _about_html(title, tagline, about_text, groups, episodes, author, language)
+    subscribe_html = _subscribe_html(_ICON_LIB, base) if subscribe_enabled else ""
+
+    # 注入 player.js（构建期替换占位符）
+    player_js = (Path(__file__).resolve().parent.parent / "templates" / "player.js").read_text(encoding="utf-8")
+
+    # Jinja2 渲染
+    from jinja2 import Environment, FileSystemLoader, select_autoescape
+    env = Environment(
+        loader=FileSystemLoader(str(Path(__file__).resolve().parent.parent / "templates")),
+        autoescape=select_autoescape(["html", "xml"]),
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+    template = env.get_template("site/base.html")
+    html = template.render(
+        title=title,
+        tagline=tagline,
+        description=desc,
+        base=base,
+        cover=cover,
+        language=language,
+        author=author,
+        hero=hero_html,
+        about=about_html,
+        subscribe=subscribe_html,
+        groups=groups_ctx,
+        latest=latest_ctx,
+        player_js=player_js,
+    )
+    path = out_dir / "index.html"
     path.write_text(html, encoding="utf-8")
-    # 复制样式模板到 output 根（HTML 引用 /style.css）
+
+    # 复制样式模板到 output 根
     import shutil
     css_src = Path(__file__).resolve().parent.parent / "templates" / "style.css"
     if css_src.exists():
-        shutil.copy(css_src, Path(out_dir) / "style.css")
+        shutil.copy(css_src, out_dir / "style.css")
     return path
