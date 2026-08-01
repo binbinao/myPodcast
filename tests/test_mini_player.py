@@ -12,9 +12,9 @@ class MiniPlayerRenderTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         # 触发一次 build 确保 output/index.html 是最新的
-        import subprocess
+        import subprocess, sys
         subprocess.run(
-            [".venv/bin/python", "-m", "src.build", "drafts/", "--skip-audio", "--log-level", "WARNING"],
+            [sys.executable, "-m", "src.build", "drafts/", "--skip-audio", "--log-level", "WARNING"],
             cwd=ROOT, capture_output=True, check=False,
         )
 
