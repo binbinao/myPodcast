@@ -55,6 +55,17 @@ def write_shownotes(ep_dir: Path, meta: dict[str, Any], segments: list[dict[str,
     return path
 
 
+def _hash_source(source_rel: str) -> str | None:
+    """从 draft frontmatter 的 source: 字段读 raw 文章并算 sha256。无 source 返回 None。"""
+    if not source_rel:
+        return None
+    p = Path(source_rel)
+    if not p.exists():
+        return None
+    import hashlib
+    return hashlib.sha256(p.read_bytes()).hexdigest()[:16]
+
+
 def register_episode(out_dir: Path, meta: dict[str, Any], slug: str, duration: int, size: int) -> None:
     """注册一集到 manifest。已存在则保留原 date（首次 build 写入的日期）。
 
@@ -68,6 +79,14 @@ def register_episode(out_dir: Path, meta: dict[str, Any], slug: str, duration: i
     key = f"{slug}::ep-{ep_index:02d}"
     old = next((e for e in eps if e.get("_key") == key), None)
     today = date.today().isoformat()
+    src_hash = _hash_source(meta.get("source", ""))
+    # source hash 变化：raw 文章改了，但音频没重生成 → warn
+    if old and src_hash and old.get("source_hash") and old["source_hash"] != src_hash:
+        from .log import logger as log
+        log.warning(
+            f"⚠ raw 文章已变更但音频未更新: {slug} ep-{ep_index:02d} "
+            f"hash {old['source_hash']} → {src_hash}"
+        )
     entry = {
         "_key": key,
         "slug": slug,
@@ -88,6 +107,7 @@ def register_episode(out_dir: Path, meta: dict[str, Any], slug: str, duration: i
         "format": meta.get("format", "solo"),
         "chapter": meta.get("chapter", ""),
         "voice": meta.get("voice", ""),
+        "source_hash": src_hash,
     }
     eps = [e for e in eps if e.get("_key") != key]
     eps.insert(0, entry)

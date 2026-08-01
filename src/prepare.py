@@ -19,6 +19,7 @@ import yaml
 
 from .generate import draft_dir_for, draft_filename, generate_script
 from .ingest import parse_script
+from .log import logger as log
 from .naming import chinese_to_ascii
 from .split import plan_episodes
 
@@ -80,7 +81,7 @@ def prepare_file(path: Path, cfg: dict[str, Any], drafts_dir: Path) -> list[Path
         f = out_dir / draft_filename(plan)
         f.write_text(script, encoding="utf-8")
         made.append(f)
-    print(f"  {path.name} → 《{series_title}》{len(plans)} 集 → {out_dir}")
+    log.info(f"  {path.name} → 《{series_title}》{len(plans)} 集 → {out_dir}")
     return made
 
 
@@ -94,21 +95,25 @@ def run(raw_dir: Path, drafts_dir: Path, config_path: Path, article: Path | None
     raw_dir = Path(raw_dir)
     files = sorted(raw_dir.glob("*.md"))
     if not files:
-        print(f"⚠ raw/ 下没有 markdown 文章（{raw_dir}）")
+        log.info(f"⚠ raw/ 下没有 markdown 文章（{raw_dir}）")
         return
     total = 0
     for f in files:
         total += len(prepare_file(f, cfg, drafts_dir))
-    print(f"\n✓ 生成 {total} 个草稿脚本到 {drafts_dir}/（审完用 build 生成音频）")
+    log.info(f"\n✓ 生成 {total} 个草稿脚本到 {drafts_dir}/（审完用 build 生成音频）")
 
 
 def main() -> None:
+    from .log import configure
     ap = argparse.ArgumentParser(description="myPodcast prepare: 文章→分集脚本")
     ap.add_argument("--article", help="只处理单个文章")
     ap.add_argument("--raw", default="raw", help="原始文章目录 (默认 raw)")
     ap.add_argument("--drafts", default="drafts", help="草稿输出目录 (默认 drafts)")
     ap.add_argument("--config", default="config.yaml")
+    ap.add_argument("--log-file", default=None, help="追加日志到此文件")
+    ap.add_argument("--log-level", default="INFO", help="DEBUG/INFO/WARNING/ERROR")
     args = ap.parse_args()
+    configure(level=args.log_level, log_file=args.log_file)
     art = Path(args.article) if args.article else None
     run(Path(args.raw), Path(args.drafts), Path(args.config), art)
 
