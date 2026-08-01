@@ -352,6 +352,11 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
         ep_idx = e.get("episode") or e.get("ep_index") or 1
         return f"series/{slug}/ep-{ep_idx:02d}/shownotes.md"
 
+    def _audio_label(e: dict[str, Any]) -> str:
+        # aria-label 给听按钮用（"听 第 1 部分"）
+        title = (e.get("title") or "").split("·")[-1].strip() or e.get("title", "这一集")
+        return title[:24] + ("…" if len(title) > 24 else "")
+
     def _ep_card(e: dict[str, Any], compact: bool = False) -> str:
         dur = _fmt_dur(e.get("duration", 0))
         ep_idx = e.get("episode")
@@ -411,13 +416,28 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
   </div>
 </section>"""
 
-    # Series 卡片网格
+    # Series 卡片网格 — 合集型：每卡展示一个 series 含旗下 ep 的紧凑列表
+    # 区别于"全部单集"扁平流：合集卡看 series 全貌，单集流按发布时间刷新。
     series_cards = []
     for g in groups:
-        cover_letter = (g["series"] or "?").strip()[0]
+        cover_letter = (g["series"] or "?").strip()[0] if (g["series"] or "?").strip() else "?"
         dur_total = _fmt_dur(g["total_duration"])
-        # 取每组描述（短）
+        # 该 series 的 ep 紧凑行（编号 / 标题 / 时长 / play）
+        ep_rows = []
+        for it in g.get("items", []):
+            ep_rows.append(
+                f'<li class="series-ep-item">'
+                f'<span class="series-ep-num">EP {int(it.get("ep_index", it.get("episode", 1)) or 1):02d}</span>'
+                f'<a class="series-ep-title" href="{_ep_shownotes_src(it)}" title="{escape(it.get("title",""))}">'
+                f'{escape(_display_title(it))}</a>'
+                f'<span class="series-ep-dur">{_fmt_dur(it.get("duration", 0))}</span>'
+                f'<a class="series-ep-play" href="{_audio_src(it)}" aria-label="听 {_audio_label(it)}" download>▶</a>'
+                f'</li>'
+            )
+        # 该 series 的所有 ep 共享 series 描述（取第一集切片用作节目简介）
         s_desc = g.get("description", "")
+        # 单集描述如果以"（第"开头截掉避免噪音
+        s_desc = s_desc.split("（第")[0].strip() if "（第" in s_desc else s_desc
         series_cards.append(f"""<article class="series-card" data-slug="{escape(g['slug'])}">
   <div class="series-cover" aria-hidden="true" style="background-image:url('{cover_src}')">
     <span class="cover-letter">{escape(cover_letter)}</span>
@@ -426,7 +446,9 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     <h3>{escape(g['series'])}</h3>
     <p class="series-meta">{g['count']} 集 · 总时长 {dur_total}</p>
     <p class="series-desc">{escape(s_desc)}</p>
-    <p class="series-cta"><a href="#latest">收听全部单集 →</a></p>
+    <ol class="series-ep-list">
+{chr(10).join(ep_rows)}
+    </ol>
   </div>
 </article>""")
 
