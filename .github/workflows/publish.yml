@@ -50,12 +50,12 @@ jobs:
       - name: Render index + feed (use existing mp3, no TTS)
         # CI 走 --skip-audio 模式：mp3 资产随 git 走（output/ 入 git）；
         # 仅重新渲染 shownotes / RSS / index.html。
+        # build.py 在 is_dir() 时递归收集 drafts/**/ep-*.md，一次跑完全部 series。
         env:
           # 不设 MINIMAX_API_KEY：edge-tts backend 不需要 key
           TTS_BACKEND: edge-tts
         run: |
-          python -m src.build drafts/ --skip-audio --log-level INFO || \
-            python -m src.build drafts/*/ --skip-audio --log-level INFO
+          python -m src.build drafts/ --skip-audio --log-level INFO
 
       - name: Deploy output/ to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

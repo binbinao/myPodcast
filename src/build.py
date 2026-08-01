@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 from pathlib import Path
 from typing import Any
 
@@ -71,7 +72,10 @@ def run_one(episode_path: Path, out_dir: Path, cfg: dict[str, Any]) -> None:
         ep_dir = Path(_ep_out_dir(str(out_dir), series_title_v, ep_index, series_slug))
         mp3 = ep_dir / "episode.mp3"
         if not mp3.exists():
-            raise SystemExit(f"✗ --skip-audio 但 {mp3} 不存在；先跑一次非 skip-audio build")
+            # --skip-audio 但没有现成 mp3：常见于 CI 拿到一批新 draft 但还没 build 过音频。
+            # 不再 raise（之前会直接 SystemExit 让 CI 红），改成 warning + 跳过本集。
+            log.warning(f"      ⊘ {mp3} 不存在，跳过本集（先跑一次非 skip-audio build 生音频）")
+            return "skipped"  # 信号给 run() 区分「正常跳过（TTS 跳）」和「无产物跳过」
         duration = _ffprobe_duration(mp3)
         size = mp3.stat().st_size
         log.info(f"      → (skip) {mp3}  ({duration // 60}分{duration % 60}秒, {size // 1024}KB)")
@@ -122,11 +126,15 @@ def run(
     out_dir = Path(out_dir)
 
     if target.is_dir():
-        scripts = sorted(target.glob("*.md"))
+        # 递归收集 drafts 下所有 ep-XX.md（命名重构后：drafts/<series>/ep-XX.md 嵌套结构）
+        # 只匹配 ep-XX.md 形式，过滤潜在的 README/笔记文件
+        scripts = sorted(
+            p for p in target.glob("**/*.md") if re.match(r"^ep-\d+\.md$", p.name)
+        )
         if not scripts:
-            raise SystemExit(f"✗ 目录 {target} 下没有脚本 markdown")
+            raise SystemExit(f"✗ 目录 {target} 下没有 ep-XX.md 脚本")
     else:
-        scripts = [target]
+        scripts = [target]  # 单文件路径（local 调试用）
 
     # 过滤脚本列表（断点续传）
     if only:
@@ -171,8 +179,11 @@ def run(
 
         log.info(f"===== [{i}/{n_total}] {s.name} =====")
         try:
-            run_one(s, out_dir, cfg)
-            n_run += 1
+            result = run_one(s, out_dir, cfg)
+            if result == "skipped":
+                skipped.append(s.name)
+            else:
+                n_run += 1
         except Exception as e:  # noqa: BLE001
             failed.append(s.name)
             log.error(f"  ✗ {s.name} 失败: {e}")
