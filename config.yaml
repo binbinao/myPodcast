@@ -1,0 +1,37 @@
+# myPodcast 配置
+# 角色 -> 音色 映射（edge-tts 中文音色）
+# 可用音色参考：zh-CN-XiaoxiaoNeural(女,温暖) / zh-CN-YunxiNeural(男,活力)
+#               zh-CN-YunyangNeural(男,新闻) / zh-CN-XiaoyiNeural(女,温柔)
+
+podcast:
+  title: "小搭电台"
+  author: "小搭 & 斌哥"
+  language: "zh-CN"
+  website: "https://example.com"   # 改成你的节目站地址
+  description: "把文章、白皮书、长文，变成能听的电台。"
+
+# 默认角色音色（脚本里 [host] [guest] 等标签对应这里）
+voices:
+  host: "zh-CN-XiaoxiaoNeural"
+  guest: "zh-CN-YunxiNeural"
+  default: "zh-CN-XiaoxiaoNeural"
+
+# TTS 参数
+tts:
+  rate: "+0%"      # 语速：+10% 更快 / -10% 更慢
+  volume: "+0%"    # 音量
+  pitch: "+0Hz"
+  pause_ms: 600    # 每段之间的停顿(毫秒)
+
+# 可选 LLM 润色（留空则跳过，直接使用脚本原稿）
+# 支持任何 OpenAI 兼容接口；不填 key 时流水线假设输入已是口播稿
+llm:
+  enable: false
+  base_url: "https://api.openai.com/v1"
+  api_key: ""
+  model: "gpt-4o-mini"
+  # 润色提示词（把书面文改成口语播客稿）
+  prompt: |
+    你是一名播客文案编辑。把下面的书面内容改写成自然、口语化、适合双人播客朗读的脚本。
+    用 [host] 和 [guest] 标注说话人，交替发言。保留关键信息，去掉冗余书面词，
+    适当加入过渡句和互动。只输出脚本正文，不要解释。

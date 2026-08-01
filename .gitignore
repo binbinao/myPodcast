@@ -1,0 +1,5 @@
+# 忽略生成产物与缓存
+output/
+__pycache__/
+*.pyc
+.venv/
