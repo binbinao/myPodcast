@@ -205,8 +205,8 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     # Featured：第一组第一集
     featured = groups[0]["items"][0] if groups else None
     featured_slug = featured["slug"] if featured else None
-    # Latest：featured 之外的全部按日期倒序
-    latest = [e for e in episodes if e.get("slug") != featured_slug]
+    # Latest：全部单集按日期倒序
+    latest = list(episodes)
     latest.sort(key=lambda x: x.get("date", ""), reverse=True)
 
     def _audio_src(e: dict[str, Any]) -> str:
@@ -226,10 +226,11 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     {f'<span class="badge">{escape(ep_label)}</span>' if ep_label else ''}
     <span class="duration">{dur}</span>
   </div>
-  <h3 class="ep-title"><a href="{_audio_src(e)}">听</a> {escape(e.get('title',''))}</h3>
+  <h3 class="ep-title">{escape(e.get('title',''))}</h3>
   <p class="ep-desc">{escape(e.get('description',''))}</p>
   <audio controls preload="none" src="{_audio_src(e)}"></audio>
   <div class="ep-links">
+    <a href="{_audio_src(e)}">收听</a>
     <a href="{e.get('slug','')}/shownotes.md">Shownotes</a>
     <a href="{_audio_src(e)}" download>下载</a>
   </div>
@@ -255,7 +256,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
   </div>
   <div class="hero-content">
     <p class="hero-eyebrow">最新一期 · <time datetime="{featured.get('date','')}">{featured.get('date','')}</time></p>
-    <h1 class="hero-title">{escape(featured.get('title',''))}</h1>
+    <h1 class="hero-title">{escape(featured.get('series') or featured.get('title',''))}</h1>
     <p class="hero-desc">{escape(featured.get('description',''))}</p>
     <div class="hero-cta">
       <a class="btn btn-primary" href="{_audio_src(featured)}" data-action="play-now">▶ 现在就听</a>
@@ -279,31 +280,20 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
         dur_total = _fmt_dur(g["total_duration"])
         # 取每组描述（短）
         s_desc = g.get("description", "")
-        # 取首图 mp3 第一个 episode
-        first = g["items"][0]
-        items_html = "\n".join(
-            f"""<li>
-  <span class="li-title">{escape(it.get('title','').split('·',1)[-1].strip())}</span>
-  <span class="li-meta">{_fmt_dur(it.get('duration',0))} · <a href="{_audio_src(it)}">听</a></span>
-</li>""" for it in g["items"][:5]
-        )
         series_cards.append(f"""<article class="series-card" data-slug="{escape(g['slug'])}">
-  <div class="series-cover" aria-hidden="true">
+  <div class="series-cover" aria-hidden="true" style="background-image:url('{cover_src}')">
     <span class="cover-letter">{escape(cover_letter)}</span>
   </div>
   <div class="series-body">
     <h3>{escape(g['series'])}</h3>
     <p class="series-meta">{g['count']} 集 · 总时长 {dur_total}</p>
     <p class="series-desc">{escape(s_desc)}</p>
-    <ul class="episode-list">
-      {items_html}
-    </ul>
-    <p class="series-cta"><a href="#latest">查看全部</a></p>
+    <p class="series-cta"><a href="#latest">收听全部单集 →</a></p>
   </div>
 </article>""")
 
     # Latest 单集（featured 之外的全部，显示最近 6 个）
-    latest_html = "\n".join(_ep_card(e, compact=True) for e in latest[:6])
+    latest_html = "\n".join(_ep_card(e, compact=True) for e in latest)
 
     # About
     about_html = f"""<section class="about">
@@ -370,17 +360,18 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
 
     # Header
     header_html = f"""<header class="site-header">
-  <a class="brand" href="#top">
+  <a class="brand" href="#">
     <span class="brand-mark" aria-hidden="true">🎙</span>
     <span class="brand-text">{escape(title)}</span>
   </a>
-  <nav class="site-nav" aria-label="主导航">
+  <nav class="site-nav" id="site-nav" aria-label="主导航">
     <a href="#series">节目</a>
     <a href="#latest">最新</a>
     <a href="#about">关于</a>
     <a href="#subscribe">订阅</a>
     <a class="nav-cta" href="feed.xml">RSS</a>
   </nav>
+  <button class="nav-toggle" aria-label="打开菜单" aria-expanded="false" aria-controls="site-nav">☰</button>
 </header>"""
 
     # All HTML
@@ -396,6 +387,9 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
 <meta property="og:type" content="website">
 <meta property="og:image" content="{og_image}">
 <link rel="alternate" type="application/rss+xml" title="{escape(title)}" href="feed.xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;700&display=swap" rel="stylesheet">
 <style>
 :root {{
   --bg: #0b0c10;
@@ -404,14 +398,15 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
   --border: #262833;
   --text: #f4f4f6;
   --text-soft: #b6b8c4;
-  --text-dim: #7a7d8c;
+  --text-dim: #9a9eae;
   --accent: #ff7a59;
   --accent-glow: rgba(255,122,89,0.18);
   --link: #ffb59a;
   --radius: 14px;
   --max: 1100px;
-  --font-display: ui-serif, "Newsreader", "Fraunces", "Source Serif Pro", "PingFang SC", serif;
-  --font-body: ui-sans-serif, "Inter", "IBM Plex Sans", "PingFang SC", "Helvetica Neue", sans-serif;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --font-display: "Fraunces", "Newsreader", "Source Serif Pro", "PingFang SC", serif;
+  --font-body: "DM Sans", "IBM Plex Sans", "PingFang SC", "Helvetica Neue", sans-serif;
 }}
 * {{ box-sizing: border-box; }}
 html, body {{ margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--font-body); -webkit-font-smoothing: antialiased; line-height: 1.55; }}
@@ -422,6 +417,7 @@ img {{ max-width: 100%; display: block; }}
 /* Skip link / a11y */
 .skip {{ position: absolute; left: -9999px; top: 8px; background: var(--accent); color: #000; padding: 8px 16px; border-radius: 6px; }}
 .skip:focus {{ left: 8px; z-index: 10; }}
+a:focus-visible, .btn:focus-visible, .sub-card:focus-visible, .nav-toggle:focus-visible, .series-cta a:focus-visible {{ outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }}
 
 /* Header */
 .site-header {{ position: sticky; top: 0; z-index: 10; backdrop-filter: blur(12px); background: rgba(11,12,16,0.78); border-bottom: 1px solid var(--border); }}
@@ -432,6 +428,7 @@ img {{ max-width: 100%; display: block; }}
 .site-nav a {{ color: var(--text-soft); }}
 .site-nav a:hover {{ color: var(--text); text-decoration: none; }}
 .nav-cta {{ border: 1px solid var(--accent); color: var(--accent) !important; padding: 6px 12px; border-radius: 8px; }}
+.nav-toggle {{ display: none; background: none; border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 10px; font-size: 18px; cursor: pointer; align-items: center; justify-content: center; }}
 
 /* Hero */
 .hero {{ max-width: var(--max); margin: 0 auto; padding: 56px 24px 80px; display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 56px; align-items: center; }}
@@ -444,7 +441,7 @@ img {{ max-width: 100%; display: block; }}
 .hero-title {{ font-family: var(--font-display); font-size: clamp(34px, 5vw, 56px); line-height: 1.08; font-weight: 700; margin: 0 0 16px; letter-spacing: -0.02em; }}
 .hero-desc {{ color: var(--text-soft); font-size: 18px; margin: 0 0 28px; max-width: 56ch; }}
 .hero-cta {{ display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }}
-.btn {{ display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 10px; font-weight: 600; font-size: 15px; transition: transform .15s ease, background .15s ease; }}
+.btn {{ display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 10px; font-weight: 600; font-size: 15px; transition: transform .15s var(--ease), background .15s var(--ease); }}
 .btn-primary {{ background: var(--accent); color: #0b0c10; }}
 .btn-primary:hover {{ background: #ff8d6f; text-decoration: none; transform: translateY(-1px); }}
 .btn-ghost {{ border: 1px solid var(--border); color: var(--text); }}
@@ -458,9 +455,9 @@ section > p.lead {{ color: var(--text-soft); margin: 0 0 32px; font-size: 16px; 
 
 /* Series grid */
 .series-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-top: 32px; }}
-.series-card {{ background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: transform .2s ease, border-color .2s ease; }}
+.series-card {{ background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: transform .2s var(--ease), border-color .2s var(--ease); }}
 .series-card:hover {{ transform: translateY(-2px); border-color: var(--accent); }}
-.series-cover {{ aspect-ratio: 16/9; background: linear-gradient(135deg, #181a23, #0b0c10); position: relative; overflow: hidden; border-bottom: 1px solid var(--border); }}
+.series-cover {{ aspect-ratio: 16/9; background: linear-gradient(135deg, #181a23, #0b0c10); background-size: cover; background-position: center; position: relative; overflow: hidden; border-bottom: 1px solid var(--border); }}
 .series-cover::before {{ content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 70% 30%, var(--accent-glow), transparent 60%); }}
 .cover-letter {{ position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-display); font-size: 96px; color: var(--accent); opacity: 0.6; }}
 .series-body {{ padding: 20px 22px 22px; }}
@@ -496,7 +493,7 @@ section > p.lead {{ color: var(--text-soft); margin: 0 0 32px; font-size: 16px; 
 .subscribe {{ text-align: center; padding-bottom: 80px; }}
 .subscribe-lead {{ color: var(--text-soft); max-width: 60ch; margin: 0 auto 32px; }}
 .subscribe-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; max-width: 880px; margin: 0 auto; }}
-.sub-card {{ display: block; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 18px; text-align: left; color: var(--text); transition: transform .2s ease, border-color .2s ease; }}
+.sub-card {{ display: block; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 18px; text-align: left; color: var(--text); transition: transform .2s var(--ease), border-color .2s var(--ease); }}
 .sub-card:hover {{ border-color: var(--accent); transform: translateY(-2px); text-decoration: none; }}
 .sub-icon {{ display: block; font-size: 28px; margin-bottom: 8px; }}
 .sub-title {{ display: block; font-weight: 600; margin-bottom: 4px; }}
@@ -521,8 +518,9 @@ section > p.lead {{ color: var(--text-soft); margin: 0 0 32px; font-size: 16px; 
   section {{ padding: 40px 20px; }}
   .footer-grid {{ grid-template-columns: 1fr; gap: 24px; }}
   .site-header > * {{ padding: 12px 16px; }}
-  .site-nav {{ display: none; }}
-  .site-nav.nav-open {{ display: flex; flex-wrap: wrap; }}
+  .nav-toggle {{ display: inline-flex; }}
+  .site-nav {{ display: none; position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; gap: 4px; background: var(--bg-soft); padding: 12px 16px; border-bottom: 1px solid var(--border); }}
+  .site-nav.nav-open {{ display: flex; }}
 }}
 
 /* Reduced motion */
@@ -544,8 +542,8 @@ section > p.lead {{ color: var(--text-soft); margin: 0 0 32px; font-size: 16px; 
   </div>
 </section>
 <section id="latest">
-  <h2>最新单集</h2>
-  <p class="lead">按发布日期排序的前几集。</p>
+  <h2>全部单集</h2>
+  <p class="lead">所有已上线单集，按发布日期倒序。</p>
   <div class="ep-grid">
 {latest_html}
   </div>
@@ -563,6 +561,14 @@ document.addEventListener('click', function(e) {{
     e.preventDefault();
   }}
 }});
+var nt = document.querySelector('.nav-toggle');
+if (nt) {{
+  nt.addEventListener('click', function() {{
+    var n = document.getElementById('site-nav');
+    var open = n.classList.toggle('nav-open');
+    nt.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }});
+}}
 </script>
 </body>
 </html>
