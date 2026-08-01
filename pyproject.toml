@@ -1,0 +1,23 @@
+[project]
+name = "mypodcast"
+version = "0.3.0"
+description = "文章转语音播客流水线：raw → prepare → drafts → build → output/RSS"
+requires-python = ">=3.13"
+dependencies = [
+    "edge-tts>=1.1.0",
+    "PyYAML>=6.0",
+    "requests>=2.31",
+    "pypinyin>=0.51",
+]
+
+[project.scripts]
+mypodcast-prepare = "src.prepare:main"
+mypodcast-build = "src.build:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*", "scripts*"]
