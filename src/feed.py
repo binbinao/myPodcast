@@ -44,9 +44,10 @@ _ICON_LIB: dict[str, str] = {
         '</svg>'
     ),
     "play": (
+        # 纯填充三角（去掉 stroke，避免双重描边的"幽灵边"）。
+        # stroke 留 fallback：未来若想做 line-only 风格可换 stroke="currentColor" stroke-width="2"。
         '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" '
-        'viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" '
-        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        'viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">'
         '<polygon points="7 5 19 12 7 19 7 5"/>'
         '</svg>'
     ),
@@ -556,7 +557,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
             "count": g["count"],
             "dur_total": _fmt_dur(g["total_duration"]),
             "description": _hescape(s_desc) if s_desc else "",
-            "items": items,
+            "episodes": items,   # 跟 templates/site/partials/series.html 的 g.episodes 对齐
         })
 
     latest_ctx = _enrich(latest_short)

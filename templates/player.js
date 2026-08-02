@@ -124,11 +124,15 @@
   }
 
   // 按钮 + 链接 click 拦截（play-now + ep-play + series-ep-play）
+  // 兼容：ep-play button 自己不带 data-audio 时，向外层 article 找。
+  // series-ep-play / Hero 链接 自带 data-audio，行为不变。
   document.addEventListener('click', function (e) {
     var play = e.target.closest('[data-action="play-now"]');
     if (!play) return;
     e.preventDefault();
-    var src = play.getAttribute('data-audio') || play.getAttribute('href');
+    var src = play.getAttribute('data-audio')
+      || (play.closest('[data-audio]') && play.closest('[data-audio]').getAttribute('data-audio'))
+      || play.getAttribute('href');
     if (!src) return;
     var title = play.getAttribute('data-title') || play.getAttribute('aria-label') || '未命名';
     var series = play.getAttribute('data-series') || '';
