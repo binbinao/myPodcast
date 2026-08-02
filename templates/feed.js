@@ -248,11 +248,12 @@
 
   // 分页 click handler（一次性事件委托）— 替代上一版的 +N 折叠行
   // 缓存：每张 series-card 的 _items（g.items 引用）
+  // 注意：列表级 pager 已挪出 #series-list grid，事件冒泡不到 #series-list；
+  // 所以绑到 document 上做全局委托，匹配 .pg-arrow / .pg-num 任意位置都生效。
   function bindSeriesPagination() {
-    var slot = document.getElementById('series-list');
-    if (!slot || slot._pgBound) return;
-    slot._pgBound = true;
-    slot.addEventListener('click', function (ev) {
+    if (document._pgBound) return;
+    document._pgBound = true;
+    document.addEventListener('click', function (ev) {
       var arrow = ev.target.closest('.pg-arrow');
       var num = ev.target.closest('.pg-num');
       var btn = arrow || num;
@@ -261,7 +262,7 @@
       ev.preventDefault();
       var action = btn.dataset.action || '';
 
-      // ---- 列表级分页：< 1 2 > 在 series-card 之外 ----
+      // ---- 列表级分页：< 1 2 > 在 series-list 之外 ----
       if (action === 'list-prev' || action === 'list-next' || action === 'list-num') {
         var pager = btn.closest('.series-list-pager');
         if (!pager) return;
@@ -272,12 +273,14 @@
         else if (action === 'list-next') next = Math.min(totalPages, cur + 1);
         else next = parseInt(btn.dataset.page, 10);
         if (next === cur) return;
-        // 隐藏所有 list-page，显示目标
-        var grids = slot.querySelectorAll('.series-grid');
-        grids.forEach(function (g) {
-          if (parseInt(g.getAttribute('data-list-page'), 10) === next) g.removeAttribute('hidden');
-          else g.setAttribute('hidden', '');
-        });
+        // 隐藏所有 list-page，显示目标（grids 仍在 #series-list 里）
+        var slot = document.getElementById('series-list');
+        if (slot) {
+          slot.querySelectorAll('.series-grid').forEach(function (g) {
+            if (parseInt(g.getAttribute('data-list-page'), 10) === next) g.removeAttribute('hidden');
+            else g.setAttribute('hidden', '');
+          });
+        }
         // 重渲 pager 整条（保持挪出 #series-list grid，到 parent 末尾居中）
         var newPager = document.createElement('div');
         newPager.innerHTML = listPagerHtml(totalPages, next);
