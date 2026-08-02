@@ -80,7 +80,7 @@ a:focus-visible, .btn:focus-visible, .sub-card:focus-visible, .nav-toggle:focus-
 .hero-art { position: relative; aspect-ratio: 1 / 1; border-radius: 24px; overflow: hidden; background: var(--bg-soft); border: 1px solid var(--border); }
 .art-gradient { position: absolute; inset: 0; background: radial-gradient(circle at 30% 20%, var(--color-accent-veil-strong), transparent 55%), radial-gradient(circle at 80% 80%, var(--color-accent-2-veil), transparent 60%), linear-gradient(160deg, var(--bg-card), var(--bg)); }
 .art-glyph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--color-on-art); filter: drop-shadow(0 0 20px var(--accent-glow)); }
-.art-glyph svg { width: 64px; height: 64px; }
+.art-glyph svg { width: 48px; height: 48px; }
 .hero-eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: 1px; font-size: 12px; font-weight: 600; margin: 0 0 14px; }
 .hero-title {
   font-family: var(--font-display);
