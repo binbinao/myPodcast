@@ -63,31 +63,21 @@
   }
 
   function renderLatest(groups) {
-    var LATEST_PER_SERIES = 3;   // 每 series 前 N 集展示在 latest 区
     var PAGE_SIZE = 3;            // latest 分页：每页 3 张 ep-card（跟 series 区分页视觉一致）
     var cards = [];
-    var overflows = [];
     groups.forEach(function (g) {
-      g.items.slice(0, LATEST_PER_SERIES).forEach(function (e) { cards.push(e); });
-      var rest = g.items.slice(LATEST_PER_SERIES);
-      if (rest.length) {
-        overflows.push({ series: g.series, slug: g.slug, remaining: rest.length });
-      }
+      // 全部 ep 都展开进 latest，不截取也不折叠成 overflow——分页自己处理
+      g.items.forEach(function (e) { cards.push(e); });
     });
     // featured = cards[0]（hero 已经在静态模板里展示，这里跳过）
-    // 拍平后分页：cards.slice(1) + overflows 一起放进列表
     var allItems = cards.slice(1).map(function (e) { return { kind: 'ep', ep: e }; });
-    overflows.forEach(function (o) { allItems.push({ kind: 'overflow', o: o }); });
     var totalPages = Math.max(1, Math.ceil(allItems.length / PAGE_SIZE));
     var html = '';
     for (var p = 1; p <= totalPages; p++) {
       var slice = allItems.slice((p - 1) * PAGE_SIZE, p * PAGE_SIZE);
       html += '<div class="ep-list-page" data-ep-page="' + p + '"'
         + (p === 1 ? '' : ' hidden') + '>';
-      slice.forEach(function (it) {
-        if (it.kind === 'ep') html += epCardHtml(it.ep);
-        else html += overflowCardHtml(it.o);
-      });
+      slice.forEach(function (it) { html += epCardHtml(it.ep); });
       html += '</div>';
     }
     // 注意：epListPagerHtml 由 init() 单独 append 到 #latest-list 的 parent（跟 series 分页
