@@ -498,7 +498,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     拆解：
     - _hero_html / _about_html / _subscribe_html：3 个 section 独立函数
     - templates/site/base.html：根模板
-    - templates/site/partials/{header,series,latest,player}.html：4 个 partial
+    - templates/site/partials/{header,series,latest,footer,player}.html：5 个 partial
     - 站点级数据全走 ctx 字典
     """
     out_dir = Path(out_dir)
