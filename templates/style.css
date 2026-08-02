@@ -228,6 +228,8 @@ section > p.lead { color: var(--text-soft); margin: 0 0 32px; font-size: 16px; m
 
 /* Footer */
 .site-footer { background: var(--bg-soft); border-top: 1px solid var(--border); margin-top: 80px; padding: 48px 24px 24px; }
+.footer-credit { max-width: var(--max); margin: 0 auto; text-align: center; color: var(--text-dim); font-size: 12px; }
+.footer-credit a { color: var(--text-soft); }
 .footer-grid { max-width: var(--max); margin: 0 auto; display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 40px; }
 .footer-brand h3 { font-family: var(--font-display); margin: 0 0 8px; font-size: 20px; }
 .footer-brand p { color: var(--text-soft); margin: 0; font-size: 14px; }
