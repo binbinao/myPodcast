@@ -8,7 +8,7 @@ podcast:
   language: "zh-CN"
   website: "https://binbinao.github.io/myPodcast"   # 节目站地址（RSS 绝对链接 / Apple 订阅用）
   description: "把文章、白皮书、长文，变成能听的电台。"   # 全局描述（meta/og/RSS）
-  tagline: "把文章变成能听的电台。"                       # 站点 1-2 处的核心 slogan（M2-3 收敛）
+  tagline: "把文章变成能听的电台节目。"                   # 站点 1-2 处的核心 slogan（M2-3 收敛）
   hero_desc: |                                          # Hero 区 slogan 下方的一段扩展：吸引听众来听
     一杯咖啡的时间，换一种读法。我们替你把那些值得反复看的文章
     念完——白皮书、行业分析、长文笔记，拆成十几分钟的音频，
