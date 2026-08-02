@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>myPodcast 全流程图集</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 20px 60px;
+    background: #0d1117; color: #e6edf3;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; }
+  header { margin-bottom: 28px; }
+  h1 { font-size: 22px; font-weight: 600; margin: 0 0 8px; }
+  header p { color: #8b949e; font-size: 13px; margin: 4px 0; }
+  .card {
+    background: #161b22; border: 1px solid #30363d; border-radius: 12px;
+    padding: 20px 24px 16px; margin-bottom: 24px;
+  }
+  .card h2 {
+    font-size: 16px; font-weight: 600; margin: 0 0 4px;
+    color: #ff7a59; letter-spacing: 0.3px;
+  }
+  .card .src { color: #8b949e; font-size: 12px; margin: 0 0 14px; }
+  .mermaid-box {
+    background: #0d1117; border: 1px solid #30363d; border-radius: 8px;
+    padding: 16px; overflow-x: auto; margin: 12px 0 16px;
+  }
+  .mermaid-box svg { max-width: 100%; height: auto; }
+  ul.points { margin: 8px 0 0; padding-left: 20px; color: #c9d1d9; font-size: 13px; }
+  ul.points li { margin: 4px 0; }
+  code {
+    background: #21262d; border-radius: 4px; padding: 1px 5px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; color: #79c0ff;
+  }
+  .err { color: #f85149; font-size: 13px; }
+  .badge { display: inline-block; background: #238636; color: #fff; font-size: 11px; border-radius: 20px; padding: 2px 10px; margin-left: 8px; vertical-align: 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>myPodcast 全流程图集 <span class="badge">mermaid 渲染 8/8</span></h1>
+  <p>从一篇 markdown 文章到可订阅的播客站，完整流水线（2026-08-02 review，与代码交叉核对）。</p>
+  <p>对应 Markdown 版本：<code>docs/pipeline-flow-2026-08-02.md</code>（GitHub / Obsidian / Typora 可直接渲染）。</p>
+</header>
+
+<!-- ============ 图 1 ============ -->
+<div class="card">
+  <h2>图 1 · 全景总览（End-to-End）</h2>
+  <p class="src">src/prepare → drafts 评审门 → src/build → output → CI</p>
+  <div class="mermaid-box"><div id="mmd1"></div></div>
+  <ul class="points">
+    <li>三层数据层：<code>raw/</code>（源文章）→ <code>drafts/</code>（评审门）→ <code>output/</code>（最终产物，入库 git 跟踪）。</li>
+    <li><code>prepare</code> 只产出脚本不进音频；<code>build</code> 是通往 <code>output/</code> 的唯一路径。</li>
+    <li><code>build</code> 对 draft <b>只读</b>——正文逐字节来自 draft，不再二次 LLM 改写。</li>
+  </ul>
+</div>
+
+<!-- ============ 图 2 ============ -->
+<div class="card">
+  <h2>图 2 · prepare 内部流程</h2>
+  <p class="src">命名硬门 → 三决策门 → 分集 → LLM/骨架 → 落盘 drafts</p>
+  <div class="mermaid-box"><div id="mmd2"></div></div>
+  <ul class="points">
+    <li><b>三决策门原则</b>：AI 先给推荐 + 理由，用户永远有最终决定权；<code>--yes</code>/<code>--auto</code> 全自动采纳（默认交互）。</li>
+    <li>frontmatter 三件套（<code>format</code>/<code>voice</code>/<code>split_strategy</code>）齐全时尊重用户，不重复打扰。</li>
+    <li><code>voice</code> 与 <code>split_strategy</code> 会写进 draft frontmatter，build 重渲时按 draft 脏值复现——<b>commit 前必须人工 review draft frontmatter</b>。</li>
+  </ul>
+</div>
+
+<!-- ============ 图 3 ============ -->
+<div class="card">
+  <h2>图 3 · 三决策门交互详图</h2>
+  <p class="src">src/decisions.py · 每门「AI 推荐 → 用户拍板」</p>
+  <div class="mermaid-box"><div id="mmd3"></div></div>
+  <ul class="points">
+    <li>每门都是「AI 推荐 → 用户拍板」，<code>r</code> 可重新分析，全程不猜用户。</li>
+    <li><code>recommend_split</code> 与最终生成走同一 <code>plan_episodes</code>，杜绝「推荐 3 集实际生成 5 集」的偏差。</li>
+  </ul>
+</div>
+
+<!-- ============ 图 4 ============ -->
+<div class="card">
+  <h2>图 4 · 分集策略决策树</h2>
+  <p class="src">src/split.py · by_h2 / by_chars / by_duration</p>
+  <div class="mermaid-box"><div id="mmd4"></div></div>
+  <ul class="points">
+    <li>分集原则：多章节每章一集、不按字数合并；仅单块长文按 <code>max_episode_chars</code> 切，超长单章再按 H3/段落细分。</li>
+    <li>关键坑：<code>split._strip_md</code> 必须剔除水平线 <code>---</code>（raw 用它分节但残留成段落，edge-tts 对纯 <code>---</code> 返回 <code>No audio was received</code>）。</li>
+  </ul>
+</div>
+
+<!-- ============ 图 5 ============ -->
+<div class="card">
+  <h2>图 5 · build 5 步 pipeline + 断点续传</h2>
+  <p class="src">src/build.py · manifest source_hash 幂等跳过</p>
+  <div class="mermaid-box"><div id="mmd5"></div></div>
+  <ul class="points">
+    <li>断点续传：<code>source_hash = sha256(source)[:16]</code> 未变即跳过；<code>--only ep-XX</code> / <code>--from</code> / <code>--retry-failed</code> / <code>--force</code> 控制粒度。</li>
+    <li><b><code>--skip-audio</code> 在 manifest 已注册集上幂等跳过整个 ep</b>——真正验证要用 <code>--only ep-XX --force</code>（真 TTS）或 <code>--skip-audio --force</code>（重渲）。</li>
+    <li>验证信号：<b>git status 有变化才算真通过</b>，不能凭「build 没报错」。</li>
+  </ul>
+</div>
+
+<!-- ============ 图 6 ============ -->
+<div class="card">
+  <h2>图 6 · TTS 内部（后端路由 + 音频拼接）</h2>
+  <p class="src">src/tts.py · minimax / edge-tts · ffmpeg concat</p>
+  <div class="mermaid-box"><div id="mmd6"></div></div>
+  <ul class="points">
+    <li>后端切换<b>只改 config</b>（<code>tts.backend</code>），业务代码零改动（<code>@register</code> 抽象）。</li>
+    <li>MiniMax 的 mp3 响应 mime 标签是 <code>mp4a</code>（实际编码 mp3），与 silence 拼接时 ffmpeg 会 exit 234——concat filter 前加 <code>aformat</code> 归一化解决。</li>
+    <li>韵律：heuristic（零依赖，按标点）输出 emotion 给 minimax 用；edge-tts 只吃 rate/pitch。</li>
+  </ul>
+</div>
+
+<!-- ============ 图 7 ============ -->
+<div class="card">
+  <h2>图 7 · 发布部署（CI + gh-pages）</h2>
+  <p class="src">.github/workflows/publish.yml · 改 src/** 触发</p>
+  <div class="mermaid-box"><div id="mmd7"></div></div>
+  <ul class="points">
+    <li>改 <code>src/**</code> 会触发 CI 重跑——改 <code>src/build.py</code> 等必须本地测通再 push。</li>
+    <li>mp3 是付费 TTS 交付物，随仓库走；CI 永远 skip-audio。</li>
+  </ul>
+</div>
+
+<!-- ============ 图 8 ============ -->
+<div class="card">
+  <h2>图 8 · draft 生命周期状态机（ai_stage）</h2>
+  <p class="src">src/stages.py · skeleton → generated → reviewed → frozen</p>
+  <div class="mermaid-box"><div id="mmd8"></div></div>
+  <ul class="points">
+    <li><code>set_stage</code> 只改 frontmatter 的 <code>ai_stage</code> 一行，正文逐字节保留。</li>
+    <li>build 按 stage 告警：<code>reviewed</code>/<code>frozen</code> 静默；<code>skeleton</code>/<code>generated</code> 提示先审再 build。</li>
+  </ul>
+</div>
+
+</div>
+
+<script type="text/plain" id="mmd-src-1">
+flowchart TD
+    subgraph IN["① 输入层 raw/"]
+        A1["📄 文章 MD<br/>frontmatter: title / date / format /<br/>series_slug / voice / split_strategy"]
+    end
+
+    subgraph PREP["② prepare（src.prepare）"]
+        B1["naming_enforce 硬门<br/>自动 rename 违规物理名"]
+        B2["三决策门<br/>format / voice / split_strategy<br/>AI 推荐 + 用户拍板"]
+        B3["plan_episodes 分集<br/>by_h2 / by_chars / by_duration"]
+        B4["generate_script<br/>LLM 全自动 or 骨架半自动"]
+    end
+
+    subgraph DRAFT["③ 评审门 drafts/"]
+        C1["drafts/&lt;date-slug&gt;/ep-XX.md<br/>+ _decisions.json 审计"]
+        C2["人工编辑 [host]/[guest]<br/>--mark-reviewed / --freeze"]
+    end
+
+    subgraph BUILD["④ build（src.build）"]
+        D1["5 步 pipeline<br/>read → parse → validate<br/>→ TTS → shownotes/RSS"]
+    end
+
+    subgraph OUT["⑤ 输出层 output/"]
+        E1["series/&lt;slug&gt;/ep-NN/<br/>episode.mp3 + shownotes.md"]
+        E2["feed.xml + index.html<br/>+ manifest.json"]
+    end
+
+    subgraph DEP["⑥ 发布"]
+        F1["git push → CI 单测 → naming_enforce<br/>→ build --skip-audio → gh-pages"]
+        F2["https://binbinao.github.io/myPodcast/"]
+    end
+
+    A1 --> B1 --> B2 --> B3 --> B4 --> C1 --> C2 --> D1 --> E1 & E2
+    E1 & E2 --> F1 --> F2
+</script>
+
+<script type="text/plain" id="mmd-src-2">
+flowchart TD
+    RAW["raw/ 文章"] --> ENF["naming_enforce 硬门<br/>enforce_raw_files + enforce_drafts_dirs"]
+    ENF --> META["解析 frontmatter<br/>title / format / episodes / date / slug"]
+
+    META --> CHECK{"frontmatter 三件套齐？<br/>format + voice + split_strategy"}
+    CHECK -- 齐 --> RESPECT["尊重用户既定决策<br/>跳过交互门，不打扰"]
+    CHECK -- 缺任一 --> GATE["collect_decisions 三决策门<br/>AI 推荐 + 用户拍板"]
+    GATE -->|"--yes / --auto（CI 直通）"| AUTO["直接采纳 AI 推荐<br/>CI / 批处理用"]
+
+    RESPECT --> SAVE["写 _decisions.json 审计<br/>与 draft 同目录"]
+    AUTO --> SAVE
+    GATE --> SAVE
+    SAVE --> SPLIT["plan_episodes(strategy)<br/>返回真实集数 EpisodePlan<br/>（含短引言合并进第 1 集）"]
+
+    SPLIT --> GEN{"llm.enable 且<br/>resolve_api_key 有 key?"}
+    GEN -- 是 --> LLM["_auto：LLM 改写成口播稿<br/>solo 全 [host] / duo [host]+[guest]"]
+    LLM --> CLEAN["validate BLOCK 校验<br/>命中 → heuristic_clean 二次清洗"]
+    CLEAN --> WRAP
+    GEN -- 否 --> SKEL["_skeleton：纯 [host] 骨架<br/>ai_stage = skeleton（无需 key）"]
+    SKEL --> WRAP["_wrap 组装 frontmatter<br/>title / chapter / format / series / voice<br/>split_strategy / source / ai_stage"]
+    WRAP --> DRAFTS["drafts/&lt;date-slug&gt;/ep-XX.md"]
+</script>
+
+<script type="text/plain" id="mmd-src-3">
+flowchart TD
+    START["collect_decisions(article, cfg, auto_accept)"] --> QF{"门 1 · format？"}
+    QF --> RF["AI 推荐：启发式 / LLM 推断<br/>solo 单人 or duo 双人"]
+    RF --> UF{"用户输入（stdin）"}
+    UF -- 回车 --> ACF["采纳推荐"]
+    UF -- 1/2/3/4 --> CHF["选其他候选"]
+    UF -- r --> RERUN1["重新分析"]
+    ACF --> QV{"门 2 · voice？"}
+    CHF --> QV
+    RERUN1 --> QF
+    QV --> RV["AI 推荐：voicecaster 音色<br/>5 类文章信号 → 音色映射"]
+    RV --> UV{"用户输入（stdin）"}
+    UV -- 回车 --> ACV["采纳推荐"]
+    UV -- 1/2/3/4 --> CHV["选其他"]
+    UV -- r --> RERUN2["重新分析"]
+    RERUN2 --> QV
+    ACV --> QS{"门 3 · split_strategy？"}
+    CHV --> QS
+    QS --> RS["AI 推荐：直接调 plan_episodes(strategy)<br/>实测返回真实集数（保证推荐与生成一致）"]
+    RS --> US{"用户输入（stdin）"}
+    US -- 回车 --> ACS["采纳推荐"]
+    US -- 1/2/3 --> CHS["选其他"]
+    US -- r --> RERUN3["重新分析"]
+    RERUN3 --> QS
+    ACS --> DONE["决策写入 draft frontmatter<br/>format / voice / split_strategy<br/>+ 落 _decisions.json"]
+    CHS --> DONE
+</script>
+
+<script type="text/plain" id="mmd-src-4">
+flowchart TD
+    ARTICLE["文章正文"] --> S{"split_strategy"}
+    S -- by_h2 --> H2["按 H2 章节拆集<br/>（默认：多章节每章一集）"]
+    H2 --> C1{"章节 &lt; min_episode_chars(600)？"}
+    C1 -- 是 --> MERGE["并入上一集"]
+    C1 -- 否 --> KEEP["独立成集"]
+    MERGE --> L1{"单集 &gt; max_episode_chars(3000)？"}
+    KEEP --> L1
+    L1 -- 是 --> SUB["超长单章按 H3 / 段落再切"]
+    L1 -- 否 --> PLAN["EpisodePlan 列表"]
+    SUB --> PLAN
+    S -- by_chars --> CH["按固定字数切分<br/>max_episode_chars 控制单集上限"]
+    CH --> PLAN
+    S -- by_duration --> DU["按时长切分<br/>max_duration_min + chars_per_minute(250)"]
+    DU --> PLAN
+    PLAN --> INTRO{"存在短引言？"}
+    INTRO -- 是 --> M1["合并进第 1 集"]
+    INTRO -- 否 --> FINAL["最终分集方案<br/>prepare 落盘即事实源"]
+    M1 --> FINAL
+</script>
+
+<script type="text/plain" id="mmd-src-5">
+flowchart TD
+    C0["读 manifest.json<br/>existing_keys: series_slug::ep-XX → source_hash"] --> C1{"key 已注册 且<br/>source_hash 未变 且<br/>mp3 存在？"}
+    C1 -- 是 --> SKIP["跳过整集 ⊝<br/>产物 0 变更（幂等）"]
+    C1 -- 否 --> R1["[1/5] 读取 draft<br/>stage 告警：reviewed/frozen 静默<br/>legacy 无字段只告警"]
+    R1 --> R2["[2/5] parse_script 解析<br/>frontmatter + [host]/[guest] 分段"]
+    R2 --> R3["[3/5] validate_script 质量门禁<br/>emoji / 零宽 / md 残留 / 长度 / 角色标签"]
+    R3 -- BLOCK --> FAIL["PipelineError → 计入 failed"]
+    R3 -- 通过 --> R4{"--skip-audio？"}
+    R4 -- 是 --> R4B{"mp3 已存在？"}
+    R4B -- 是 --> R5["ffprobe 读现有时长<br/>跳过 TTS（CI 重渲模式）"]
+    R4B -- 否 --> WARN["⚠ 无产物，跳过本集<br/>先跑一次正常 build 生音频"]
+    R4 -- 否 --> TTS["TTS 合成 episode.mp3<br/>voicecaster 选音色（仅 solo/minimax）<br/>prosody 注入 emotion"]
+    R5 --> S1["[4/5] 写 shownotes.md"]
+    TTS --> S1
+    S1 --> S2["[5/5] register_episode → manifest"]
+    FAIL --> FIN{"failed 非空？"}
+    FIN -- 是 --> EXIT1["sys.exit(1)<br/>不重建 RSS/index（防残缺站点）"]
+    FIN -- 否 --> OK["重建 feed.xml + index.html ✓"]
+    SKIP --> FIN
+</script>
+
+<script type="text/plain" id="mmd-src-6">
+flowchart TD
+    SEG["segments 分段列表"] --> BK{"cfg.tts.backend"}
+    BK -- minimax --> EN["_enrich_with_emotion<br/>prosody.plan_sentences 每句打标签<br/>段 emotion = 首句标签"]
+    EN --> BMIN["backends.minimax.build_episode<br/>speech-2.8-hd"]
+    BK -- edge-tts --> BED["backends.edge.build_episode<br/>免费 / 开发烟雾测试"]
+    BMIN --> PER["逐段 TTS 合成<br/>_speak 内置 3 次重试<br/>hex 解码 mp3"]
+    BED --> PER2["逐段 edge-tts<br/>3 次重试"]
+    PER --> CON["ffmpeg concat filter 拼接"]
+    PER2 --> CON
+    CON --> NORM["aformat 归一化<br/>fltp / 32000Hz / mono<br/>解决 mp4a 标签 exit 234"]
+    NORM --> OUT["output/series/&lt;slug&gt;/ep-NN/episode.mp3<br/>返回 (path, duration)"]
+</script>
+
+<script type="text/plain" id="mmd-src-7">
+flowchart LR
+    PUSH["git push main<br/>（触发含 src/** 路径）"] --> TEST["单测 142 case"]
+    TEST --> NAMING["naming_enforce 守护<br/>exit 2 → workflow fail"]
+    NAMING --> BUILD["build --skip-audio<br/>只重渲 shownotes / RSS / index<br/>不动 mp3"]
+    BUILD --> GH["peaceiris/actions-gh-pages@v4<br/>推 output/ → gh-pages 分支"]
+    GH --> URL["https://binbinao.github.io/myPodcast/"]
+</script>
+
+<script type="text/plain" id="mmd-src-8">
+stateDiagram-v2
+    [*] --> skeleton: prepare 无 LLM key，纯骨架稿
+    skeleton --> generated: generate._auto LLM 改写产出
+    generated --> reviewed: prepare --mark-reviewed 人工审阅通过
+    reviewed --> frozen: prepare --freeze 锁稿
+    skeleton --> frozen: 人工直接锁稿
+    generated --> generated: 重新 prepare 覆盖
+    reviewed --> [*]
+    generated --> [*]
+    frozen --> [*]
+</script>
+
+<script>
+  mermaid.initialize({ startOnLoad: false, theme: "dark", securityLevel: "loose", flowchart: { htmlLabels: true, curve: "basis" } });
+
+  (async () => {
+    const sources = document.querySelectorAll("script[type='text/plain'][id^='mmd-src-']");
+    for (const src of sources) {
+      const n = src.id.replace("mmd-src-", "");
+      const target = document.getElementById("mmd" + n);
+      if (!target) continue;
+      try {
+        const { svg } = await mermaid.render("mmd-out-" + n, src.textContent);
+        target.innerHTML = svg;
+      } catch (e) {
+        target.innerHTML = '<div class="err">渲染失败：' + e.message + "</div>";
+      }
+    }
+  })();
+</script>
+
+</body>
+</html>

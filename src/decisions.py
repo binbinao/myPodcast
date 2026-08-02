@@ -107,6 +107,47 @@ def recommend_voice(article_text: str, cfg: dict[str, Any]) -> tuple[str, str, s
     return (chosen, typ, reason, alternatives)
 
 
+def recommend_duo_voices(
+    article_text: str,
+    cfg: dict[str, Any],
+) -> tuple[str, str, str, list[tuple[str, str, str]]]:
+    """为 duo 推荐 host/guest 音色组合。
+
+    返回 (host_voice, guest_voice, reason, alternatives)。
+    alternatives 每项为 (host, guest, label)。推荐优先保证角色反差，避免两个
+    相近男声在长对话里难以区分。
+    """
+    primary, typ, reason, same_type = recommend_voice(article_text, cfg)
+    voice_cfg = cfg.get("voices_minimax", {})
+
+    # 教程/商业内容优先专业男声 + 成熟女声，角色辨识度高。
+    female_candidates = [v for v in same_type if v.startswith("female-") or "female" in v]
+    if typ in ("tutorial", "business"):
+        host = primary
+        guest = female_candidates[0] if female_candidates else "female-yujie"
+    elif typ == "reflective":
+        host, guest = "audiobook_male_1", "female-chengshu"
+    else:
+        host = primary or str(voice_cfg.get("host", "audiobook_male_1"))
+        guest = str(voice_cfg.get("guest", "male-qn-qingse"))
+
+    candidates = [
+        (host, guest, f"内容匹配：{typ}"),
+        ("audiobook_male_1", "female-chengshu", "沉稳耐听：有声书男声 + 成熟女声"),
+        ("male-qn-jingying", "male-qn-daxuesheng", "全男声：专业主讲 + 年轻追问"),
+    ]
+    # 去重，推荐组合不重复出现在备选里。
+    seen: set[tuple[str, str]] = set()
+    unique: list[tuple[str, str, str]] = []
+    for h, g, label in candidates:
+        if h == g or (h, g) in seen:
+            continue
+        seen.add((h, g))
+        unique.append((h, g, label))
+
+    return host, guest, f"{reason}；双人节目用明显声线反差保证角色可辨", unique[1:]
+
+
 def recommend_split(
     article_text: str,
     cfg: dict[str, Any],
@@ -301,6 +342,83 @@ def ask_voice(
         print("    输入 1/2/3/4，或直接回车")
 
 
+def ask_duo_voices(
+    ai_host: str,
+    ai_guest: str,
+    ai_reason: str,
+    alternatives: list[tuple[str, str, str]],
+    all_voices: list[str],
+    auto_accept: bool = False,
+) -> tuple[str, str]:
+    """返回 (host_voice, guest_voice)，保证 duo 的音色选择实际可执行。"""
+    print()
+    print("━━━ 2/3  VOICE  双人音色 ━━━")
+    print(f"  AI 推荐: host={ai_host} / guest={ai_guest}")
+    print(f"  理由: {ai_reason}")
+    print(f"  [1] 推荐组合")
+    for i, (host, guest, label) in enumerate(alternatives, start=2):
+        print(f"  [{i}] {host} / {guest}（{label}）")
+    print("  [m] 手动输入 host / guest voice_id")
+    print("  [r] 重新分析")
+    if auto_accept:
+        log.info(f"    → 自动接受: host={ai_host} / guest={ai_guest}")
+        return ai_host, ai_guest
+
+    while True:
+        raw = _prompt("选 (回车=接受推荐)", "1")
+        if raw == "" or raw == "1":
+            return ai_host, ai_guest
+        if raw == "r":
+            return "__reanalyze__", "__reanalyze__"
+        if raw == "m":
+            print("    可用 voice_id: " + " / ".join(all_voices))
+            host = _prompt("host voice_id", ai_host) or ai_host
+            guest = _prompt("guest voice_id", ai_guest) or ai_guest
+            if host == guest:
+                print("    host 与 guest 不能相同，保持推荐")
+                return ai_host, ai_guest
+            return host, guest
+        try:
+            idx = int(raw) - 2
+            if 0 <= idx < len(alternatives):
+                host, guest, _label = alternatives[idx]
+                return host, guest
+        except ValueError:
+            pass
+        print("    输入编号、m 或 r，或直接回车")
+
+
+def _customize_split_params(
+    strategy: str,
+    params: dict[str, Any],
+) -> dict[str, Any]:
+    """当用户选按字数/时长时，让阈值也由用户拍板。"""
+    out = dict(params)
+    if strategy == "by_duration":
+        default = int(out.get("max_duration_min", 12))
+        raw = _prompt("每集目标时长（分钟）", str(default))
+        try:
+            minutes = int(raw or default)
+            if minutes < 3 or minutes > 60:
+                raise ValueError
+            out["max_duration_min"] = minutes
+        except ValueError:
+            print(f"    无效时长，保持 {default} 分钟")
+            out["max_duration_min"] = default
+    elif strategy == "by_chars":
+        default = int(out.get("max_episode_chars", 3000))
+        raw = _prompt("每集最大字数", str(default))
+        try:
+            chars = int(raw or default)
+            if chars < 500 or chars > 20000:
+                raise ValueError
+            out["max_episode_chars"] = chars
+        except ValueError:
+            print(f"    无效字数，保持 {default} 字")
+            out["max_episode_chars"] = default
+    return out
+
+
 def ask_split(
     ai_choice: str,
     ai_params: dict[str, Any],
@@ -357,9 +475,11 @@ class Decisions:
     format: str
     voice: str
     voice_type: str
-    split_strategy: str
-    split_params: dict[str, Any]
-    split_count: int
+    host_voice: str = ""
+    guest_voice: str = ""
+    split_strategy: str = ""
+    split_params: dict[str, Any] = None  # type: ignore[assignment]
+    split_count: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
@@ -394,11 +514,23 @@ def collect_decisions(
         # 用 fmt_default 作为 placeholder；正式 plan_episodes 在 prepare.py 用 fmt_choice 跑
         fmt_for_split = fmt_choice or fmt_default
 
-        voice, vtype, vreason, valts = recommend_voice(article_text, cfg)
-        voice_choice = ask_voice(voice, vtype, vreason, valts, all_voices,
-                                 auto_accept=auto_accept)
-        if voice_choice == "__reanalyze__":
-            continue
+        if fmt_for_split == "duo":
+            h, g, vreason, alts_pair = recommend_duo_voices(article_text, cfg)
+            h_choice, g_choice = ask_duo_voices(
+                h, g, vreason, alts_pair, all_voices,
+                auto_accept=auto_accept,
+            )
+            if h_choice == "__reanalyze__":
+                continue
+            voice_choice = f"host={h_choice} / guest={g_choice}"
+            vtype = "duo"
+        else:
+            voice, vtype, vreason, valts = recommend_voice(article_text, cfg)
+            voice_choice = ask_voice(voice, vtype, vreason, valts, all_voices,
+                                     auto_accept=auto_accept)
+            if voice_choice == "__reanalyze__":
+                continue
+            h_choice, g_choice = "", ""
 
         strategy, params, count, reason = recommend_split(
             article_text, cfg, series_title=series_title, fmt=fmt_for_split,
@@ -412,16 +544,28 @@ def collect_decisions(
                                           auto_accept=auto_accept)
         if strat == "__reanalyze__":
             continue
+        # 阈值也由用户拍板：按字数 / 时长才让改；按章节就跳过。
+        if strat in ("by_chars", "by_duration") and not auto_accept:
+            params_choice = _customize_split_params(strat, params_choice)
+        elif strat in ("by_chars", "by_duration") and auto_accept:
+            # 自动模式下，记录一下用了默认阈值（备查）
+            log.info(f"    auto-accept: 阈值默认 {params_choice}")
 
         print()
         print(f"✓ 锁定决策 →")
         print(f"    format:        {fmt_choice}")
-        print(f"    voice:         {voice_choice}  ({vtype})")
+        if fmt_for_split == "duo":
+            print(f"    host voice:    {h_choice}")
+            print(f"    guest voice:   {g_choice}")
+        else:
+            print(f"    voice:         {voice_choice}  ({vtype})")
         print(f"    split:         {strat} → {count} 集")
         return Decisions(
             format=fmt_choice,
             voice=voice_choice,
             voice_type=vtype,
+            host_voice=h_choice,
+            guest_voice=g_choice,
             split_strategy=strat,
             split_params=params_choice,
             split_count=count,

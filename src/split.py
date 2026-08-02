@@ -36,7 +36,9 @@ class EpisodePlan:
     body: str         # 待转口播的正文
     format: str = "duo"  # solo / duo
     article_date: str = ""   # 文章日期（YYYY-MM-DD），用于 drafts 目录
-    voice: str = ""          # TTS voice_id（prepare 阶段决定；空=build 阶段 voicecaster 选）
+    voice: str = ""          # solo 节目用的 TTS voice_id（prepare 阶段决定；空=build 阶段 voicecaster 选）
+    host_voice: str = ""     # duo 节目的 host voice_id（build 透传到 voice_map['host']）
+    guest_voice: str = ""    # duo 节目的 guest voice_id
     split_strategy: str = "" # split 策略（by_h2 / by_chars / by_duration）；空=auto
 
 
@@ -251,13 +253,23 @@ def plan_episodes(
             combined = "\n\n".join(hr_blocks[i] for i in g)
             pairs.append((titles[g[0]], combined))
     elif mode == "chars":
-        # 纯按字数切：忽略 H2 / hr 边界，整体当一块
+        # 按字数贪心装桶：每段单独成集几乎不可能凑满 max_c（如表格密集的
+        # 文档单段才 200-1000 字），所以改成"累计到接近 max_c 再开新集"。
         text = cleaned.strip()
-        if _count(text) <= max_c:
-            pairs = [("全文", text)]
-        else:
-            pairs = [(f"第{i+1}部分", sub)
-                     for i, sub in enumerate(_split_long(text, max_c), 1)]
+        paras = [p for p in text.split("\n\n") if p.strip()]
+        pieces: list[str] = []
+        bucket = ""
+        for para in paras:
+            if bucket and _count(bucket) + _count(para) > max_c:
+                pieces.append(bucket)
+                bucket = para
+            else:
+                bucket = (bucket + "\n\n" + para).strip() if bucket else para
+        if bucket:
+            pieces.append(bucket)
+        if not pieces:
+            pieces = [text]
+        pairs = [(f"第{i+1}部分", p) for i, p in enumerate(pieces, 1)]
     else:  # "single"
         text = cleaned.strip()
         if _count(text) <= max_c:

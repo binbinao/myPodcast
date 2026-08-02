@@ -14,14 +14,22 @@ TAG_RE = re.compile(r"^\[([^\]]+)\]\s*(.*)$")
 
 
 def parse_script(text: str) -> tuple[dict[str, Any], list[dict[str, str]]]:
-    """返回 (metadata, segments)。segments: [{role, text}]。"""
+    """返回 (metadata, segments)。segments: [{role, text}]。
+
+    防御：frontmatter YAML 解析失败时 **log warning** 而不是静默吞错——
+    之前静默处理导致整集 meta 空、build 把 output 写到 `series/<path.stem>/ep-01/`
+    的诡异路径还不报错（2026-08-02 跨境电商 ep-13 翻车）。
+    """
+    from .log import logger as log
     meta: dict[str, Any] = {}
     body = text
     m = FRONTMATTER_RE.match(text)
     if m:
         try:
-            meta = yaml.safe_load(m.group(1)) or {}
-        except yaml.YAMLError:
+            loaded = yaml.safe_load(m.group(1))
+            meta = loaded if isinstance(loaded, dict) else {}
+        except yaml.YAMLError as e:
+            log.warning(f"frontmatter YAML 解析失败（meta 置空）: {str(e).splitlines()[0]}")
             meta = {}
         body = m.group(2)
 

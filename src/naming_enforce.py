@@ -1,20 +1,16 @@
-"""命名规则 hard gate：扫 raw/、drafts/、output/series/，把不符合命名约定的自动 rename。
+"""命名规则检查工具：扫 raw/、drafts/、output/series/，报告与 frontmatter slug
+不一致的物理名，但**不再 silent rename**（2026-08-02 移除——个人内容资产命名
+由作者自主决定，pipeline 不越权）。
 
-约定（与 src/naming.py pick_series_slug/raw_filename/drafts_dir_for 对齐）：
+仍然返回 ``(path, expected_target)`` 列表，方便：
+- 手动调用 ``python -m src.naming_enforce --apply`` 一次性修正
+- CI 用 ``--dry-run`` 检测（违规 → exit 2）
 
-- raw/<filename>                    := ``YYYY-MM-DD-<slug>.md``
-- drafts/<dirname>/<ep-XX.md>      := ``<YYYY-MM-DD>-<slug>/``
-- output/series/<dirname>/ep-NN/    := ``<slug>/`` （slug 来自 series_slug）
-
-slug 优先级：``meta.series_slug`` → ``meta.slug`` → ``chinese_to_ascii(title)``。
-
-Destructive 行为是 design，但 git 是兜底——rename 后 ``git status`` 立即可见、
-可 ``git checkout`` 回滚。CI 应当 dry-run（fail on divergence，但不要 in-place 修改）。
-
-退出码：
-- 0：全部合规
-- 1：原状态不合规但已自动修复（实测下不会发生；CLI 是 silent fix）
-- 2：CI-only 模式发现不合规且 dry-run 不修改
+使用方式：
+    # 仅报告（不修改）
+    python -m src.naming_enforce
+    # 真的应用改名
+    python -m src.naming_enforce --apply
 """
 from __future__ import annotations
 

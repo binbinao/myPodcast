@@ -90,6 +90,19 @@ def run_one(
             log.info(f"      voice CLI 覆盖 → {voice_override}")
         else:
             log.info(f"      voicecaster → {chosen}")
+    elif backend == "minimax" and fmt == "duo":
+        # duo 节目：尊重 frontmatter host_voice / guest_voice；都缺再回退到
+        # voices_minimax 的 host/guest 配置。CLI --voice 在 duo 模式下不适用
+        # （需要分别覆盖两个音色，应走 frontmatter 而不是 CLI 单值）。
+        host_v = meta.get("host_voice") or voice_map.get("host")
+        guest_v = meta.get("guest_voice") or voice_map.get("guest")
+        if host_v:
+            voice_map["host"] = host_v
+        if guest_v:
+            voice_map["guest"] = guest_v
+        if voice_override:
+            log.warning("      --voice 对 duo 节目不生效，请改 frontmatter 的 host_voice / guest_voice")
+        log.info(f"      duo voices → host={voice_map.get('host')} / guest={voice_map.get('guest')}")
 
     series_slug = meta.get("series_slug", "")
     series_title_v = meta.get("series", "")

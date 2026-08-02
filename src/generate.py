@@ -26,32 +26,45 @@ def _wrap(
     source: str | None = None,
     stage: str = STAGE_GENERATED,
 ) -> str:
-    src_line = f'source: "{source}"\n' if source else ""
-    series_slug_line = (
-        f'series_slug: "{plan.series_slug}"\n' if getattr(plan, "series_slug", "") else ""
+    """把 draft 包成带 frontmatter 的 markdown。
+
+    重要：用 yaml.safe_dump 序列化 frontmatter，而不是 f-string 拼接——
+    LLM 生成的 chapter / description 里可能含双引号（`结语："开始"`），f-string
+    会破坏 YAML 边界，导致 parse_script 静默失败、整集 meta 空、build 把
+    output 写到 `series/<path.stem>/ep-01/` 的诡异路径。yaml.safe_dump 自动
+    escape 引号和换行。
+    """
+    import yaml
+    fm: dict[str, Any] = {
+        "title": plan.title,
+        "description": plan.description if hasattr(plan, "description") and plan.description else "",
+        "format": plan.format,
+        "series": plan.series,
+    }
+    if getattr(plan, "series_slug", ""):
+        fm["series_slug"] = plan.series_slug
+    fm["episode"] = plan.index
+    fm["total"] = plan.total
+    fm["chapter"] = plan.chapter
+    if getattr(plan, "voice", ""):
+        fm["voice"] = plan.voice
+    if getattr(plan, "host_voice", ""):
+        fm["host_voice"] = plan.host_voice
+    if getattr(plan, "guest_voice", ""):
+        fm["guest_voice"] = plan.guest_voice
+    if getattr(plan, "split_strategy", ""):
+        fm["split_strategy"] = plan.split_strategy
+    if source:
+        fm["source"] = source
+    fm["ai_stage"] = stage
+
+    # sort_keys=False 保留字段顺序；allow_unicode=True 支持中文；
+    # default_flow_style=False 用 block style（更可读）。
+    yaml_str = yaml.safe_dump(
+        fm, allow_unicode=True, sort_keys=False, default_flow_style=False,
+        width=4096,
     )
-    voice_line = f'voice: "{plan.voice}"\n' if getattr(plan, "voice", "") else ""
-    split_line = (
-        f'split_strategy: "{plan.split_strategy}"\n'
-        if getattr(plan, "split_strategy", "") else ""
-    )
-    return (
-        f"---\n"
-        f'title: "{plan.title}"\n'
-        f'description: "《{plan.series}》{plan.chapter}（第 {plan.index}/{plan.total} 集）"\n'
-        f"format: {plan.format}\n"
-        f'series: "{plan.series}"\n'
-        f"{series_slug_line}"
-        f"episode: {plan.index}\n"
-        f"total: {plan.total}\n"
-        f'chapter: "{plan.chapter}"\n'
-        f"{voice_line}"
-        f"{split_line}"
-        f"{src_line}"
-        f"ai_stage: {stage}\n"
-        f"---\n\n"
-        f"{body_text.strip()}\n"
-    )
+    return f"---\n{yaml_str}---\n\n{body_text.strip()}\n"
 
 
 def _ensure_clean_body(body: str, episode_label: str) -> str:

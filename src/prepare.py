@@ -49,11 +49,17 @@ def _article_meta(article: str, path: Path, fmt_default: str) -> tuple[str, str,
             art_date = m.group(1)
     if not art_date:
         art_date = date.today().isoformat()
-    # slug 优先 frontmatter series_slug → 否则 slug → 否则从标题生成
+    # slug 优先 frontmatter series_slug → 否则 slug → 否则从 raw 文件名（去掉日期前缀）
+    # 兜底。**不再走 chinese_to_ascii(title)**——2026-08-02 拍板，pipeline 不再越权
+    # 决定命名；raw 文件用什么名，drafts/ 目录就跟什么名。
     explicit_slug = (
         str(meta.get("series_slug") or "").strip()
         or str(meta.get("slug") or "").strip()
     )
+    if not explicit_slug:
+        m = re.match(r"^\d{4}-\d{2}-\d{2}-(.+)$", path.stem)
+        if m:
+            explicit_slug = m.group(1).strip()
     return title, fmt, episodes, art_date, explicit_slug
 
 
@@ -68,9 +74,15 @@ def prepare_file(
     series_title, fmt, episodes, art_date, explicit_slug = _article_meta(
         article, path, fmt_default
     )
-    # series_slug：frontmatter series_slug 优先，否则从 series_title 生成
+    # series_slug：frontmatter series_slug 优先 → 否则用 explicit_slug（来自
+    # frontmatter slug 或 raw 文件名）→ 兜底用 ascii(title)。兜底路径只在
+    # 极端异常（既无 frontmatter 又无 YYYY-MM-DD 前缀的文件名）时触发。
     meta, _ = parse_script(article)
-    series_slug = str(meta.get("series_slug") or "").strip() or chinese_to_ascii(series_title)
+    series_slug = (
+        str(meta.get("series_slug") or "").strip()
+        or explicit_slug
+        or chinese_to_ascii(series_title)
+    )
 
     # ===== 三决策门 =====
     # AI 给推荐，用户拍板；auto_accept=True 全自动（CI / 批处理用）。
@@ -124,10 +136,15 @@ def prepare_file(
         source_rel = str(path.resolve().relative_to(Path.cwd()))
     except ValueError:
         source_rel = str(path)
-    # 把 voice / split_strategy 落到 EpisodePlan（_wrap 会写进 frontmatter）
+    # 把 voice / split_strategy / host_voice / guest_voice 落到 EpisodePlan
+    # （_wrap 会写进 frontmatter，build 会按 format 透传到 voice_map）。
     for plan in plans:
-        if decisions.voice:
+        if decisions.voice and not getattr(plan, "voice", ""):
             plan.voice = decisions.voice
+        if decisions.host_voice:
+            plan.host_voice = decisions.host_voice
+        if decisions.guest_voice:
+            plan.guest_voice = decisions.guest_voice
         if decisions.split_strategy:
             plan.split_strategy = decisions.split_strategy
         script = generate_script(plan, cfg, source_rel)
@@ -148,11 +165,9 @@ def run(
     cfg = yaml.safe_load(Path(config_path).read_text(encoding="utf-8"))
     drafts_dir = Path(drafts_dir)
     drafts_dir.mkdir(parents=True, exist_ok=True)
-    # Hard gate：先 enforce 命名（自动 rename 非合规 → 合规），再扫描。
-    # 否则 prepare_file() 依赖 `drafts_dir_for(...)` 与物理目录错位的输入。
-    from .naming_enforce import enforce_raw_files, enforce_drafts_dirs
-    enforce_raw_files(raw_dir, dry_run=False)
-    enforce_drafts_dirs(drafts_dir, dry_run=False)
+    # 不再 hard gate 静默 rename：raw 文件名由作者自主决定（frontmatter slug
+    # 是 preferred，但 prepare 不再越权改用户命名）。2026-08-02 与斌哥拍板取消
+    # silent rename——个人内容资产，英文/拼音/中文都应该是用户说了算。
     if article:
         prepare_file(Path(article), cfg, drafts_dir, auto_accept=auto_accept)
         return

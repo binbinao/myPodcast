@@ -1,0 +1,15 @@
+{
+  "decisions": {
+    "format": "duo",
+    "voice": "host=male-qn-jingying / guest=female-yujie",
+    "voice_type": "duo",
+    "host_voice": "male-qn-jingying",
+    "guest_voice": "female-yujie",
+    "split_strategy": "by_h2",
+    "split_params": {
+      "min_episode_chars": 600,
+      "max_episode_chars": 3000
+    },
+    "split_count": 13
+  }
+}
