@@ -115,6 +115,9 @@ section > p.lead { color: var(--text-soft); margin: 0 0 32px; font-size: 16px; m
 /* Series grid：永远 3 列，不足时留空（why-engineers 单集也能占第 1 列跟其它对齐） */
 .series-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 32px; }
 @media (max-width: 960px) { .series-grid { grid-template-columns: 1fr; } }
+/* #series-list 静态壳本身也是 .series-grid，会和 page-grid 嵌套——强制 block，
+   让内层 page-grid 自己 3 列排（外层不再 grid 子元素对 page-grid 挤宽） */
+#series-list { display: block; }
 .series-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
