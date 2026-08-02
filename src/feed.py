@@ -395,6 +395,7 @@ def _hero_html(
     out_dir: Path,
     title: str,
     tagline: str,
+    hero_desc: str,
     cover: str,
     base: str,
     featured: dict | None,
@@ -403,16 +404,21 @@ def _hero_html(
 
 
 ) -> str:
-    """Hero 段：含封面 + featured 播放 CTA。独立函数，<50 行。"""
+    """Hero 段：含封面 + featured 播放 CTA + hero_desc 感悟段落。独立函数，<50 行。"""
     cover_abs = (Path(out_dir) / Path(cover).name).resolve() if cover else None
     cover_exists = cover_abs.exists() if cover_abs else False
+    desc_html = f'<p class="hero-desc">{_hescape(hero_desc)}</p>' if hero_desc else ''
     if not cover_exists:
         # 兜底：art-gradient + mic icon（hero-art 视觉）
         return f"""<section class="hero">
   <div class="hero-content">
     <h1 class="hero-title">{_hescape(title)}</h1>
     <p class="hero-quote">"{_hescape(tagline)}"</p>
+    {desc_html}
     <div class="hero-cta">
+      <div id="hero-featured" data-source="manifest">
+        <noscript></noscript>
+      </div>
       {f'<a class="btn btn-ghost" href="#subscribe">订阅 RSS</a>' if subscribe_enabled else ''}
     </div>
   </div>
@@ -429,13 +435,17 @@ def _hero_html(
     featured_dur = _fmt_dur(featured.get("duration", 0)) if featured else ""
     return f"""<section class="hero">
   <div class="hero-media">
-    <img class="hero-img" src="{_hescape(cover)}" alt="{featured_title} 封面" width="800" height="800" loading="eager">
+    <img class="hero-img" src="{_hescape(cover)}" alt="最新一期封面" width="800" height="800" loading="eager">
   </div>
   <div class="hero-content">
     <h1 class="hero-title">{_hescape(title)}</h1>
     <p class="hero-quote">"{_hescape(tagline)}"</p>
+    {desc_html}
     <div class="hero-cta">
-      {f'<a class="btn btn-primary" href="{audio_src}" data-action="play-now" data-audio="{_hescape(audio_src)}" data-title="{featured_title}" data-series="{featured_series}" data-duration="{featured.get("duration",0) if featured else 0}">{ICON_LIB["play"]}<span>听最新一期</span></a>' if featured else ''}
+      <div id="hero-featured" data-source="manifest">
+        <!-- 客户端动态层：feed.js 从 manifest.json fetch featured 并渲染 CTA -->
+        <noscript>{f'<a class="btn btn-primary" href="{audio_src}">{ICON_LIB["play"]}<span>听最新一期</span></a>' if featured else ''}</noscript>
+      </div>
       {f'<a class="btn btn-ghost" href="#subscribe">订阅 RSS</a>' if subscribe_enabled else ''}
     </div>
   </div>
@@ -507,6 +517,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     title = podcast.get("title", "Podcast")
     desc = podcast.get("description", "")
     tagline = podcast.get("tagline", desc)
+    hero_desc = podcast.get("hero_desc", "")
     about_text = podcast.get("about", "")
     author = podcast.get("author", "")
     language = podcast.get("language", "zh-CN")
@@ -546,6 +557,11 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     def _enrich(eps: list[dict[str, Any]]) -> list[dict[str, Any]]:
         out = []
         for e in eps:
+            # 折叠卡（"还有 +N 集"）不是 episode，没有 url / duration 字段；
+            # 模板走 {% if ep.is_overflow %} 分支，跳过 enrich 直接透传。
+            if e.get("is_overflow"):
+                out.append(e)
+                continue
             out.append({
                 **e,
                 "audio_src": _audio_src(e),
@@ -584,7 +600,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
 
     # 4 个 section 独立生成
     hero_html = _hero_html(
-        out_dir, title, tagline, cover, base, featured, subscribe_enabled,
+        out_dir, title, tagline, hero_desc, cover, base, featured, subscribe_enabled,
         _ICON_LIB,
     )
     about_html = _about_html(title, tagline, about_text, groups, episodes, author, language)
@@ -592,6 +608,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
 
     # 注入 player.js（构建期替换占位符）
     player_js = (Path(__file__).resolve().parent.parent / "templates" / "player.js").read_text(encoding="utf-8")
+    feed_js = (Path(__file__).resolve().parent.parent / "templates" / "feed.js").read_text(encoding="utf-8")
 
     # Jinja2 渲染
     from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -616,6 +633,7 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
         groups=groups_ctx,
         latest=latest_ctx,
         player_js=player_js,
+        feed_js=feed_js,
     )
     path = out_dir / "index.html"
     path.write_text(html, encoding="utf-8")

@@ -7,6 +7,33 @@
     <language>zh-CN</language>
     <itunes:author>小搭 &amp; 斌哥</itunes:author>
     <item>
+      <title>工程师的知识管理：从收藏到复利 · 第三章 用播客让知识二次复利</title>
+      <description>《工程师的知识管理：从收藏到复利》第三章 用播客让知识二次复利（第 3/3 集）</description>
+      <pubDate>2026-08-01</pubDate>
+      <itunes:episode>3</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/knowledge-management/ep-03/episode.mp3" type="audio/mpeg" length="150285"/>
+      <itunes:duration>37</itunes:duration>
+    </item>
+    <item>
+      <title>工程师的知识管理：从收藏到复利 · 第二章 把文章变成可复用的资产</title>
+      <description>《工程师的知识管理：从收藏到复利》第二章 把文章变成可复用的资产（第 2/3 集）</description>
+      <pubDate>2026-08-01</pubDate>
+      <itunes:episode>2</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/knowledge-management/ep-02/episode.mp3" type="audio/mpeg" length="169869"/>
+      <itunes:duration>42</itunes:duration>
+    </item>
+    <item>
+      <title>工程师的知识管理：从收藏到复利 · 第一章 为什么你的收藏夹在吃灰</title>
+      <description>《工程师的知识管理：从收藏到复利》第一章 为什么你的收藏夹在吃灰（第 1/3 集）</description>
+      <pubDate>2026-08-01</pubDate>
+      <itunes:episode>1</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/knowledge-management/ep-01/episode.mp3" type="audio/mpeg" length="234093"/>
+      <itunes:duration>58</itunes:duration>
+    </item>
+    <item>
       <title>用三个晚上做的小工具，被 WorkBuddy 一夜归零了 · 第3部分</title>
       <description>《用三个晚上做的小工具，被 WorkBuddy 一夜归零了》第3部分（第 3/3 集）</description>
       <pubDate>2026-08-01</pubDate>
@@ -34,31 +61,175 @@
       <itunes:duration>294</itunes:duration>
     </item>
     <item>
-      <title>工程师的知识管理：从收藏到复利 · 第三章 用播客让知识二次复利</title>
-      <description>《工程师的知识管理：从收藏到复利》第三章 用播客让知识二次复利（第 3/3 集）</description>
-      <pubDate>2026-08-01</pubDate>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 最后寄语</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》最后寄语（第 19/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>19</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-19/episode.mp3" type="audio/mpeg" length="1009140"/>
+      <itunes:duration>62</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 核心洞察</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》核心洞察（第 18/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>18</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-18/episode.mp3" type="audio/mpeg" length="1505652"/>
+      <itunes:duration>93</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 核心决策要点</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》核心决策要点（第 17/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>17</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-17/episode.mp3" type="audio/mpeg" length="6210420"/>
+      <itunes:duration>387</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 未来展望</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》未来展望（第 16/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>16</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-16/episode.mp3" type="audio/mpeg" length="1018356"/>
+      <itunes:duration>63</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 六大趋势总览</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》六大趋势总览（第 15/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>15</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-15/episode.mp3" type="audio/mpeg" length="2774580"/>
+      <itunes:duration>173</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 四种架构模式总览</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》四种架构模式总览（第 14/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>14</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-14/episode.mp3" type="audio/mpeg" length="2654772"/>
+      <itunes:duration>165</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 3.6 观测与优化层</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》3.6 观测与优化层（第 13/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>13</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-13/episode.mp3" type="audio/mpeg" length="3094836"/>
+      <itunes:duration>193</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 3.5 数据管理层</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》3.5 数据管理层（第 12/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>12</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-12/episode.mp3" type="audio/mpeg" length="3055668"/>
+      <itunes:duration>190</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 3.4 调度与编排层</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》3.4 调度与编排层（第 11/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>11</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-11/episode.mp3" type="audio/mpeg" length="2454324"/>
+      <itunes:duration>153</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 3.3 框架与运行时层</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》3.3 框架与运行时层（第 10/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>10</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-10/episode.mp3" type="audio/mpeg" length="2546484"/>
+      <itunes:duration>158</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 3.2 虚拟化与资源管理层</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》3.2 虚拟化与资源管理层（第 9/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>9</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-09/episode.mp3" type="audio/mpeg" length="1968756"/>
+      <itunes:duration>122</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 3.1 硬件层 - 算力底座</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》3.1 硬件层 - 算力底座（第 8/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>8</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-08/episode.mp3" type="audio/mpeg" length="3402420"/>
+      <itunes:duration>212</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 2.4 训练 vs 推理的架构差异</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》2.4 训练 vs 推理的架构差异（第 7/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>7</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-07/episode.mp3" type="audio/mpeg" length="1748724"/>
+      <itunes:duration>109</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 2.3 解耦责任边界</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》2.3 解耦责任边界（第 6/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>6</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-06/episode.mp3" type="audio/mpeg" length="493620"/>
+      <itunes:duration>30</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 2.2 分层优化的典型场景</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》2.2 分层优化的典型场景（第 5/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>5</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-05/episode.mp3" type="audio/mpeg" length="1220532"/>
+      <itunes:duration>76</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 2.1 架构总览</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》2.1 架构总览（第 4/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>4</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-04/episode.mp3" type="audio/mpeg" length="380148"/>
+      <itunes:duration>23</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 1.3 论点：AI Infra需要分层、分场景理解</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》1.3 论点：AI Infra需要分层、分场景理解（第 3/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
       <itunes:episode>3</itunes:episode>
       <itunes:season>1</itunes:season>
-      <enclosure url="https://binbinao.github.io/myPodcast/series/knowledge-management/ep-03/episode.mp3" type="audio/mpeg" length="150285"/>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-03/episode.mp3" type="audio/mpeg" length="607092"/>
       <itunes:duration>37</itunes:duration>
     </item>
     <item>
-      <title>工程师的知识管理：从收藏到复利 · 第二章 把文章变成可复用的资产</title>
-      <description>《工程师的知识管理：从收藏到复利》第二章 把文章变成可复用的资产（第 2/3 集）</description>
-      <pubDate>2026-08-01</pubDate>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 1.2 关键区分：训练集群 vs 推理集群的本质差异</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》1.2 关键区分：训练集群 vs 推理集群的本质差异（第 2/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
       <itunes:episode>2</itunes:episode>
       <itunes:season>1</itunes:season>
-      <enclosure url="https://binbinao.github.io/myPodcast/series/knowledge-management/ep-02/episode.mp3" type="audio/mpeg" length="169869"/>
-      <itunes:duration>42</itunes:duration>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-02/episode.mp3" type="audio/mpeg" length="1297716"/>
+      <itunes:duration>80</itunes:duration>
     </item>
     <item>
-      <title>工程师的知识管理：从收藏到复利 · 第一章 为什么你的收藏夹在吃灰</title>
-      <description>《工程师的知识管理：从收藏到复利》第一章 为什么你的收藏夹在吃灰（第 1/3 集）</description>
-      <pubDate>2026-08-01</pubDate>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 1.1 现象：GPU抢购狂潮背后的认知盲区</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》1.1 现象：GPU抢购狂潮背后的认知盲区（第 1/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
       <itunes:episode>1</itunes:episode>
       <itunes:season>1</itunes:season>
-      <enclosure url="https://binbinao.github.io/myPodcast/series/knowledge-management/ep-01/episode.mp3" type="audio/mpeg" length="234093"/>
-      <itunes:duration>58</itunes:duration>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-01/episode.mp3" type="audio/mpeg" length="1702644"/>
+      <itunes:duration>106</itunes:duration>
     </item>
     <item>
       <title>为什么工程师也该做一档自己的播客</title>
