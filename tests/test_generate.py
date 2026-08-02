@@ -71,7 +71,8 @@ class TestSkeleton(unittest.TestCase):
         out = _skeleton(plan)
         # 没传 source → 不应有 source 行（但 plan.series_slug 应当保留）
         self.assertNotIn("source:", out)
-        self.assertIn('series_slug: "test-show"', out)
+        # _wrap 改用 yaml.safe_dump，无歧义值裸输出不带引号；语义一致
+        self.assertIn("series_slug: test-show", out)
 
 
 class TestGenerateScript(unittest.TestCase):
