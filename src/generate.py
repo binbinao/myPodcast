@@ -17,9 +17,15 @@ from .log import logger as log
 from .naming import draft_filename as _draft_filename, drafts_dir_for as _drafts_dir_for
 from .polish import heuristic_clean, llm_complete, resolve_api_key
 from .split import EpisodePlan, _strip_md
+from .stages import STAGE_GENERATED, STAGE_SKELETON
 
 
-def _wrap(plan: EpisodePlan, body_text: str, source: str | None = None) -> str:
+def _wrap(
+    plan: EpisodePlan,
+    body_text: str,
+    source: str | None = None,
+    stage: str = STAGE_GENERATED,
+) -> str:
     src_line = f'source: "{source}"\n' if source else ""
     series_slug_line = (
         f'series_slug: "{plan.series_slug}"\n' if getattr(plan, "series_slug", "") else ""
@@ -35,6 +41,7 @@ def _wrap(plan: EpisodePlan, body_text: str, source: str | None = None) -> str:
         f"total: {plan.total}\n"
         f'chapter: "{plan.chapter}"\n'
         f"{src_line}"
+        f"ai_stage: {stage}\n"
         f"---\n\n"
         f"{body_text.strip()}\n"
     )
@@ -92,7 +99,7 @@ def _skeleton(plan: EpisodePlan, source: str | None = None) -> str:
         p = _strip_md(para).strip()
         if p:
             lines.append(f"[host] {p}")
-    return _wrap(plan, "\n".join(lines), source)
+    return _wrap(plan, "\n".join(lines), source, stage=STAGE_SKELETON)
 
 
 def generate_script(plan: EpisodePlan, cfg: dict[str, Any], source: str | None = None) -> str:

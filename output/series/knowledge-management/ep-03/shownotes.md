@@ -1,7 +1,7 @@
 ---
 title: "工程师的知识管理：从收藏到复利 · 第三章 用播客让知识二次复利"
 series: "工程师的知识管理：从收藏到复利"
-date: 2026-08-01
+date: 2026-08-02
 duration: 37
 audio: series/knowledge-management/ep-03/episode.mp3
 ---
@@ -10,7 +10,7 @@ audio: series/knowledge-management/ep-03/episode.mp3
 
 > 《工程师的知识管理：从收藏到复利》第三章 用播客让知识二次复利（第 3/3 集）
 
-听：series/knowledge-management/ep-03/episode.mp3 · 时长 0 分 37 秒 · 2026-08-01 · 主播：小搭
+听：series/knowledge-management/ep-03/episode.mp3 · 时长 0 分 37 秒 · 2026-08-02 · 主播：小搭
 
 **[host]** 文字资产还能再榨一层：把它变成声音。通勤、洗碗、跑步时听一遍自己整理过的内容，等于又复习一次，而且是从"读者"变成"听众"的视角切换，常常能听出之前没注意的漏洞。
 

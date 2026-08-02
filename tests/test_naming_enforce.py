@@ -91,18 +91,17 @@ class TestEnforceDrafts(unittest.TestCase):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     def test_dir_rename(self):
-        from datetime import date
+        # date 字段必须给：缺它时 enforce_drafts_dirs 回落 date.today()，
+        # 断言里的固定日期就会在次日起全部失败。fixture 固定 date 使断言可精确匹配。
         old = self.drafts_dir / "wrong-dir-name"
         old.mkdir()
         (old / "ep-01.md").write_text(
-            "---\nseries_slug: ai-infra-redefined\ntitle: 测试\n---\n\nbody",
+            "---\nseries_slug: ai-infra-redefined\ndate: 2026-08-01\ntitle: 测试\n---\n\nbody",
             encoding="utf-8",
         )
         moves = enforce_drafts_dirs(self.drafts_dir)
         self.assertEqual(len(moves), 1)
-        # 日期用 today 而不是写死 2026-08-01——之前的硬编码在跨天后会假阴 fail
-        today = date.today().strftime("%Y-%m-%d")
-        self.assertEqual(moves[0][1].name, f"{today}-ai-infra-redefined")
+        self.assertEqual(moves[0][1].name, "2026-08-01-ai-infra-redefined")
 
     def test_dir_compliant_no_op(self):
         """目录名已合规（YYYY-MM-DD-slug）→ 不动。"""

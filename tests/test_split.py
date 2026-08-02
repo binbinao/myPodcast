@@ -6,7 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.split import plan_episodes
+from src.split import _strip_md, plan_episodes
 
 
 def _cfg():
@@ -67,6 +67,23 @@ content content content content content content content content content content 
         plans = plan_episodes(article, _cfg(), "测试", "solo", 1,
                               series_slug="x", article_date="2026-07-31")
         self.assertEqual(plans[0].article_date, "2026-07-31")
+
+
+class TestStripMd(unittest.TestCase):
+    """_strip_md 必须剔除水平线 `---`：残留会变成纯 `---` 段落，edge-tts 无法合成。"""
+
+    def test_removes_hr_lines(self):
+        self.assertEqual(_strip_md("开头。\n---\n结尾。"), "开头。\n结尾。")
+
+    def test_removes_multiple_hr(self):
+        self.assertEqual(_strip_md("A\n---\nB\n---\nC"), "A\nB\nC")
+
+    def test_does_not_touch_em_dash_in_text(self):
+        self.assertEqual(_strip_md("三个——破折号"), "三个——破折号")
+
+    def test_hr_only_line_not_removed_mid_word(self):
+        # 只有整行是 --- 才删；`a---b` 是内容
+        self.assertEqual(_strip_md("a---b"), "a---b")
 
 
 if __name__ == "__main__":

@@ -79,7 +79,10 @@ def llm_complete(system_prompt: str, user_content: str, cfg: dict[str, Any]) -> 
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_content},
         ],
-        "temperature": 0.7,
+        # 曾是硬编码 0.7 + 完全不读 max_tokens：config.yaml 里两个键都是死配置。
+        # max_tokens 尤其致命——默认上限截断长稿，是"产出集偏短"的一条成因。
+        "temperature": float(llm.get("temperature", 0.7)),
+        "max_tokens": int(llm.get("max_tokens", 4000)),
     }
     if is_minimax:
         payload["thinking"] = {"type": "disabled"}

@@ -12,14 +12,16 @@
 
 ```bash
 # 0. 准备 venv（隔离，不污染系统）
-/Users/jiduobin/.workbuddy/binaries/python/versions/3.13.12/bin/python3 -m venv .venv
+# 0. 准备 venv（隔离，不污染系统）。需要 Python 3.13+
+python3.13 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 
 # 1. 一篇 markdown 扔进 raw/（frontmatter 可加 format: solo|duo、series_slug: <英文>）
 # 2. 准备脚本（评审门，审完再生成音频）
 .venv/bin/python -m src.prepare
-# 3. 编辑 drafts/ 里的脚本（按你的口吻调整 [host]/[guest]）
-# 4. 生成音频 + 刷新 RSS / 节目站
+# 3. 编辑 drafts/ 里的脚本（按你的口吻调整 [host]/[guest]），审完标记
+.venv/bin/python -m src.prepare --mark-reviewed drafts/<系列目录>
+# 4. 生成音频 + 刷新 RSS / 节目站（build 只读 drafts，不会覆盖你的修改）
 .venv/bin/python -m src.build drafts/<系列目录>
 ```
 
@@ -45,7 +47,7 @@
 | 层 | 角色 | 关键决策 |
 |---|---|---|
 | **raw/** | 源文章（MD + frontmatter） | frontmatter：`title` / `date` / `format` / `series_slug` / `source` |
-| **drafts/** | **评审门**，半成品脚本 | `LLM 全文产出` 或 `骨架`；人可以改 `[host]/[guest]` 文案 |
+| **drafts/** | **评审门**，半成品脚本 | `LLM 全文产出` 或 `骨架`；人可以改 `[host]/[guest]` 文案；`ai_stage` 记录审阅状态 |
 | **output/** | 已审完的最终产物 | mp3 + shownotes + manifest，**入库 git 跟踪**（CI skip-audio 模式必需） |
 
 ### 关键模块
@@ -53,10 +55,11 @@
 | 模块 | 职责 |
 |---|---|
 | `src/split.py` | 按 H2 章节拆集；单块长文按 `max_episode_chars` 切；过长单章再按 H3/段落细分；产出 `EpisodePlan` |
-| `src/generate.py` | 脚本生成。全自动（LLM，按 `format` 出 solo/duo）/ 半自动（骨架）。**auto 模式调 polish.llm_complete** |
-| `src/polish.py` | LLM 调用封装（OpenAI 兼容）；`resolve_api_key` 支持 cfg-first + env-兜底；自动给 MiniMax 加 `reasoning_split + thinking.disabled` |
-| `src/prepare.py` | `raw/` → `drafts/` 流水线入口 |
-| `src/build.py` | `drafts/` → `output/`。**支持断点续传**：manifest 含 `source_hash`，未变跳过；`--only ep-XX` / `--from ep-XX` / `--retry-failed` / `--force` |
+| `src/generate.py` | 脚本生成。全自动（LLM，按 `format` 出 solo/duo）/ 半自动（骨架）。**auto 模式调 polish.llm_complete**，产出的 draft 自带 `ai_stage` |
+| `src/stages.py` | **draft 生命周期**：`ai_stage` = skeleton → generated → reviewed → frozen。build 据此告警；`set_stage` 只改这一行，正文逐字节保留 |
+| `src/polish.py` | LLM 调用封装（OpenAI 兼容）；`resolve_api_key` 支持 cfg-first + env-兜底；自动给 MiniMax 加 `reasoning_split + thinking.disabled`；payload 读 cfg 的 `max_tokens` / `temperature` |
+| `src/prepare.py` | `raw/` → `drafts/` 流水线入口；`--mark-reviewed` / `--freeze` 改 stage |
+| `src/build.py` | `drafts/` → `output/`。**draft 只读**（不再二次 polish）。**支持断点续传**：manifest 含 `source_hash`，未变跳过；`--only ep-XX` / `--from ep-XX` / `--retry-failed` / `--force` |
 | `src/tts.py` | TTS backend registry：`@register` 抽象；当前支持 edge-tts 与 MiniMax speech-2.8-hd |
 | `src/backends/{edge,minimax}.py` | TTS 后端实现 |
 | `src/prosody.py` | 韵律规划。heuristic（零依赖，按标点） / llm（按情绪打标）；缓解单人播客单调 |
@@ -107,6 +110,32 @@ src 实现：`src/naming.py:pick_series_slug()` 给 naming/ 场景（series 目�
 - `build` 读 `drafts/`，是唯一通往 `output/` 的路径。
 - `manifest.json` 的 `source_hash = sha256(source)[:16]` 让 build 知道哪些集已合成、可断点续传。
 
+### draft 只读 + `ai_stage` 生命周期
+
+`drafts/` 是评审门，落盘即事实源。**build 只读，绝不改写正文。**
+
+```
+skeleton  ── prepare 时无 LLM key，未口语化的骨架稿
+generated ── LLM 改写产出，未经人工审阅
+reviewed  ── 人工审阅通过
+frozen    ── 锁稿：同 reviewed，额外声明不再重生成
+```
+
+build 消费 draft 时按 stage 告警（`reviewed`/`frozen` 静默，其余提示下一步动作）。
+无 `ai_stage` 的 legacy draft 只告警不阻断。
+
+```bash
+# 审完 drafts/ 里的脚本后标记，消除 build 告警
+.venv/bin/python -m src.prepare --mark-reviewed drafts/<系列目录>
+.venv/bin/python -m src.prepare --freeze drafts/<系列目录>      # 锁稿
+```
+
+**为何 build 不能改写**：重构前 `build.py` 无条件跑 `polish()` 二次 LLM 改写，
+而 draft 本身已是 `generate._auto()` 的 LLM 产物 —— 后果是人工在 `drafts/` 的修改被吃、
+LLM 成本翻倍、同一 draft 每次 build 输出不同（不可复现）。
+这条契约由 `tests/test_stages.py::TestBuildReadOnlyContract` AST 扫描机械 enforce：
+`build.py` 一旦重新 import 或调用 `polish`，测试立即 fail。
+
 ### TTS 后端切换
 
 | 后端 | 代价 | 优势 | 何时用 |
@@ -128,7 +157,7 @@ llm:
   base_url: "https://api.minimaxi.com/v1"
   api_key: ""               # 留空：自动用环境变量 MINIMAX_API_KEY
   model: "MiniMax-M2.5"     # 便宜优先；要更强推理换 MiniMax-M3
-  max_tokens: 1500
+  max_tokens: 4000          # 单集口播稿 ~3000-4000 字；1500 会截断长稿
   temperature: 0.7
 ```
 
@@ -195,7 +224,10 @@ push 到 main 自动构建并部署到 gh-pages，**走 skip-audio 模式**：�
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-24 个 case，覆盖命名 / 校验 / voicecaster / split 四个核心模块。零外部依赖。
+142 个 case，覆盖命名 / 校验 / voicecaster / split / stage 契约等模块。零外部依赖。
+
+其中 `test_stages.py::TestBuildReadOnlyContract` 是**机械守卫**：AST 扫描 `build.py`，
+一旦重新 import 或调用 `polish` 就 fail —— 让"draft 只读"这条规范不只是注释。
 
 ---
 

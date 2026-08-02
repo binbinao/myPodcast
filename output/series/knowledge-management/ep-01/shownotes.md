@@ -1,7 +1,7 @@
 ---
 title: "工程师的知识管理：从收藏到复利 · 第一章 为什么你的收藏夹在吃灰"
 series: "工程师的知识管理：从收藏到复利"
-date: 2026-08-01
+date: 2026-08-02
 duration: 58
 audio: series/knowledge-management/ep-01/episode.mp3
 ---
@@ -10,7 +10,7 @@ audio: series/knowledge-management/ep-01/episode.mp3
 
 > 《工程师的知识管理：从收藏到复利》第一章 为什么你的收藏夹在吃灰（第 1/3 集）
 
-听：series/knowledge-management/ep-01/episode.mp3 · 时长 0 分 58 秒 · 2026-08-01 · 主播：小搭
+听：series/knowledge-management/ep-01/episode.mp3 · 时长 0 分 58 秒 · 2026-08-02 · 主播：小搭
 
 **[host]** 很多人以为知识管理就是找个好用的笔记软件，把看到的好文章塞进去。三个月后打开收藏夹，全是没读过的链接。这篇文章想说清楚一件事：收藏不是管理，能复用才算。
 

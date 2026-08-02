@@ -1,7 +1,7 @@
 ---
 title: "工程师的知识管理：从收藏到复利 · 第二章 把文章变成可复用的资产"
 series: "工程师的知识管理：从收藏到复利"
-date: 2026-08-01
+date: 2026-08-02
 duration: 42
 audio: series/knowledge-management/ep-02/episode.mp3
 ---
@@ -10,7 +10,7 @@ audio: series/knowledge-management/ep-02/episode.mp3
 
 > 《工程师的知识管理：从收藏到复利》第二章 把文章变成可复用的资产（第 2/3 集）
 
-听：series/knowledge-management/ep-02/episode.mp3 · 时长 0 分 42 秒 · 2026-08-01 · 主播：小搭
+听：series/knowledge-management/ep-02/episode.mp3 · 时长 0 分 42 秒 · 2026-08-02 · 主播：小搭
 
 **[host]** 当你开始给每条收藏加一句注解，文章就从"别人的"变成了"我的素材"。下一步，是把零散的素材聚成主题。
 

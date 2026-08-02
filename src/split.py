@@ -54,6 +54,10 @@ def _strip_md(text: str) -> str:
     t = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", text)
     t = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", t)
     t = re.sub(r"[#*`>_~|]", "", t)
+    # 水平线 `---`：split 用它在正文分节，但行本身会残留成 `---` 段落。
+    # edge-tts 对纯 `---` 无法合成（No audio was received），必须剔除。
+    # 连同前导换行一起删，避免留下空行（A\n---\nB → A\nB）。
+    t = re.sub(r"^-{3,}\s*$\n?", "", t, flags=re.M)
     return t
 
 

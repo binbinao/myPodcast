@@ -115,10 +115,33 @@ def main() -> None:
     ap.add_argument("--raw", default="raw", help="原始文章目录 (默认 raw)")
     ap.add_argument("--drafts", default="drafts", help="草稿输出目录 (默认 drafts)")
     ap.add_argument("--config", default="config.yaml")
+    ap.add_argument("--mark-reviewed", metavar="路径",
+                    help="把指定 draft 目录/文件标为 ai_stage: reviewed（审阅完成，消除 build 告警）")
+    ap.add_argument("--freeze", metavar="路径",
+                    help="把指定 draft 标为 ai_stage: frozen（锁稿，语义同 reviewed 且声明不再重生成）")
     ap.add_argument("--log-file", default=None, help="追加日志到此文件")
     ap.add_argument("--log-level", default="INFO", help="DEBUG/INFO/WARNING/ERROR")
     args = ap.parse_args()
     configure(level=args.log_level, log_file=args.log_file)
+
+    # --mark-reviewed / --freeze 是独立动作：只改 ai_stage，不跑生成流水线。
+    if args.mark_reviewed or args.freeze:
+        from .core import EXIT_GATE_VIOLATION
+        from .stages import STAGE_FROZEN, STAGE_REVIEWED, mark_reviewed
+        target, stage = (
+            (args.freeze, STAGE_FROZEN) if args.freeze
+            else (args.mark_reviewed, STAGE_REVIEWED)
+        )
+        try:
+            changed = mark_reviewed(Path(target), stage)
+        except ValueError as e:
+            log.error(f"✗ {e}")
+            raise SystemExit(EXIT_GATE_VIOLATION) from None
+        for path, old in changed:
+            log.info(f"  {path}  {old or '(无标记)'} → {stage}")
+        log.info(f"\n✓ {len(changed)} 个 draft 标为 {stage}")
+        return
+
     art = Path(args.article) if args.article else None
     run(Path(args.raw), Path(args.drafts), Path(args.config), art)
 

@@ -19,7 +19,7 @@ import yaml
 from .feed import build_feed, build_index, register_episode, write_shownotes
 from .log import logger as log
 from .ingest import parse_script, slugify
-from .polish import polish
+from .stages import stage_of, stage_warning
 from .tts import build_episode_audio
 from .voicecaster import cast as vc_cast
 
@@ -27,11 +27,17 @@ from .voicecaster import cast as vc_cast
 def run_one(episode_path: Path, out_dir: Path, cfg: dict[str, Any]) -> None:
     raw = Path(episode_path).read_text(encoding="utf-8")
 
-    log.info(f"[1/5] 润色脚本: {episode_path.name}")
-    polished = polish(raw, cfg)
+    # draft 只读契约：build 不再跑 polish() 二次 LLM 改写。
+    # 重构前 `polished = polish(raw, cfg)` 会把 drafts/ 里的人工修改喂给 LLM 重写一遍
+    # → 人工改动被吃、LLM 成本翻倍、同一 draft 每次 build 输出不同（不可复现）。
+    # 现在正文逐字节来自 draft；stage 只决定告警等级（src/stages.py）。
+    log.info(f"[1/5] 读取 draft: {episode_path.name}")
 
     log.info("[2/5] 解析分段")
-    meta, segments = parse_script(polished)
+    meta, segments = parse_script(raw)
+    warn = stage_warning(stage_of(meta))
+    if warn:
+        log.warning(f"      ⚠ {warn}")
     if not segments:
         raise PipelineError(
             "没有可朗读的内容，检查脚本格式或 frontmatter。",
@@ -46,8 +52,8 @@ def run_one(episode_path: Path, out_dir: Path, cfg: dict[str, Any]) -> None:
     from .validate import has_blocking, report_and_warn, validate_script
     # 把 frontmatter 与正文分离
     import re as _re
-    fm_match = _re.match(r"^---\n.*?\n---\n(.*)$", polished, flags=_re.S)
-    body_text = fm_match.group(1) if fm_match else polished
+    fm_match = _re.match(r"^---\n.*?\n---\n(.*)$", raw, flags=_re.S)
+    body_text = fm_match.group(1) if fm_match else raw
     warnings = validate_script(meta, body_text)
     report_and_warn(episode_path.name, warnings)
     if has_blocking(warnings):
