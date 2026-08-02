@@ -195,6 +195,29 @@ section > p.lead { color: var(--text-soft); margin: 0 0 32px; font-size: 16px; m
 .series-ep-play svg { width: 14px; height: 14px; display: block; }
 .series-cta { font-size: 13px; color: var(--accent); margin: 12px 0 0; }
 
+/* +N 折叠行：让 +14 集看起来像可点的占位，hover 时微亮 */
+.series-ep-overflow { border-top: 1px dashed var(--border); margin-top: 4px; padding-top: 10px; }
+.series-overflow-btn {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 12px;
+  width: 100%;
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  color: var(--text-soft);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.series-overflow-btn:hover,
+.series-overflow-btn:focus-visible { border-color: var(--accent); color: var(--accent); background: var(--color-accent-wash); outline: none; }
+.series-overflow-num { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--accent); }
+.series-overflow-label { font-size: 13px; }
+
 /* Latest episodes */
 .ep-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 24px; }
 .ep-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; transition: border-color .15s var(--ease), box-shadow .15s var(--ease); }

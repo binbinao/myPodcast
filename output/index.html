@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>小搭-斌哥电台 — 把文章变成能听的电台。</title>
+<title>小搭-斌哥电台 — 把文章变成能听的电台节目。</title>
 <meta name="description" content="把文章、白皮书、长文，变成能听的电台。">
 <meta property="og:title" content="小搭-斌哥电台">
 <meta property="og:description" content="把文章、白皮书、长文，变成能听的电台。">
@@ -37,7 +37,7 @@
   </div>
   <div class="hero-content">
     <h1 class="hero-title">小搭-斌哥电台</h1>
-    <p class="hero-quote">"把文章变成能听的电台。"</p>
+    <p class="hero-quote">"把文章变成能听的电台节目。"</p>
     <p class="hero-desc">一杯咖啡的时间，换一种读法。我们替你把那些值得反复看的文章
 念完——白皮书、行业分析、长文笔记，拆成十几分钟的音频，
 随时点开就能听。通勤路上、眼睛累了、想慢下来的时候，
@@ -438,9 +438,15 @@
   }
 
   function renderSeries(groups) {
+    var SERIES_VISIBLE = 3;
+    // 用闭包缓存 hidden items，给点 +N 按钮时展开用
+    var extraBySlug = renderSeries._extraBySlug || (renderSeries._extraBySlug = {});
     var html = '';
     groups.forEach(function (g) {
       var totalDur = fmtDur(g.total_duration);
+      var visible = g.items.slice(0, SERIES_VISIBLE);
+      var hidden = g.items.slice(SERIES_VISIBLE);
+      extraBySlug[g.slug] = hidden;   // 缓存剩余集
       html += ''
         + '<article class="series-card" data-slug="' + escapeHtml(g.slug) + '">'
         + '<div class="series-body">'
@@ -450,23 +456,65 @@
         + '<span>总时长 ' + totalDur + '</span></p>'
         + (g.description ? '<p class="series-desc">' + escapeHtml(g.description) + '</p>' : '')
         + '<ol class="series-ep-list">';
-      g.items.forEach(function (it) {
-        var epIdx = it.ep_index || it.episode || 1;
-        html += ''
-          + '<li class="series-ep-item">'
-          + '<span class="series-ep-num">EP ' + pad(epIdx) + '</span>'
-          + '<a class="series-ep-title" href="' + escapeHtml('series/' + g.slug + '/ep-' + pad(epIdx) + '/shownotes.md')
-          + '" title="' + escapeHtml(it.title) + '">' + escapeHtml(it.title) + '</a>'
-          + '<span class="series-ep-dur">' + fmtDur(it.duration) + '</span>'
-          + '<button type="button" class="series-ep-play" data-action="play-now" data-audio="'
-          + escapeHtml(it.url) + '" data-title="' + escapeHtml(it.title) + '" data-series="'
-          + escapeHtml(it.series) + '" data-duration="' + (it.duration || 0)
-          + '" aria-label="听 ' + escapeHtml(it.title) + '">' + PLAY_SVG + '</button>'
-          + '</li>';
+      visible.forEach(function (it) {
+        html += seriesEpItemHtml(g, it);
       });
+      if (hidden.length) {
+        html += ''
+          + '<li class="series-ep-item series-ep-overflow">'
+          + '<button type="button" class="series-overflow-btn" data-slug="'
+          + escapeHtml(g.slug) + '" aria-label="展开 ' + escapeHtml(g.series)
+          + ' 剩余 ' + hidden.length + ' 集">'
+          + '<span class="series-overflow-num">+' + hidden.length + '</span>'
+          + '<span class="series-overflow-label">展开剩余集</span>'
+          + '</button>'
+          + '</li>';
+      }
       html += '</ol></div></article>';
     });
     return html;
+  }
+
+  // 抽出来复用：单集 <li> HTML
+  function seriesEpItemHtml(g, it) {
+    var epIdx = it.ep_index || it.episode || 1;
+    return ''
+      + '<li class="series-ep-item">'
+      + '<span class="series-ep-num">EP ' + pad(epIdx) + '</span>'
+      + '<a class="series-ep-title" href="' + escapeHtml('series/' + g.slug + '/ep-' + pad(epIdx) + '/shownotes.md')
+      + '" title="' + escapeHtml(it.title) + '">' + escapeHtml(it.title) + '</a>'
+      + '<span class="series-ep-dur">' + fmtDur(it.duration) + '</span>'
+      + '<button type="button" class="series-ep-play" data-action="play-now" data-audio="'
+      + escapeHtml(it.url) + '" data-title="' + escapeHtml(it.title) + '" data-series="'
+      + escapeHtml(it.series) + '" data-duration="' + (it.duration || 0)
+      + '" aria-label="听 ' + escapeHtml(it.title) + '">' + PLAY_SVG + '</button>'
+      + '</li>';
+  }
+
+  // 展开剩余集的 click handler（一次性事件委托）
+  function bindSeriesOverflow() {
+    var slot = document.getElementById('series-list');
+    if (!slot || slot._overflowBound) return;
+    slot._overflowBound = true;
+    slot.addEventListener('click', function (ev) {
+      var btn = ev.target.closest('.series-overflow-btn');
+      if (!btn) return;
+      ev.preventDefault();
+      var slug = btn.dataset.slug;
+      var hidden = (renderSeries._extraBySlug || {})[slug] || [];
+      if (!hidden.length) return;
+      var card = btn.closest('.series-card');
+      var ol = card.querySelector('.series-ep-list');
+      var g = { slug: slug };
+      var html = '';
+      hidden.forEach(function (it) { html += seriesEpItemHtml(g, it); });
+      ol.insertAdjacentHTML('beforeend', html);
+      // 移除 +N 折叠行
+      var overflowLi = btn.closest('.series-ep-overflow');
+      if (overflowLi) overflowLi.remove();
+      // 缓存清掉（再点无效，安全网）
+      delete renderSeries._extraBySlug[slug];
+    });
   }
 
   function renderFeaturedCta(groups) {
@@ -507,6 +555,7 @@
         var seriesSlot = document.getElementById('series-list');
         if (seriesSlot) seriesSlot.innerHTML = renderSeries(groups);
         renderFeaturedCta(groups);
+        bindSeriesOverflow();
       })
       .catch(function (err) {
         console.warn('[feed] manifest fetch failed:', err);
