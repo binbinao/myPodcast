@@ -405,9 +405,8 @@
       });
       html += '</div>';
     }
-    if (totalPages > 1) {
-      html += epListPagerHtml(totalPages, 1);
-    }
+    // 注意：epListPagerHtml 由 init() 单独 append 到 #latest-list 的 parent（跟 series 分页
+    // 一样的策略——避免被外层 #latest-list grid 当 child 错位塞到空 cell）。
     renderLatest._totalEpPages = totalPages;
     return html;
   }

@@ -116,7 +116,7 @@ section > p.lead { color: var(--text-soft); margin: 0 0 32px; font-size: 16px; m
 #series-list { display: block; }
 /* page-grid 用全新类 series-list-page 避免跟 #series-list 的 series-grid 类嵌套冲突 */
 .series-list-page { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 32px; }
-@media (max-width: 768px) { .series-list-page { grid-template-columns: 1fr; } }
+@media (max-width: 1024px) { .series-list-page { grid-template-columns: 1fr; } }
 .series-list-page[hidden] { display: none; }
 .series-card {
   background: var(--bg-card);
@@ -273,7 +273,7 @@ section > p.lead { color: var(--text-soft); margin: 0 0 32px; font-size: 16px; m
 #latest-list { display: block; }
 /* ep-list-page 用全新类（跟 series-list-page 同思路），3 列 1 行；窄屏切单列 */
 .ep-list-page { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-@media (max-width: 768px) { .ep-list-page { grid-template-columns: 1fr; } }
+@media (max-width: 1024px) { .ep-list-page { grid-template-columns: 1fr; } }
 .ep-list-page[hidden] { display: none; }
 /* latest 列表级 pager（继续听区分页，跟 series-list-pager 视觉一致） */
 .ep-list-pager {
