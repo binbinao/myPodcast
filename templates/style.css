@@ -116,7 +116,7 @@ section > p.lead { color: var(--text-soft); margin: 0 0 32px; font-size: 16px; m
 #series-list { display: block; }
 /* page-grid 用全新类 series-list-page 避免跟 #series-list 的 series-grid 类嵌套冲突 */
 .series-list-page { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 32px; }
-@media (max-width: 960px) { .series-list-page { grid-template-columns: 1fr; } }
+@media (max-width: 768px) { .series-list-page { grid-template-columns: 1fr; } }
 .series-list-page[hidden] { display: none; }
 .series-card {
   background: var(--bg-card);
