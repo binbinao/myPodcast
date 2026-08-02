@@ -63,7 +63,8 @@
   }
 
   function renderLatest(groups) {
-    var LATEST_PER_SERIES = 3;
+    var LATEST_PER_SERIES = 3;   // 每 series 前 N 集展示在 latest 区
+    var PAGE_SIZE = 3;            // latest 分页：每页 3 张 ep-card（跟 series 区分页视觉一致）
     var cards = [];
     var overflows = [];
     groups.forEach(function (g) {
@@ -74,13 +75,50 @@
       }
     });
     // featured = cards[0]（hero 已经在静态模板里展示，这里跳过）
+    // 拍平后分页：cards.slice(1) + overflows 一起放进列表
+    var allItems = cards.slice(1).map(function (e) { return { kind: 'ep', ep: e }; });
+    overflows.forEach(function (o) { allItems.push({ kind: 'overflow', o: o }); });
+    var totalPages = Math.max(1, Math.ceil(allItems.length / PAGE_SIZE));
     var html = '';
-    cards.slice(1).forEach(function (e) {
-      html += epCardHtml(e);
-    });
-    overflows.forEach(function (o) {
-      html += overflowCardHtml(o);
-    });
+    for (var p = 1; p <= totalPages; p++) {
+      var slice = allItems.slice((p - 1) * PAGE_SIZE, p * PAGE_SIZE);
+      html += '<div class="ep-list-page" data-ep-page="' + p + '"'
+        + (p === 1 ? '' : ' hidden') + '>';
+      slice.forEach(function (it) {
+        if (it.kind === 'ep') html += epCardHtml(it.ep);
+        else html += overflowCardHtml(it.o);
+      });
+      html += '</div>';
+    }
+    if (totalPages > 1) {
+      html += epListPagerHtml(totalPages, 1);
+    }
+    renderLatest._totalEpPages = totalPages;
+    return html;
+  }
+
+  // latest 区列表分页条（同 series 分页同款 UI，但作用域 #latest-list 之外）
+  function epListPagerHtml(totalPages, page) {
+    var ARROW_LEFT = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="15 5 7 12 15 19 15 5"/></svg>';
+    var ARROW_RIGHT = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="9 5 17 12 9 19 9 5"/></svg>';
+    var html = ''
+      + '<nav class="series-pagination ep-list-pager" data-ep-page="' + page + '" data-ep-total="' + totalPages + '" aria-label="继续听分页">'
+      + '<button type="button" class="pg-arrow ep-list-prev" data-action="ep-prev"'
+      + (page <= 1 ? ' disabled aria-disabled="true"' : ' aria-label="上一页"') + '>'
+      + ARROW_LEFT + '</button>';
+    for (var p = 1; p <= totalPages; p++) {
+      var active = (p === page);
+      html += ''
+        + '<button type="button" class="pg-num ep-list-num' + (active ? ' is-active' : '') + '"'
+        + ' data-action="ep-num" data-ep-page="' + p + '"'
+        + (active ? ' aria-current="page"' : ' aria-label="第 ' + p + ' 页"') + '>'
+        + p + '</button>';
+    }
+    html += ''
+      + '<button type="button" class="pg-arrow ep-list-next" data-action="ep-next"'
+      + (page >= totalPages ? ' disabled aria-disabled="true"' : ' aria-label="下一页"') + '>'
+      + ARROW_RIGHT + '</button>'
+      + '</nav>';
     return html;
   }
 
@@ -262,6 +300,32 @@
       ev.preventDefault();
       var action = btn.dataset.action || '';
 
+      // ---- latest 区列表分页：< 1 2 3 > 在 #latest-list 之外 ----
+      if (action === 'ep-prev' || action === 'ep-next' || action === 'ep-num') {
+        var epPager = btn.closest('.ep-list-pager');
+        if (!epPager) return;
+        var epCur = parseInt(epPager.getAttribute('data-ep-page') || '1', 10);
+        var epTotal = parseInt(epPager.getAttribute('data-ep-total') || '1', 10);
+        var epNext = epCur;
+        if (action === 'ep-prev') epNext = Math.max(1, epCur - 1);
+        else if (action === 'ep-next') epNext = Math.min(epTotal, epCur + 1);
+        else epNext = parseInt(btn.dataset.epPage, 10);
+        if (epNext === epCur) return;
+        // 隐藏所有 ep-page，显示目标
+        var epSlot = document.getElementById('latest-list');
+        if (epSlot) {
+          epSlot.querySelectorAll('.ep-list-page').forEach(function (g) {
+            if (parseInt(g.getAttribute('data-ep-page'), 10) === epNext) g.removeAttribute('hidden');
+            else g.setAttribute('hidden', '');
+          });
+        }
+        // 重渲 pager 整条
+        var newEpPager = document.createElement('div');
+        newEpPager.innerHTML = epListPagerHtml(epTotal, epNext);
+        epPager.parentNode.replaceChild(newEpPager.firstChild, epPager);
+        return;
+      }
+
       // ---- 列表级分页：< 1 2 > 在 series-list 之外 ----
       if (action === 'list-prev' || action === 'list-next' || action === 'list-num') {
         var pager = btn.closest('.series-list-pager');
@@ -342,7 +406,15 @@
         var eps = (data && data.episodes) || [];
         var groups = groupBySeries(eps);
         var latestSlot = document.getElementById('latest-list');
-        if (latestSlot) latestSlot.innerHTML = renderLatest(groups);
+        if (latestSlot) {
+          latestSlot.innerHTML = renderLatest(groups);
+          // latest pager 同 series pager 处理：挪出 #latest-list grid，append 到 section 末尾
+          if (renderLatest._totalEpPages > 1 && latestSlot.parentNode) {
+            var epPagerDiv = document.createElement('div');
+            epPagerDiv.innerHTML = epListPagerHtml(renderLatest._totalEpPages, 1);
+            latestSlot.parentNode.appendChild(epPagerDiv.firstChild);
+          }
+        }
         var seriesSlot = document.getElementById('series-list');
         if (seriesSlot) {
           seriesSlot.innerHTML = renderSeries(groups);

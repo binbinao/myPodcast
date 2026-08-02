@@ -269,6 +269,20 @@ section > p.lead { color: var(--text-soft); margin: 0 0 32px; font-size: 16px; m
 
 /* Latest episodes */
 .ep-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 24px; }
+/* #latest-list 静态壳本身是 ep-grid，强制 block，避免 ep-list-page 被外层 grid 挤窄 */
+#latest-list { display: block; }
+/* ep-list-page 用全新类（跟 series-list-page 同思路），3 列 1 行；窄屏切单列 */
+.ep-list-page { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 768px) { .ep-list-page { grid-template-columns: 1fr; } }
+.ep-list-page[hidden] { display: none; }
+/* latest 列表级 pager（继续听区分页，跟 series-list-pager 视觉一致） */
+.ep-list-pager {
+  margin-top: 24px;
+  border-top: 1px solid var(--border);
+  border-bottom: none;
+  padding-top: 18px;
+  justify-content: center;
+}
 .ep-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; transition: border-color .15s var(--ease), box-shadow .15s var(--ease); }
 .ep-card.compact { padding: 18px; }
 .ep-card.is-playing { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 4px 20px var(--color-accent-glow); }
