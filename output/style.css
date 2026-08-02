@@ -98,7 +98,8 @@ a:focus-visible, .btn:focus-visible, .sub-card:focus-visible, .nav-toggle:focus-
 }
 .hero-desc { color: var(--text-soft); font-size: 18px; margin: 0 0 28px; max-width: 56ch; }
 .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
-.btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 10px; font-weight: 600; font-size: 15px; transition: transform .15s var(--ease), background .15s var(--ease); }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 10px; font-weight: 600; font-size: 15px; transition: transform .15s var(--ease), background .15s var(--ease); white-space: nowrap; }
+.btn svg { width: 18px; height: 18px; flex-shrink: 0; }
 .btn-primary { background: var(--accent); color: var(--color-on-accent); }
 .btn-primary:hover { background: var(--accent-hover); text-decoration: none; transform: translateY(-1px); }
 .btn-ghost { border: 1px solid var(--border); color: var(--text); }
