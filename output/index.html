@@ -438,27 +438,38 @@
   }
 
   function renderSeries(groups) {
-    var PAGE_SIZE = 3;
+    var EP_PAGE_SIZE = 3;          // 单 series 内 ep 分页大小
+    var LIST_PAGE_SIZE = 3;        // series 列表本身分页大小
+    var totalListPages = Math.max(1, Math.ceil(groups.length / LIST_PAGE_SIZE));
     var html = '';
-    groups.forEach(function (g) {
-      var totalDur = fmtDur(g.total_duration);
-      var totalPages = Math.max(1, Math.ceil(g.items.length / PAGE_SIZE));
-      html += ''
-        + '<article class="series-card" data-slug="' + escapeHtml(g.slug)
-        + '" data-page-size="' + PAGE_SIZE + '" data-total-pages="' + totalPages + '">'
-        + '<div class="series-body">'
-        + '<h3>' + escapeHtml(g.series) + '</h3>'
-        + '<p class="series-meta"><span class="series-count">' + g.count + ' 集</span>'
-        + '<span class="series-dot" aria-hidden="true">·</span>'
-        + '<span>总时长 ' + totalDur + '</span></p>'
-        + (g.description ? '<p class="series-desc">' + escapeHtml(g.description) + '</p>' : '')
-        + '<ol class="series-ep-list" data-page="1">'
-        + renderPage(g, 1)
-        + '</ol>'
-        + '</div>'
-        + (totalPages > 1 ? paginationHtml(g.slug, totalPages, 1) : '')
-        + '</article>';
-    });
+    for (var lp = 1; lp <= totalListPages; lp++) {
+      var listSlice = groups.slice((lp - 1) * LIST_PAGE_SIZE, lp * LIST_PAGE_SIZE);
+      html += '<div class="series-grid" data-list-page="' + lp + '"'
+        + (lp === 1 ? '' : ' hidden') + '>';
+      listSlice.forEach(function (g) {
+        var totalDur = fmtDur(g.total_duration);
+        var totalPages = Math.max(1, Math.ceil(g.items.length / EP_PAGE_SIZE));
+        html += ''
+          + '<article class="series-card" data-slug="' + escapeHtml(g.slug)
+          + '" data-page-size="' + EP_PAGE_SIZE + '" data-total-pages="' + totalPages + '">'
+          + '<div class="series-body">'
+          + '<h3>' + escapeHtml(g.series) + '</h3>'
+          + '<p class="series-meta"><span class="series-count">' + g.count + ' 集</span>'
+          + '<span class="series-dot" aria-hidden="true">·</span>'
+          + '<span>总时长 ' + totalDur + '</span></p>'
+          + (g.description ? '<p class="series-desc">' + escapeHtml(g.description) + '</p>' : '')
+          + '<ol class="series-ep-list" data-page="1">'
+          + renderPage(g, 1)
+          + '</ol>'
+          + '</div>'
+          + (totalPages > 1 ? paginationHtml(g.slug, totalPages, 1) : '')
+          + '</article>';
+      });
+      html += '</div>';
+    }
+    if (totalListPages > 1) {
+      html += listPagerHtml(totalListPages, 1);
+    }
     // render 完成后，把每张卡片的 items 挂到 DOM 节点上，供分页 click handler 用
     // （绕过 dataset JSON escape 麻烦 + 字符串拼接里塞大数组的丑）
     setTimeout(function () {
@@ -470,6 +481,31 @@
         card._items = bySlug[card.getAttribute('data-slug')] || [];
       });
     }, 0);
+    return html;
+  }
+
+  // 列表级分页条（同款分页 UI）：< 1 2 >，箭头 + 页码
+  function listPagerHtml(totalPages, page) {
+    var ARROW_LEFT = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="15 5 7 12 15 19 15 5"/></svg>';
+    var ARROW_RIGHT = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="9 5 17 12 9 19 9 5"/></svg>';
+    var html = ''
+      + '<nav class="series-pagination series-list-pager" data-page="' + page + '" data-total-pages="' + totalPages + '" aria-label="系列列表分页">'
+      + '<button type="button" class="pg-arrow pg-list-prev" data-action="list-prev"'
+      + (page <= 1 ? ' disabled aria-disabled="true"' : ' aria-label="上一页"') + '>'
+      + ARROW_LEFT + '</button>';
+    for (var p = 1; p <= totalPages; p++) {
+      var active = (p === page);
+      html += ''
+        + '<button type="button" class="pg-num pg-list-num' + (active ? ' is-active' : '') + '"'
+        + ' data-action="list-num" data-page="' + p + '"'
+        + (active ? ' aria-current="page"' : ' aria-label="第 ' + p + ' 页"') + '>'
+        + p + '</button>';
+    }
+    html += ''
+      + '<button type="button" class="pg-arrow pg-list-next" data-action="list-next"'
+      + (page >= totalPages ? ' disabled aria-disabled="true"' : ' aria-label="下一页"') + '>'
+      + ARROW_RIGHT + '</button>'
+      + '</nav>';
     return html;
   }
 
@@ -537,26 +573,47 @@
       if (!btn) return;
       if (btn.disabled || btn.getAttribute('aria-disabled') === 'true') return;
       ev.preventDefault();
+      var action = btn.dataset.action || '';
+
+      // ---- 列表级分页：< 1 2 > 在 series-card 之外 ----
+      if (action === 'list-prev' || action === 'list-next' || action === 'list-num') {
+        var pager = btn.closest('.series-list-pager');
+        if (!pager) return;
+        var cur = parseInt(pager.getAttribute('data-page') || '1', 10);
+        var totalPages = parseInt(pager.getAttribute('data-total-pages') || '1', 10);
+        var next = cur;
+        if (action === 'list-prev') next = Math.max(1, cur - 1);
+        else if (action === 'list-next') next = Math.min(totalPages, cur + 1);
+        else next = parseInt(btn.dataset.page, 10);
+        if (next === cur) return;
+        // 隐藏所有 list-page，显示目标
+        var grids = slot.querySelectorAll('.series-grid');
+        grids.forEach(function (g) {
+          if (parseInt(g.getAttribute('data-list-page'), 10) === next) g.removeAttribute('hidden');
+          else g.setAttribute('hidden', '');
+        });
+        // 重渲 pager 整条
+        pager.outerHTML = listPagerHtml(totalPages, next);
+        return;
+      }
+
+      // ---- 单 series 内部 ep 分页：< 1 2 3 > 在 series-card 里 ----
       var slug = btn.dataset.slug;
       var card = btn.closest('.series-card');
       if (!card) return;
       var ol = card.querySelector('.series-ep-list');
-      var pager = card.querySelector('.series-pagination');
-      var cur = parseInt(ol.getAttribute('data-page') || '1', 10);
-      var totalPages = parseInt(card.getAttribute('data-total-pages') || '1', 10);
-      var next = cur;
-      if (btn.classList.contains('pg-arrow')) {
-        if (arrow.dataset.action === 'pg-prev') next = Math.max(1, cur - 1);
-        else if (arrow.dataset.action === 'pg-next') next = Math.min(totalPages, cur + 1);
-      } else if (num.classList.contains('pg-num')) {
-        next = parseInt(num.dataset.page, 10);
-      }
-      if (next === cur) return;
-      // 重渲 li + 重渲分页条（active 态 + 禁用箭头）
+      var innerPager = card.querySelector('.series-pagination:not(.series-list-pager)');
+      var cur2 = parseInt(ol.getAttribute('data-page') || '1', 10);
+      var totalPages2 = parseInt(card.getAttribute('data-total-pages') || '1', 10);
+      var next2 = cur2;
+      if (action === 'pg-prev') next2 = Math.max(1, cur2 - 1);
+      else if (action === 'pg-next') next2 = Math.min(totalPages2, cur2 + 1);
+      else next2 = parseInt(btn.dataset.page, 10);
+      if (next2 === cur2) return;
       var items = card._items || [];
-      ol.setAttribute('data-page', next);
-      ol.innerHTML = renderPage({ slug: slug, items: items }, next);
-      if (pager) pager.outerHTML = paginationHtml(slug, totalPages, next);
+      ol.setAttribute('data-page', next2);
+      ol.innerHTML = renderPage({ slug: slug, items: items }, next2);
+      if (innerPager) innerPager.outerHTML = paginationHtml(slug, totalPages2, next2);
     });
   }
 

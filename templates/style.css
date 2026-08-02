@@ -254,6 +254,16 @@ section > p.lead { color: var(--text-soft); margin: 0 0 32px; font-size: 16px; m
 }
 .series-pagination .pg-arrow svg { width: 12px; height: 12px; display: block; }
 
+/* 系列列表级分页条（跟 card footer 的 pager 同款，但不在卡片里） */
+.series-list-pager {
+  margin-top: 24px;
+  border-top: 1px solid var(--border);
+  border-bottom: none;
+  padding-top: 18px;
+  justify-content: center;          /* 列表级居中，更突出 */
+}
+.series-grid[hidden] { display: none; }
+
 /* Latest episodes */
 .ep-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 24px; }
 .ep-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; transition: border-color .15s var(--ease), box-shadow .15s var(--ease); }
