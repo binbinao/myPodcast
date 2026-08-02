@@ -453,12 +453,17 @@ def _hero_html(
 
 
 def _about_html(title: str, tagline: str, about_text: str, groups: list, episodes: list, author: str, language: str) -> str:
-    """About 段：M2-3 人味 + tagline 收敛。"""
+    """About 段：M2-3 人味 + tagline 收敛。
+
+    段落规则：用空行 \\n\\n 分段；段内单 \\n 当空格（不再替换 <br>）——
+    about 文案里作者写时按"一句话一行"的习惯换行，硬塞 <br> 会强制每句换行，
+    视觉割裂。改成自然流式段落更舒服。
+    """
     about_text_str = (about_text or "").strip()
     if about_text_str:
         paragraphs = [p.strip() for p in about_text_str.split("\n\n") if p.strip()]
         para_html = "\n".join(
-            f'    <p>{_hescape(p.replace(chr(10), "<br>"))}</p>' for p in paragraphs
+            f'    <p>{_hescape(p.replace(chr(10), " "))}</p>' for p in paragraphs
         )
     else:
         para_html = f'    <p>{_hescape(tagline)}</p>'
