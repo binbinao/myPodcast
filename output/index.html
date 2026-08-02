@@ -444,7 +444,7 @@
     var html = '';
     for (var lp = 1; lp <= totalListPages; lp++) {
       var listSlice = groups.slice((lp - 1) * LIST_PAGE_SIZE, lp * LIST_PAGE_SIZE);
-      html += '<div class="series-grid" data-list-page="' + lp + '"'
+      html += '<div class="series-list-page" data-list-page="' + lp + '"'
         + (lp === 1 ? '' : ' hidden') + '>';
       listSlice.forEach(function (g) {
         var totalDur = fmtDur(g.total_duration);
@@ -591,7 +591,7 @@
         // 隐藏所有 list-page，显示目标（grids 仍在 #series-list 里）
         var slot = document.getElementById('series-list');
         if (slot) {
-          slot.querySelectorAll('.series-grid').forEach(function (g) {
+          slot.querySelectorAll('.series-list-page').forEach(function (g) {
             if (parseInt(g.getAttribute('data-list-page'), 10) === next) g.removeAttribute('hidden');
             else g.setAttribute('hidden', '');
           });
