@@ -24,7 +24,12 @@ from .tts import build_episode_audio
 from .voicecaster import cast as vc_cast
 
 
-def run_one(episode_path: Path, out_dir: Path, cfg: dict[str, Any]) -> None:
+def run_one(
+    episode_path: Path,
+    out_dir: Path,
+    cfg: dict[str, Any],
+    voice_override: str | None = None,
+) -> None:
     raw = Path(episode_path).read_text(encoding="utf-8")
 
     # draft 只读契约：build 不再跑 polish() 二次 LLM 改写。
@@ -71,7 +76,8 @@ def run_one(episode_path: Path, out_dir: Path, cfg: dict[str, Any]) -> None:
     # 音色选型：仅 minimax backend 用 voicecaster；duo 节目保留 host/guest 映射
     fmt = str(meta.get("format", "")).lower()
     if backend == "minimax" and fmt != "duo":
-        explicit = meta.get("voice")  # frontmatter 显式 voice 字段
+        # 优先级：CLI --voice > frontmatter voice > voicecaster 自动
+        explicit = voice_override or meta.get("voice")
         source_rel = meta.get("source")
         article_text = raw
         if source_rel:
@@ -80,7 +86,10 @@ def run_one(episode_path: Path, out_dir: Path, cfg: dict[str, Any]) -> None:
                 article_text = src_path.read_text(encoding="utf-8")
         chosen = vc_cast(article_text, cfg, explicit=explicit)
         voice_map["default"] = chosen
-        log.info(f"      voicecaster → {chosen}")
+        if voice_override:
+            log.info(f"      voice CLI 覆盖 → {voice_override}")
+        else:
+            log.info(f"      voicecaster → {chosen}")
 
     series_slug = meta.get("series_slug", "")
     series_title_v = meta.get("series", "")
@@ -141,6 +150,7 @@ def run(
     from_ep: str | None = None,
     retry_failed: bool = False,
     force: bool = False,
+    voice_override: str | None = None,
 ) -> None:
     cfg = yaml.safe_load(Path(config_path).read_text(encoding="utf-8"))
     out_dir = Path(out_dir)
@@ -205,7 +215,7 @@ def run(
 
         log.info(f"===== [{i}/{n_total}] {s.name} =====")
         try:
-            result = run_one(s, out_dir, cfg)
+            result = run_one(s, out_dir, cfg, voice_override=voice_override)
             if result == "skipped":
                 skipped.append(s.name)
             else:
@@ -253,6 +263,9 @@ def main() -> None:
                     help="强制重生成已有 mp3，忽略 source_hash")
     ap.add_argument("--log-file", default=None, help="追加日志到此文件（默认仅 stdout）")
     ap.add_argument("--log-level", default="INFO", help="DEBUG/INFO/WARNING/ERROR（默认 INFO）")
+    ap.add_argument("--voice", dest="voice_override", default=None, metavar="VOICE_ID",
+                    help="覆盖 frontmatter voice 字段，仅 solo 节目生效（duo 走 host/guest 映射）"
+                         " 用于快速调音，不必重跑 prepare")
     args = ap.parse_args()
     configure(level=args.log_level, log_file=args.log_file)
     SKIP_AUDIO = args.skip_audio
@@ -263,6 +276,7 @@ def main() -> None:
             from_ep=args.from_ep,
             retry_failed=args.retry_failed,
             force=args.force,
+            voice_override=args.voice_override,
         )
     except PipelineError as e:
         log.error(f"\n✗ 流水线失败: {e}")

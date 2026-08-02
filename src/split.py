@@ -36,6 +36,8 @@ class EpisodePlan:
     body: str         # 待转口播的正文
     format: str = "duo"  # solo / duo
     article_date: str = ""   # 文章日期（YYYY-MM-DD），用于 drafts 目录
+    voice: str = ""          # TTS voice_id（prepare 阶段决定；空=build 阶段 voicecaster 选）
+    split_strategy: str = "" # split 策略（by_h2 / by_chars / by_duration）；空=auto
 
 
 # ---------- 清洗 ----------
@@ -181,21 +183,49 @@ def plan_episodes(
     episodes: int | None = None,
     series_slug: str = "",
     article_date: str = "",
+    strategy: str = "auto",
+    max_chars_override: int | None = None,
+    max_duration_min: int | None = None,
+    chars_per_minute: int = 250,
 ) -> list[EpisodePlan]:
+    """分集切分主入口。
+
+    strategy:
+      auto          - 现有行为（先 H2，再 hr，最后 single），向后兼容
+      by_h2         - 强制按 H2 章节切（一章一集，超长按 H3/段落再切）
+      by_chars      - 强制按 max_chars 切（忽略 H2 章节边界）
+      by_duration   - 按 max_duration_min × chars_per_minute 估算字数，按字数切
+
+    max_chars_override / max_duration_min：供 decisions.py 透传用户决策后的参数。
+    """
     split_cfg = cfg.get("split", {})
     min_c = split_cfg.get("min_episode_chars", 600)
-    max_c = split_cfg.get("max_episode_chars", 3000)
+    max_c = max_chars_override or split_cfg.get("max_episode_chars", 3000)
     meta = set(split_cfg.get("meta_sections", DEFAULT_META_SECTIONS))
 
     body = _body_without_frontmatter(article)
     cleaned = clean_article(body, list(meta))
 
-    h2 = _h2_content_sections(cleaned, meta)
-    if len(h2) >= 2:
-        mode = "h2"
+    # 决策 strategy="auto" 走原 mode 选择；显式策略走新分支
+    if strategy == "auto":
+        h2 = _h2_content_sections(cleaned, meta)
+        if len(h2) >= 2:
+            mode = "h2"
+        else:
+            hr_blocks = _drop_meta_blocks(_split_on_hr(cleaned), meta)
+            mode = "hr" if len(hr_blocks) >= 2 else "single"
+    elif strategy == "by_h2":
+        h2 = _h2_content_sections(cleaned, meta)
+        mode = "h2" if len(h2) >= 2 else "single"
+    elif strategy == "by_chars":
+        mode = "chars"
+    elif strategy == "by_duration":
+        # 时长 → 字数阈值（按 chars_per_minute 折算）
+        cpm = max(chars_per_minute, 50)
+        max_c = (max_duration_min or split_cfg.get("default_max_duration_min", 12)) * cpm
+        mode = "chars"
     else:
-        hr_blocks = _drop_meta_blocks(_split_on_hr(cleaned), meta)
-        mode = "hr" if len(hr_blocks) >= 2 else "single"
+        raise ValueError(f"未知 split strategy: {strategy!r}（auto/by_h2/by_chars/by_duration）")
 
     # 组装 (章节名, 正文) 列表
     if mode == "h2":
@@ -220,7 +250,15 @@ def plan_episodes(
         for g in groups:
             combined = "\n\n".join(hr_blocks[i] for i in g)
             pairs.append((titles[g[0]], combined))
-    else:
+    elif mode == "chars":
+        # 纯按字数切：忽略 H2 / hr 边界，整体当一块
+        text = cleaned.strip()
+        if _count(text) <= max_c:
+            pairs = [("全文", text)]
+        else:
+            pairs = [(f"第{i+1}部分", sub)
+                     for i, sub in enumerate(_split_long(text, max_c), 1)]
+    else:  # "single"
         text = cleaned.strip()
         if _count(text) <= max_c:
             pairs = [("全文", text)]
@@ -241,6 +279,7 @@ def plan_episodes(
                 body=text,
                 format=fmt,
                 article_date=article_date,
+                split_strategy=strategy if strategy != "auto" else "",
             )
         )
     return plans

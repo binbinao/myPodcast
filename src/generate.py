@@ -30,6 +30,11 @@ def _wrap(
     series_slug_line = (
         f'series_slug: "{plan.series_slug}"\n' if getattr(plan, "series_slug", "") else ""
     )
+    voice_line = f'voice: "{plan.voice}"\n' if getattr(plan, "voice", "") else ""
+    split_line = (
+        f'split_strategy: "{plan.split_strategy}"\n'
+        if getattr(plan, "split_strategy", "") else ""
+    )
     return (
         f"---\n"
         f'title: "{plan.title}"\n'
@@ -40,6 +45,8 @@ def _wrap(
         f"episode: {plan.index}\n"
         f"total: {plan.total}\n"
         f'chapter: "{plan.chapter}"\n'
+        f"{voice_line}"
+        f"{split_line}"
         f"{src_line}"
         f"ai_stage: {stage}\n"
         f"---\n\n"
