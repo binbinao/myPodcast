@@ -467,9 +467,8 @@
       });
       html += '</div>';
     }
-    if (totalListPages > 1) {
-      html += listPagerHtml(totalListPages, 1);
-    }
+    // 注意：listPagerHtml 由 init() 单独调用 append 到 #series-list 的 parent
+    // （不能写在 seriesSlot.innerHTML 里，否则被 series-list grid 当 child 错位）
     // render 完成后，把每张卡片的 items 挂到 DOM 节点上，供分页 click handler 用
     // （绕过 dataset JSON escape 麻烦 + 字符串拼接里塞大数组的丑）
     setTimeout(function () {
@@ -481,6 +480,8 @@
         card._items = bySlug[card.getAttribute('data-slug')] || [];
       });
     }, 0);
+    // 暴露给 init / click handler 用
+    renderSeries._totalListPages = totalListPages;
     return html;
   }
 
@@ -592,8 +593,10 @@
           if (parseInt(g.getAttribute('data-list-page'), 10) === next) g.removeAttribute('hidden');
           else g.setAttribute('hidden', '');
         });
-        // 重渲 pager 整条
-        pager.outerHTML = listPagerHtml(totalPages, next);
+        // 重渲 pager 整条（保持挪出 #series-list grid，到 parent 末尾居中）
+        var newPager = document.createElement('div');
+        newPager.innerHTML = listPagerHtml(totalPages, next);
+        pager.parentNode.replaceChild(newPager.firstChild, pager);
         return;
       }
 
@@ -653,7 +656,17 @@
         var latestSlot = document.getElementById('latest-list');
         if (latestSlot) latestSlot.innerHTML = renderLatest(groups);
         var seriesSlot = document.getElementById('series-list');
-        if (seriesSlot) seriesSlot.innerHTML = renderSeries(groups);
+        if (seriesSlot) {
+          seriesSlot.innerHTML = renderSeries(groups);
+          // 列表级 pager 必须挪出 #series-list grid 容器（series-list 本身是 grid，
+          // pager 当 child 会被 grid auto-flow 错位塞到空 cell）。挂到 section 末尾，
+          // 水平居中显示。
+          if (renderSeries._totalListPages > 1 && seriesSlot.parentNode) {
+            var pagerDiv = document.createElement('div');
+            pagerDiv.innerHTML = listPagerHtml(renderSeries._totalListPages, 1);
+            seriesSlot.parentNode.appendChild(pagerDiv.firstChild);
+          }
+        }
         renderFeaturedCta(groups);
         bindSeriesPagination();
       })
