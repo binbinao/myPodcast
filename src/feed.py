@@ -517,10 +517,30 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     groups = _group_by_series(episodes)
 
     # Featured / Latest 排序
-    latest = list(episodes)
-    latest.sort(key=lambda x: x.get("date", ""), reverse=True)
-    featured = latest[0] if latest else None
-    latest_short = [e for e in latest[1:4] if e]
+    # 规则：
+    #   - featured = 第一个 series（按 latest_date 倒序）的第 1 集
+    #   - latest = 按 series 出现顺序，每个 series 最多展示 LATEST_PER_SERIES 集
+    #     多于 LATEST_PER_SERIES 的折叠成 "+N 集" 卡片，指向 #series 锚点
+    #   - featured 那集不进 latest 区（Hero 已展示）
+    LATEST_PER_SERIES = 3
+
+    latest_cards: list[dict[str, Any]] = []
+    overflow_cards: list[dict[str, Any]] = []
+    for g in groups:
+        items = g["items"]
+        latest_cards.extend(items[:LATEST_PER_SERIES])
+        rest = items[LATEST_PER_SERIES:]
+        if rest:
+            overflow_cards.append({
+                "is_overflow": True,
+                "series": g["series"],
+                "slug": g["slug"],
+                "remaining": len(rest),
+            })
+
+    featured = latest_cards[0] if latest_cards else None
+    # 模板渲染序列：跳过 featured，剩余 cards + overflow 折叠卡
+    latest_short = list(latest_cards[1:]) + overflow_cards
 
     # 给每集补 audio_src / shownotes_src / display_title / dur_str / play_icon
     def _enrich(eps: list[dict[str, Any]]) -> list[dict[str, Any]]:

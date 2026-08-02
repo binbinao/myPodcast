@@ -1,8 +1,16 @@
 <section id="latest">
   <h2>继续听</h2>
-  <p class="lead">最近更新的 3 集（不包含 Hero 那一期）。完整列表在 <a href="#series">节目</a> 里按系列看。</p>
+  <p class="lead">按系列顺序，每个系列展示前 3 集。多余的折叠成「+N 集」跳到 <a href="#series">节目</a>。</p>
   <div class="ep-grid">
   {% for e in latest %}
+    {% if e.is_overflow %}
+    <a class="ep-card ep-card-overflow" href="#series" data-slug="{{ e.slug | e }}" aria-label="{{ e.series | e }} 还有 {{ e.remaining }} 集，去节目区看全部">
+      <div class="ep-overflow-num">+{{ e.remaining }}</div>
+      <div class="ep-overflow-label">集</div>
+      <div class="ep-overflow-hint">去节目区看全部</div>
+      <div class="ep-overflow-series">{{ e.series | e }}</div>
+    </a>
+    {% else %}
     <article class="ep-card" data-slug="{{ e.slug | e }}" data-audio="{{ e.audio_src | e }}" data-title="{{ e.title | e }}" data-series="{{ e.series | e }}" data-duration="{{ e.duration }}">
       <div class="ep-meta">
         <time datetime="{{ e.date | e }}">{{ e.date | e }}</time>
@@ -17,6 +25,7 @@
         <a href="{{ e.audio_src | e }}" download>下载</a>
       </div>
     </article>
+    {% endif %}
   {% endfor %}
   </div>
 </section>
