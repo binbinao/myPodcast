@@ -7,6 +7,114 @@
     <language>zh-CN</language>
     <itunes:author>小搭 &amp; 斌哥</itunes:author>
     <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 十二、结语</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>12</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-12/episode.mp3" type="audio/mpeg" length="6104436"/>
+      <itunes:duration>381</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 十一、未来展望：通用人工智能之路</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>11</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-11/episode.mp3" type="audio/mpeg" length="10829364"/>
+      <itunes:duration>676</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 十、AI基础设施与工程化演进</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>10</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-10/episode.mp3" type="audio/mpeg" length="16001844"/>
+      <itunes:duration>999</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 九、Agent、推理与具身智能：迈向AGI（2024-2026）</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>9</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-09/episode.mp3" type="audio/mpeg" length="12132276"/>
+      <itunes:duration>758</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 八、多模态与开源生态的爆发（2023-2024）</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>8</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-08/episode.mp3" type="audio/mpeg" length="11560884"/>
+      <itunes:duration>722</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 七、ChatGPT与大模型的"iPhone时刻"（2022-2023）</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>7</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-07/episode.mp3" type="audio/mpeg" length="7254708"/>
+      <itunes:duration>453</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 六、预训练大模型的崛起（2018-2022）</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>6</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-06/episode.mp3" type="audio/mpeg" length="10726836"/>
+      <itunes:duration>670</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 五、Transformer：改变一切的架构（2017-2019）</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>5</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-05/episode.mp3" type="audio/mpeg" length="11078196"/>
+      <itunes:duration>692</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 四、深度学习的全面开花（2014-2017）</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>4</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-04/episode.mp3" type="audio/mpeg" length="11158836"/>
+      <itunes:duration>697</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 三、深度学习的"ImageNet时刻"（2012-2014）</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>3</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-03/episode.mp3" type="audio/mpeg" length="5689140"/>
+      <itunes:duration>355</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 二、前传：深度学习之前的AI</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>2</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-02/episode.mp3" type="audio/mpeg" length="2795316"/>
+      <itunes:duration>174</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 一、引言：为什么今天需要回顾AI的发展</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>1</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-01/episode.mp3" type="audio/mpeg" length="3309108"/>
+      <itunes:duration>206</itunes:duration>
+    </item>
+    <item>
       <title>个体跨境电商商业模式与落地应用系统深度调研 · 结语：你离跨境电商只差一个“开始”</title>
       <description>《个体跨境电商商业模式与落地应用系统深度调研》结语：你离跨境电商只差一个“开始”（第 13/13 集）</description>
       <pubDate>2026-08-02</pubDate>

@@ -1,0 +1,15 @@
+{
+  "decisions": {
+    "format": "duo",
+    "voice": "host=audiobook_male_1 / guest=female-chengshu",
+    "voice_type": "duo",
+    "host_voice": "audiobook_male_1",
+    "guest_voice": "female-chengshu",
+    "split_strategy": "by_h2",
+    "split_params": {
+      "min_episode_chars": 600,
+      "max_episode_chars": 7000
+    },
+    "split_count": 60
+  }
+}

@@ -392,9 +392,29 @@ def _customize_split_params(
     strategy: str,
     params: dict[str, Any],
 ) -> dict[str, Any]:
-    """当用户选按字数/时长时，让阈值也由用户拍板。"""
+    """让阈值也由用户拍板（适用于所有策略）。
+
+    by_h2       → 改 max_chars（章节阈值；超过则切，超长 H2 章节被 _split_long 拆）
+    by_chars    → 改 max_chars（每集字数上限）
+    by_duration → 改 max_duration_min（每集分钟数）
+    """
     out = dict(params)
-    if strategy == "by_duration":
+    if strategy in ("by_h2", "by_chars"):
+        default = int(out.get("max_episode_chars", 3000))
+        prompt_label = (
+            "每章最大字数（章节超过则拆）" if strategy == "by_h2"
+            else "每集最大字数"
+        )
+        raw = _prompt(prompt_label, str(default))
+        try:
+            chars = int(raw or default)
+            if chars < 500 or chars > 20000:
+                raise ValueError
+            out["max_episode_chars"] = chars
+        except ValueError:
+            print(f"    无效字数，保持 {default} 字")
+            out["max_episode_chars"] = default
+    elif strategy == "by_duration":
         default = int(out.get("max_duration_min", 12))
         raw = _prompt("每集目标时长（分钟）", str(default))
         try:
@@ -405,17 +425,6 @@ def _customize_split_params(
         except ValueError:
             print(f"    无效时长，保持 {default} 分钟")
             out["max_duration_min"] = default
-    elif strategy == "by_chars":
-        default = int(out.get("max_episode_chars", 3000))
-        raw = _prompt("每集最大字数", str(default))
-        try:
-            chars = int(raw or default)
-            if chars < 500 or chars > 20000:
-                raise ValueError
-            out["max_episode_chars"] = chars
-        except ValueError:
-            print(f"    无效字数，保持 {default} 字")
-            out["max_episode_chars"] = default
     return out
 
 
@@ -544,10 +553,12 @@ def collect_decisions(
                                           auto_accept=auto_accept)
         if strat == "__reanalyze__":
             continue
-        # 阈值也由用户拍板：按字数 / 时长才让改；按章节就跳过。
-        if strat in ("by_chars", "by_duration") and not auto_accept:
+        # 阈值也由用户拍板：所有策略都问（by_h2 也问 max_chars 章节阈值，
+        # 否则超长章节会被 _split_long 切成 N 集——2026-08-03 ai-development-history
+        # 60 集翻车就是这么来的）。
+        if not auto_accept:
             params_choice = _customize_split_params(strat, params_choice)
-        elif strat in ("by_chars", "by_duration") and auto_accept:
+        else:
             # 自动模式下，记录一下用了默认阈值（备查）
             log.info(f"    auto-accept: 阈值默认 {params_choice}")
 
