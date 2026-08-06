@@ -1,6 +1,27 @@
 {
   "episodes": [
     {
+      "_key": "cbm-baremetal::ep-01",
+      "slug": "cbm-baremetal",
+      "ep_index": 1,
+      "title": "裸金属对外售卖机型全清单",
+      "subtitle": "",
+      "description": "裸金属对外售卖机型全量清单，共 39 款：标准型、GPU 型、高性能 GPU 型、高主频 IO 型、高 IO 型、大数据型、内存型、Arm 型、定制机型与已 EOL 机型，逐款给出内部代号、CPU 与核数、网卡形态和刊例价，面向选型与对客报价参考。",
+      "date": "2026-08-06",
+      "created": "2026-08-06",
+      "updated": "2026-08-06",
+      "duration": 1039,
+      "size": 16631412,
+      "url": "series/cbm-baremetal/ep-01/episode.mp3",
+      "series": "裸金属对外售卖机型全清单",
+      "episode": 1,
+      "total": 1,
+      "format": "solo",
+      "chapter": "全文",
+      "voice": "audiobook_male_1",
+      "source_hash": "5e4a93eead6ed990"
+    },
+    {
       "_key": "ai-development-history::ep-12",
       "slug": "ai-development-history",
       "ep_index": 12,
