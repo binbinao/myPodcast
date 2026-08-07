@@ -7,15 +7,6 @@
     <language>zh-CN</language>
     <itunes:author>小搭 &amp; 斌哥</itunes:author>
     <item>
-      <title>裸金属对外售卖机型全清单</title>
-      <description>裸金属对外售卖机型全量清单，共 39 款：标准型、GPU 型、高性能 GPU 型、高主频 IO 型、高 IO 型、大数据型、内存型、Arm 型、定制机型与已 EOL 机型，逐款给出内部代号、CPU 与核数、网卡形态和刊例价，面向选型与对客报价参考。</description>
-      <pubDate>2026-08-06</pubDate>
-      <itunes:episode>1</itunes:episode>
-      <itunes:season>1</itunes:season>
-      <enclosure url="https://binbinao.github.io/myPodcast/series/cbm-baremetal/ep-01/episode.mp3" type="audio/mpeg" length="16631412"/>
-      <itunes:duration>1039</itunes:duration>
-    </item>
-    <item>
       <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 十二、结语</title>
       <description></description>
       <pubDate>2026-08-03</pubDate>
