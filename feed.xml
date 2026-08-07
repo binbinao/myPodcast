@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>小搭-斌哥电台</title>
+    <description>把文章、白皮书、长文，变成能听的电台。</description>
+    <link>https://binbinao.github.io/myPodcast</link>
+    <language>zh-CN</language>
+    <itunes:author>小搭 &amp; 斌哥</itunes:author>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 十二、结语</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>12</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-12/episode.mp3" type="audio/mpeg" length="6104436"/>
+      <itunes:duration>381</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 十一、未来展望：通用人工智能之路</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>11</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-11/episode.mp3" type="audio/mpeg" length="10829364"/>
+      <itunes:duration>676</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 十、AI基础设施与工程化演进</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>10</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-10/episode.mp3" type="audio/mpeg" length="16001844"/>
+      <itunes:duration>999</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 九、Agent、推理与具身智能：迈向AGI（2024-2026）</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>9</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-09/episode.mp3" type="audio/mpeg" length="12132276"/>
+      <itunes:duration>758</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 八、多模态与开源生态的爆发（2023-2024）</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>8</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-08/episode.mp3" type="audio/mpeg" length="11560884"/>
+      <itunes:duration>722</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 七、ChatGPT与大模型的"iPhone时刻"（2022-2023）</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>7</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-07/episode.mp3" type="audio/mpeg" length="7254708"/>
+      <itunes:duration>453</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 六、预训练大模型的崛起（2018-2022）</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>6</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-06/episode.mp3" type="audio/mpeg" length="10726836"/>
+      <itunes:duration>670</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 五、Transformer：改变一切的架构（2017-2019）</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>5</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-05/episode.mp3" type="audio/mpeg" length="11078196"/>
+      <itunes:duration>692</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 四、深度学习的全面开花（2014-2017）</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>4</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-04/episode.mp3" type="audio/mpeg" length="11158836"/>
+      <itunes:duration>697</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 三、深度学习的"ImageNet时刻"（2012-2014）</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>3</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-03/episode.mp3" type="audio/mpeg" length="5689140"/>
+      <itunes:duration>355</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 二、前传：深度学习之前的AI</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>2</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-02/episode.mp3" type="audio/mpeg" length="2795316"/>
+      <itunes:duration>174</itunes:duration>
+    </item>
+    <item>
+      <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 一、引言：为什么今天需要回顾AI的发展</title>
+      <description></description>
+      <pubDate>2026-08-03</pubDate>
+      <itunes:episode>1</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-development-history/ep-01/episode.mp3" type="audio/mpeg" length="3309108"/>
+      <itunes:duration>206</itunes:duration>
+    </item>
+    <item>
+      <title>个体跨境电商商业模式与落地应用系统深度调研 · 结语：你离跨境电商只差一个“开始”</title>
+      <description>《个体跨境电商商业模式与落地应用系统深度调研》结语：你离跨境电商只差一个“开始”（第 13/13 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>13</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/cross-border-ecommerce/ep-13/episode.mp3" type="audio/mpeg" length="2755572"/>
+      <itunes:duration>172</itunes:duration>
+    </item>
+    <item>
+      <title>个体跨境电商商业模式与落地应用系统深度调研 · 常见坑与避雷指南：别人交过的学费，你可以省下</title>
+      <description>《个体跨境电商商业模式与落地应用系统深度调研》常见坑与避雷指南：别人交过的学费，你可以省下（第 12/13 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>12</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/cross-border-ecommerce/ep-12/episode.mp3" type="audio/mpeg" length="5897076"/>
+      <itunes:duration>368</itunes:duration>
+    </item>
+    <item>
+      <title>个体跨境电商商业模式与落地应用系统深度调研 · 从零到一实操路线图：分阶段启动指南</title>
+      <description>《个体跨境电商商业模式与落地应用系统深度调研》从零到一实操路线图：分阶段启动指南（第 11/13 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>11</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/cross-border-ecommerce/ep-11/episode.mp3" type="audio/mpeg" length="6718452"/>
+      <itunes:duration>419</itunes:duration>
+    </item>
+    <item>
+      <title>个体跨境电商商业模式与落地应用系统深度调研 · 落地系统五：收款与财务合规——钱怎么收回来</title>
+      <description>《个体跨境电商商业模式与落地应用系统深度调研》落地系统五：收款与财务合规——钱怎么收回来（第 10/13 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>10</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/cross-border-ecommerce/ep-10/episode.mp3" type="audio/mpeg" length="6845748"/>
+      <itunes:duration>427</itunes:duration>
+    </item>
+    <item>
+      <title>个体跨境电商商业模式与落地应用系统深度调研 · 落地系统四：订单履约与物流——把货送到买家手中</title>
+      <description>《个体跨境电商商业模式与落地应用系统深度调研》落地系统四：订单履约与物流——把货送到买家手中（第 9/13 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>9</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/cross-border-ecommerce/ep-09/episode.mp3" type="audio/mpeg" length="7312884"/>
+      <itunes:duration>456</itunes:duration>
+    </item>
+    <item>
+      <title>个体跨境电商商业模式与落地应用系统深度调研 · 落地系统三：营销引流——怎么让人来买</title>
+      <description>《个体跨境电商商业模式与落地应用系统深度调研》落地系统三：营销引流——怎么让人来买（第 8/13 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>8</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/cross-border-ecommerce/ep-08/episode.mp3" type="audio/mpeg" length="7463796"/>
+      <itunes:duration>466</itunes:duration>
+    </item>
+    <item>
+      <title>个体跨境电商商业模式与落地应用系统深度调研 · 落地系统二：建站与开店——把门面搭起来</title>
+      <description>《个体跨境电商商业模式与落地应用系统深度调研》落地系统二：建站与开店——把门面搭起来（第 7/13 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>7</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/cross-border-ecommerce/ep-07/episode.mp3" type="audio/mpeg" length="5292276"/>
+      <itunes:duration>330</itunes:duration>
+    </item>
+    <item>
+      <title>个体跨境电商商业模式与落地应用系统深度调研 · 落地系统一：选品与供应链——卖什么，从哪进</title>
+      <description>《个体跨境电商商业模式与落地应用系统深度调研》落地系统一：选品与供应链——卖什么，从哪进（第 6/13 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>6</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/cross-border-ecommerce/ep-06/episode.mp3" type="audio/mpeg" length="7818612"/>
+      <itunes:duration>488</itunes:duration>
+    </item>
+    <item>
+      <title>个体跨境电商商业模式与落地应用系统深度调研 · 两大模式对比：社交电商 vs Dropshipping，你选哪个？</title>
+      <description>《个体跨境电商商业模式与落地应用系统深度调研》两大模式对比：社交电商 vs Dropshipping，你选哪个？（第 5/13 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>5</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/cross-border-ecommerce/ep-05/episode.mp3" type="audio/mpeg" length="4337844"/>
+      <itunes:duration>270</itunes:duration>
+    </item>
+    <item>
+      <title>个体跨境电商商业模式与落地应用系统深度调研 · 模式二：Dropshipping无货源代发——连货都不用碰</title>
+      <description>《个体跨境电商商业模式与落地应用系统深度调研》模式二：Dropshipping无货源代发——连货都不用碰（第 4/13 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>4</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/cross-border-ecommerce/ep-04/episode.mp3" type="audio/mpeg" length="5208180"/>
+      <itunes:duration>325</itunes:duration>
+    </item>
+    <item>
+      <title>个体跨境电商商业模式与落地应用系统深度调研 · 模式一：社交电商/直播带货——用内容撬动流量</title>
+      <description>《个体跨境电商商业模式与落地应用系统深度调研》模式一：社交电商/直播带货——用内容撬动流量（第 3/13 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>3</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/cross-border-ecommerce/ep-03/episode.mp3" type="audio/mpeg" length="7055412"/>
+      <itunes:duration>440</itunes:duration>
+    </item>
+    <item>
+      <title>个体跨境电商商业模式与落地应用系统深度调研 · 行业全景：2026年跨境电商市场格局与个体机会</title>
+      <description>《个体跨境电商商业模式与落地应用系统深度调研》行业全景：2026年跨境电商市场格局与个体机会（第 2/13 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>2</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/cross-border-ecommerce/ep-02/episode.mp3" type="audio/mpeg" length="6462708"/>
+      <itunes:duration>403</itunes:duration>
+    </item>
+    <item>
+      <title>个体跨境电商商业模式与落地应用系统深度调研 · 引言</title>
+      <description>《个体跨境电商商业模式与落地应用系统深度调研》引言（第 1/13 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>1</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/cross-border-ecommerce/ep-01/episode.mp3" type="audio/mpeg" length="2615604"/>
+      <itunes:duration>163</itunes:duration>
+    </item>
+    <item>
+      <title>工程师的知识管理：从收藏到复利 · 第三章 用播客让知识二次复利</title>
+      <description>《工程师的知识管理：从收藏到复利》第三章 用播客让知识二次复利（第 3/3 集）</description>
+      <pubDate>2026-08-01</pubDate>
+      <itunes:episode>3</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/knowledge-management/ep-03/episode.mp3" type="audio/mpeg" length="150285"/>
+      <itunes:duration>37</itunes:duration>
+    </item>
+    <item>
+      <title>工程师的知识管理：从收藏到复利 · 第二章 把文章变成可复用的资产</title>
+      <description>《工程师的知识管理：从收藏到复利》第二章 把文章变成可复用的资产（第 2/3 集）</description>
+      <pubDate>2026-08-01</pubDate>
+      <itunes:episode>2</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/knowledge-management/ep-02/episode.mp3" type="audio/mpeg" length="169869"/>
+      <itunes:duration>42</itunes:duration>
+    </item>
+    <item>
+      <title>工程师的知识管理：从收藏到复利 · 第一章 为什么你的收藏夹在吃灰</title>
+      <description>《工程师的知识管理：从收藏到复利》第一章 为什么你的收藏夹在吃灰（第 1/3 集）</description>
+      <pubDate>2026-08-01</pubDate>
+      <itunes:episode>1</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/knowledge-management/ep-01/episode.mp3" type="audio/mpeg" length="234093"/>
+      <itunes:duration>58</itunes:duration>
+    </item>
+    <item>
+      <title>用三个晚上做的小工具，被 WorkBuddy 一夜归零了 · 第3部分</title>
+      <description>《用三个晚上做的小工具，被 WorkBuddy 一夜归零了》第3部分（第 3/3 集）</description>
+      <pubDate>2026-08-01</pubDate>
+      <itunes:episode>3</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/when-platform-absorbs-you/ep-03/episode.mp3" type="audio/mpeg" length="2304564"/>
+      <itunes:duration>143</itunes:duration>
+    </item>
+    <item>
+      <title>用三个晚上做的小工具，被 WorkBuddy 一夜归零了 · 第2部分</title>
+      <description>《用三个晚上做的小工具，被 WorkBuddy 一夜归零了》第2部分（第 2/3 集）</description>
+      <pubDate>2026-08-01</pubDate>
+      <itunes:episode>2</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/when-platform-absorbs-you/ep-02/episode.mp3" type="audio/mpeg" length="3940404"/>
+      <itunes:duration>246</itunes:duration>
+    </item>
+    <item>
+      <title>用三个晚上做的小工具，被 WorkBuddy 一夜归零了 · 第1部分</title>
+      <description>《用三个晚上做的小工具，被 WorkBuddy 一夜归零了》第1部分（第 1/3 集）</description>
+      <pubDate>2026-08-01</pubDate>
+      <itunes:episode>1</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/when-platform-absorbs-you/ep-01/episode.mp3" type="audio/mpeg" length="4713396"/>
+      <itunes:duration>294</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 最后寄语</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》最后寄语（第 19/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>19</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-19/episode.mp3" type="audio/mpeg" length="1009140"/>
+      <itunes:duration>62</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 核心洞察</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》核心洞察（第 18/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>18</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-18/episode.mp3" type="audio/mpeg" length="1505652"/>
+      <itunes:duration>93</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 核心决策要点</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》核心决策要点（第 17/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>17</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-17/episode.mp3" type="audio/mpeg" length="6210420"/>
+      <itunes:duration>387</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 未来展望</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》未来展望（第 16/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>16</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-16/episode.mp3" type="audio/mpeg" length="1018356"/>
+      <itunes:duration>63</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 六大趋势总览</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》六大趋势总览（第 15/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>15</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-15/episode.mp3" type="audio/mpeg" length="2774580"/>
+      <itunes:duration>173</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 四种架构模式总览</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》四种架构模式总览（第 14/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>14</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-14/episode.mp3" type="audio/mpeg" length="2654772"/>
+      <itunes:duration>165</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 3.6 观测与优化层</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》3.6 观测与优化层（第 13/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>13</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-13/episode.mp3" type="audio/mpeg" length="3094836"/>
+      <itunes:duration>193</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 3.5 数据管理层</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》3.5 数据管理层（第 12/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>12</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-12/episode.mp3" type="audio/mpeg" length="3055668"/>
+      <itunes:duration>190</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 3.4 调度与编排层</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》3.4 调度与编排层（第 11/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>11</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-11/episode.mp3" type="audio/mpeg" length="2454324"/>
+      <itunes:duration>153</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 3.3 框架与运行时层</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》3.3 框架与运行时层（第 10/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>10</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-10/episode.mp3" type="audio/mpeg" length="2546484"/>
+      <itunes:duration>158</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 3.2 虚拟化与资源管理层</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》3.2 虚拟化与资源管理层（第 9/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>9</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-09/episode.mp3" type="audio/mpeg" length="1968756"/>
+      <itunes:duration>122</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 3.1 硬件层 - 算力底座</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》3.1 硬件层 - 算力底座（第 8/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>8</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-08/episode.mp3" type="audio/mpeg" length="3402420"/>
+      <itunes:duration>212</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 2.4 训练 vs 推理的架构差异</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》2.4 训练 vs 推理的架构差异（第 7/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>7</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-07/episode.mp3" type="audio/mpeg" length="1748724"/>
+      <itunes:duration>109</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 2.3 解耦责任边界</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》2.3 解耦责任边界（第 6/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>6</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-06/episode.mp3" type="audio/mpeg" length="493620"/>
+      <itunes:duration>30</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 2.2 分层优化的典型场景</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》2.2 分层优化的典型场景（第 5/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>5</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-05/episode.mp3" type="audio/mpeg" length="1220532"/>
+      <itunes:duration>76</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 2.1 架构总览</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》2.1 架构总览（第 4/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>4</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-04/episode.mp3" type="audio/mpeg" length="380148"/>
+      <itunes:duration>23</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 1.3 论点：AI Infra需要分层、分场景理解</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》1.3 论点：AI Infra需要分层、分场景理解（第 3/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>3</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-03/episode.mp3" type="audio/mpeg" length="607092"/>
+      <itunes:duration>37</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 1.2 关键区分：训练集群 vs 推理集群的本质差异</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》1.2 关键区分：训练集群 vs 推理集群的本质差异（第 2/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>2</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-02/episode.mp3" type="audio/mpeg" length="1297716"/>
+      <itunes:duration>80</itunes:duration>
+    </item>
+    <item>
+      <title>重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 1.1 现象：GPU抢购狂潮背后的认知盲区</title>
+      <description>《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》1.1 现象：GPU抢购狂潮背后的认知盲区（第 1/19 集）</description>
+      <pubDate>2026-08-02</pubDate>
+      <itunes:episode>1</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-01/episode.mp3" type="audio/mpeg" length="1702644"/>
+      <itunes:duration>106</itunes:duration>
+    </item>
+    <item>
+      <title>为什么工程师也该做一档自己的播客</title>
+      <description>首集 — 把文章、白皮书、长文，变成能听的电台。</description>
+      <pubDate>2026-08-01</pubDate>
+      <itunes:episode>1</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/why-engineers-should-podcast/ep-01/episode.mp3" type="audio/mpeg" length="427821"/>
+      <itunes:duration>106</itunes:duration>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,30 @@
+---
+title: "重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 2.2 分层优化的典型场景"
+series: "重新定义AI Infra：从GPU堆砌到全栈基础设施的进化"
+date: 2026-08-02
+duration: 76
+audio: series/ai-infra-redefined/ep-05/episode.mp3
+---
+
+# 重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 2.2 分层优化的典型场景
+
+> 《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》2.2 分层优化的典型场景（第 5/19 集）
+
+听：series/ai-infra-redefined/ep-05/episode.mp3 · 时长 1 分 16 秒 · 2026-08-02 · 主播：小搭
+
+**[host]** 分层架构的另一大价值，是让问题诊断变得清晰可循。当 GPU 利用率上不去的时候，问题可能出在任何一个层次——硬件选型不当、网络带宽不足、调度策略低效、框架并行度不够、甚至是数据加载成为了瓶颈。定位错误的代价是巨大的，而分层的价值正在于此：每个层次都有自己独特的优化杠杆。
+
+**[host]** 比如，如果 GPU 算力本身是瓶颈，最直接的解法是升级到 H100 或 H200；但如果数据加载拖慢了 GPU，那就应该优先优化并行文件系统和数据预取机制，而不是花冤枉钱买更多 GPU。
+
+**[host]** - 硬件层瓶颈：GPU算力不足 → 升级H100/H200，或增加GPU数量
+
+**[host]** - 调度层瓶颈：资源碎片化严重 → 引入Volcano或Slurm优化调度策略
+
+**[host]** - 框架层瓶颈：分布式训练效率低 → 采用DeepSpeed ZeRO或FSDP
+
+**[host]** - 数据层瓶颈：数据加载成为瓶颈 → 采用3FS或Lustre并行文件系统
+
+## 订阅
+
+- [RSS / Atom](https://binbinao.github.io/myPodcast/feed.xml)
+- 在 [Apple Podcasts](https://podcasts.apple.com/)、[小宇宙](https://www.xiaoyuzhoufm.com/) 等客户端粘贴 RSS 链接
