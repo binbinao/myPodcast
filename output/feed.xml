@@ -7,6 +7,105 @@
     <language>zh-CN</language>
     <itunes:author>小搭 &amp; 斌哥</itunes:author>
     <item>
+      <title>AI芯片全景深度报告：GPU、TPU、NPU及其他AI专用芯片分类解析 · 第11部分</title>
+      <description></description>
+      <pubDate>2026-08-14</pubDate>
+      <itunes:episode>10</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-chips/ep-10/episode.mp3" type="audio/mpeg" length="7174643"/>
+      <itunes:duration>448</itunes:duration>
+    </item>
+    <item>
+      <title>AI芯片全景深度报告：GPU、TPU、NPU及其他AI专用芯片分类解析 · 第10部分</title>
+      <description></description>
+      <pubDate>2026-08-14</pubDate>
+      <itunes:episode>9</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-chips/ep-09/episode.mp3" type="audio/mpeg" length="8512691"/>
+      <itunes:duration>531</itunes:duration>
+    </item>
+    <item>
+      <title>AI芯片全景深度报告：GPU、TPU、NPU及其他AI专用芯片分类解析 · 第9部分</title>
+      <description></description>
+      <pubDate>2026-08-14</pubDate>
+      <itunes:episode>8</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-chips/ep-08/episode.mp3" type="audio/mpeg" length="5636723"/>
+      <itunes:duration>352</itunes:duration>
+    </item>
+    <item>
+      <title>AI芯片全景深度报告：GPU、TPU、NPU及其他AI专用芯片分类解析 · 第8部分</title>
+      <description></description>
+      <pubDate>2026-08-14</pubDate>
+      <itunes:episode>7</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-chips/ep-07/episode.mp3" type="audio/mpeg" length="8478707"/>
+      <itunes:duration>529</itunes:duration>
+    </item>
+    <item>
+      <title>AI芯片全景深度报告：GPU、TPU、NPU及其他AI专用芯片分类解析 · 第7部分</title>
+      <description></description>
+      <pubDate>2026-08-14</pubDate>
+      <itunes:episode>6</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-chips/ep-06/episode.mp3" type="audio/mpeg" length="5063603"/>
+      <itunes:duration>316</itunes:duration>
+    </item>
+    <item>
+      <title>AI芯片全景深度报告：GPU、TPU、NPU及其他AI专用芯片分类解析 · 第6部分</title>
+      <description></description>
+      <pubDate>2026-08-14</pubDate>
+      <itunes:episode>5</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-chips/ep-05/episode.mp3" type="audio/mpeg" length="10356467"/>
+      <itunes:duration>647</itunes:duration>
+    </item>
+    <item>
+      <title>AI芯片全景深度报告：GPU、TPU、NPU及其他AI专用芯片分类解析 · 第5部分</title>
+      <description></description>
+      <pubDate>2026-08-14</pubDate>
+      <itunes:episode>4</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-chips/ep-04/episode.mp3" type="audio/mpeg" length="8510963"/>
+      <itunes:duration>531</itunes:duration>
+    </item>
+    <item>
+      <title>AI芯片全景深度报告：GPU、TPU、NPU及其他AI专用芯片分类解析 · 第4部分</title>
+      <description></description>
+      <pubDate>2026-08-14</pubDate>
+      <itunes:episode>3</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-chips/ep-03/episode.mp3" type="audio/mpeg" length="6980531"/>
+      <itunes:duration>436</itunes:duration>
+    </item>
+    <item>
+      <title>AI芯片全景深度报告：GPU、TPU、NPU及其他AI专用芯片分类解析 · 第3部分</title>
+      <description></description>
+      <pubDate>2026-08-14</pubDate>
+      <itunes:episode>2</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-chips/ep-02/episode.mp3" type="audio/mpeg" length="7755827"/>
+      <itunes:duration>484</itunes:duration>
+    </item>
+    <item>
+      <title>AI芯片全景深度报告：GPU、TPU、NPU及其他AI专用芯片分类解析 · 第2部分</title>
+      <description></description>
+      <pubDate>2026-08-14</pubDate>
+      <itunes:episode>1</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/ai-chips/ep-01/episode.mp3" type="audio/mpeg" length="5346995"/>
+      <itunes:duration>334</itunes:duration>
+    </item>
+    <item>
+      <title>裸金属对外售卖机型全清单</title>
+      <description>裸金属对外售卖机型全量清单，共 39 款：标准型、GPU 型、高性能 GPU 型、高主频 IO 型、高 IO 型、大数据型、内存型、Arm 型、定制机型与已 EOL 机型，逐款给出内部代号、CPU 与核数、网卡形态和刊例价，面向选型与对客报价参考。</description>
+      <pubDate>2026-08-13</pubDate>
+      <itunes:episode>1</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/cbm-baremetal/ep-01/episode.mp3" type="audio/mpeg" length="16631412"/>
+      <itunes:duration>1039</itunes:duration>
+    </item>
+    <item>
       <title>从深度学习到大模型：人工智能的十四年（2012-2026） · 十二、结语</title>
       <description></description>
       <pubDate>2026-08-03</pubDate>

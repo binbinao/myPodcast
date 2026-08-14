@@ -1,6 +1,6 @@
 # myPodcast 配置
-# TTS 后端：edge-tts（免费，零依赖，单调）/ minimax（情感/22拟声词，需 API Key）
-# 切换时 voices 与 voices_minimax 对应不同后端使用的音色 ID。
+# TTS 后端：edge-tts（免费，零依赖，单调）/ minimax（情感/22拟声词，需 API Key）/ fish-speech（Fish Audio OpenAudio S2）
+# 切换时 voices / voices_minimax / voices_fishspeech 对应不同后端使用的音色 ID。
 
 podcast:
   title: "小搭-斌哥电台"
@@ -38,6 +38,14 @@ voices_minimax:
   guest: "male-qn-qingse"    # 嘉宾：青涩青年（duo 节目用）
   default: "audiobook_male_1"
 
+# Fish Audio 角色音色（OpenAudio S2 / s2.1-pro-free）
+# 这里的 ID 是 Fish Audio 控制台建的 voice model reference_id（在 fish.audio/app 创建立即可见）
+# 没有预设；user 必须在 platform 上传参考音频后填入。
+voices_fishspeech:
+  host: ""      # 单人/host 的 reference_id；留空则报错（Fish 必须指定 voice）
+  guest: ""     # 嘉宾的 reference_id（duo 节目用）
+  default: ""   # 兜底
+
 # 音色智能选型（基于文章内容自动选 voice_id）
 # 优先级：frontmatter voice 字段 > LLM 推断(mode=llm 且 api_key 配了) > 启发式规则 > default_voice
 # 文章类型 → 音色映射见 src/voicecaster.py 的 ARTICLE_TYPES
@@ -47,7 +55,7 @@ voicecaster:
 
 # TTS 参数
 tts:
-  backend: "minimax"         # edge-tts | minimax
+  backend: "minimax"         # edge-tts | minimax | fish-speech
   rate: "+0%"                # 语速（仅 edge-tts 全局模式用）
   volume: "+0%"              # 音量
   pitch: "+0Hz"
@@ -61,6 +69,26 @@ tts:
     speed: 1.0               # [0.5, 2]
     vol: 1.0                 # (0, 10]
     pitch: 0                 # [-12, 12]
+
+  # Fish Audio (OpenAudio S2) 配置（仅当 backend=fish-speech 时生效）
+  fishspeech:
+    base_url: "https://api.fish.audio/v1/tts"
+    # api_key 不推荐写文件，优先用环境变量 FISH_AUDIO_API_KEY
+    api_key: ""
+    model: "s2.1-pro-free"   # s2.1-pro（付费） / s2.1-pro-free（$0 试用）/ s2-pro / s1
+    format: "mp3"            # mp3 / wav / pcm / opus
+    sample_rate: 44100       # opus 默认 48000
+    mp3_bitrate: 128         # kbps；wav/pcm 忽略
+    temperature: 0.7         # [0, 1]
+    top_p: 0.7               # [0, 1]
+    chunk_chars: 1000        # 段内超长按句末标点切
+    timeout_sec: 60
+    # 国内访问 api.fish.audio 被断；本地调试时配 socks5 代理（需 pip install PySocks）
+    # CI 环境直连即可，留空字符串
+    socks5_proxy: "socks5://127.0.0.1:1086"
+    # 走 MITM 代理时（如公司 VPN），Python SSL hostname 校验会失败；本地调试可关
+    # CI/直连保留 True。False 会触发 urllib3 InsecureRequestWarning，可忽略。
+    verify_ssl: false
 
 # 韵律规划：缓解单人播客语调单调
 # enable: 是否按句注入 prosody

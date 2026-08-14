@@ -70,10 +70,16 @@ def run_one(
 
     backend = cfg.get("tts", {}).get("backend", "edge-tts").lower()
     log.info(f"[3/5] 生成音频 (backend={backend})")
-    voice_key = "voices_minimax" if backend == "minimax" else "voices"
+    if backend == "minimax":
+        voice_key = "voices_minimax"
+    elif backend == "fish-speech":
+        voice_key = "voices_fishspeech"
+    else:
+        voice_key = "voices"
     voice_map = dict(cfg.get(voice_key, {}))  # 拷贝，避免改全局配置
 
-    # 音色选型：仅 minimax backend 用 voicecaster；duo 节目保留 host/guest 映射
+    # 音色选型：仅 minimax backend 用 voicecaster（Fish Audio voice ID 是平台分配的，
+    # voicecaster 词典是 minimax 专用的）；duo 节目保留 host/guest 映射
     fmt = str(meta.get("format", "")).lower()
     if backend == "minimax" and fmt != "duo":
         # 优先级：CLI --voice > frontmatter voice > voicecaster 自动
@@ -90,9 +96,9 @@ def run_one(
             log.info(f"      voice CLI 覆盖 → {voice_override}")
         else:
             log.info(f"      voicecaster → {chosen}")
-    elif backend == "minimax" and fmt == "duo":
+    elif backend in ("minimax", "fish-speech") and fmt == "duo":
         # duo 节目：尊重 frontmatter host_voice / guest_voice；都缺再回退到
-        # voices_minimax 的 host/guest 配置。CLI --voice 在 duo 模式下不适用
+        # voices_<backend> 的 host/guest 配置。CLI --voice 在 duo 模式下不适用
         # （需要分别覆盖两个音色，应走 frontmatter 而不是 CLI 单值）。
         host_v = meta.get("host_voice") or voice_map.get("host")
         guest_v = meta.get("guest_voice") or voice_map.get("guest")

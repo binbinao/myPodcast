@@ -1,7 +1,14 @@
-# 自动生成：pip freeze | grep -iE "edge-tts|requests|pypinyin|pyyaml|jinja2"
+# 自动生成：pip freeze | grep -iE "edge-tts|requests|httpx|h11|h2|anyio|sniffio|httpcore|pypinyin|pyyaml|jinja2|PySocks|socksio"
 # 重新生成：pip freeze > requirements.lock
 Jinja2==3.1.6
+PySocks==1.7.1
 PyYAML==6.0.3
 edge-tts==7.2.8
+h11==0.16.0
+h2==4.4.1
+httpcore==1.0.9
+httpx==0.28.1
+hyperframe==6.1.0
 pypinyin==0.55.0
 requests==2.34.2
+socksio==1.0.0
