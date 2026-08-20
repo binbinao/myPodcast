@@ -7,6 +7,87 @@
     <language>zh-CN</language>
     <itunes:author>小搭 &amp; 斌哥</itunes:author>
     <item>
+      <title>汽车 E&amp;E 工程的 AI 助手化：CodeBuddy 脚手架工程全景 · 第 9 集 · 总结与展望</title>
+      <description></description>
+      <pubDate>2026-08-20</pubDate>
+      <itunes:episode>9</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/codebuddy-auto-ee/ep-09/episode.mp3" type="audio/mpeg" length="4592435"/>
+      <itunes:duration>286</itunes:duration>
+    </item>
+    <item>
+      <title>汽车 E&amp;E 工程的 AI 助手化：CodeBuddy 脚手架工程全景 · 第 8 集 · 脚手架工程建议：CodeBuddy 的深度定制方向</title>
+      <description></description>
+      <pubDate>2026-08-20</pubDate>
+      <itunes:episode>8</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/codebuddy-auto-ee/ep-08/episode.mp3" type="audio/mpeg" length="8563955"/>
+      <itunes:duration>535</itunes:duration>
+    </item>
+    <item>
+      <title>汽车 E&amp;E 工程的 AI 助手化：CodeBuddy 脚手架工程全景 · 第 7 集 · MISRA C 编码规范：静态分析与合规性保障</title>
+      <description></description>
+      <pubDate>2026-08-20</pubDate>
+      <itunes:episode>7</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/codebuddy-auto-ee/ep-07/episode.mp3" type="audio/mpeg" length="6104435"/>
+      <itunes:duration>381</itunes:duration>
+    </item>
+    <item>
+      <title>汽车 E&amp;E 工程的 AI 助手化：CodeBuddy 脚手架工程全景 · 第 6 集 · IATF 16949 质量管理：融入 APQP 流程</title>
+      <description></description>
+      <pubDate>2026-08-20</pubDate>
+      <itunes:episode>6</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/codebuddy-auto-ee/ep-06/episode.mp3" type="audio/mpeg" length="6486899"/>
+      <itunes:duration>405</itunes:duration>
+    </item>
+    <item>
+      <title>汽车 E&amp;E 工程的 AI 助手化：CodeBuddy 脚手架工程全景 · 第 5 集 · SOTIF 预期功能安全：超越传统功能安全的视角</title>
+      <description></description>
+      <pubDate>2026-08-20</pubDate>
+      <itunes:episode>5</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/codebuddy-auto-ee/ep-05/episode.mp3" type="audio/mpeg" length="7148147"/>
+      <itunes:duration>446</itunes:duration>
+    </item>
+    <item>
+      <title>汽车 E&amp;E 工程的 AI 助手化：CodeBuddy 脚手架工程全景 · 第 4 集 · AUTOSAR 架构：标准化开发范式与 AI 助手的融合</title>
+      <description></description>
+      <pubDate>2026-08-20</pubDate>
+      <itunes:episode>4</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/codebuddy-auto-ee/ep-04/episode.mp3" type="audio/mpeg" length="7322099"/>
+      <itunes:duration>457</itunes:duration>
+    </item>
+    <item>
+      <title>汽车 E&amp;E 工程的 AI 助手化：CodeBuddy 脚手架工程全景 · 第 3 集 · ISO 26262 功能安全：CodeBuddy 的支持方案与脚手架建议</title>
+      <description></description>
+      <pubDate>2026-08-20</pubDate>
+      <itunes:episode>3</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/codebuddy-auto-ee/ep-03/episode.mp3" type="audio/mpeg" length="5604467"/>
+      <itunes:duration>350</itunes:duration>
+    </item>
+    <item>
+      <title>汽车 E&amp;E 工程的 AI 助手化：CodeBuddy 脚手架工程全景 · 第 2 集 · 汽车 E&amp;E 开发的核心挑战：标准驱动的工程实践</title>
+      <description></description>
+      <pubDate>2026-08-20</pubDate>
+      <itunes:episode>2</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/codebuddy-auto-ee/ep-02/episode.mp3" type="audio/mpeg" length="3884531"/>
+      <itunes:duration>242</itunes:duration>
+    </item>
+    <item>
+      <title>汽车 E&amp;E 工程的 AI 助手化：CodeBuddy 脚手架工程全景 · 第 1 集 · 引言：汽车软件革命与 AI 助手的机遇</title>
+      <description></description>
+      <pubDate>2026-08-20</pubDate>
+      <itunes:episode>1</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/codebuddy-auto-ee/ep-01/episode.mp3" type="audio/mpeg" length="4588979"/>
+      <itunes:duration>286</itunes:duration>
+    </item>
+    <item>
       <title>NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 9 集 · 附录群速查：A 到 Q 里最有用的几个模板</title>
       <description></description>
       <pubDate>2026-08-16</pubDate>
