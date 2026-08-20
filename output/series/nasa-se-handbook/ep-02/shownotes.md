@@ -1,7 +1,7 @@
 ---
 title: "NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 2 集 · 系统工程基础：17 个流程是怎么串起来的"
 series: "NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎"
-date: 2026-08-16
+date: 2026-08-20
 duration: 617
 audio: series/nasa-se-handbook/ep-02/episode.mp3
 ---
@@ -10,7 +10,7 @@ audio: series/nasa-se-handbook/ep-02/episode.mp3
 
 > NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 2 集
 
-听：series/nasa-se-handbook/ep-02/episode.mp3 · 时长 10 分 17 秒 · 2026-08-16 · 主播：小搭
+听：series/nasa-se-handbook/ep-02/episode.mp3 · 时长 10 分 17 秒 · 2026-08-20 · 主播：小搭
 
 **[host]** 大家好，欢迎来到我们的播客节目。今天我们要聊一个听起来很专业但其实非常重要的领域——系统工程。系统工程到底是做什么的？它和普通工程项目有什么区别？让我们一起来探讨。
 

@@ -1,7 +1,7 @@
 ---
 title: "NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 4 集 · 系统设计：从利益相关者期望到一份能落地的方案"
 series: "NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎"
-date: 2026-08-16
+date: 2026-08-20
 duration: 688
 audio: series/nasa-se-handbook/ep-04/episode.mp3
 ---
@@ -10,7 +10,7 @@ audio: series/nasa-se-handbook/ep-04/episode.mp3
 
 > NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 4 集
 
-听：series/nasa-se-handbook/ep-04/episode.mp3 · 时长 11 分 28 秒 · 2026-08-16 · 主播：小搭
+听：series/nasa-se-handbook/ep-04/episode.mp3 · 时长 11 分 28 秒 · 2026-08-20 · 主播：小搭
 
 **[host]** 大家好，欢迎来到本期节目。今天我们要继续聊NASA系统工程手册的内容，特别是第四章——系统设计。
 

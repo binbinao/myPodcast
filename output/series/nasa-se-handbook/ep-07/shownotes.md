@@ -1,7 +1,7 @@
 ---
 title: "NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 6 集 · 技术管理上：规划 / 需求 / 接口 / 风险（下）"
 series: "NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎"
-date: 2026-08-16
+date: 2026-08-20
 duration: 533
 audio: series/nasa-se-handbook/ep-07/episode.mp3
 ---
@@ -10,7 +10,7 @@ audio: series/nasa-se-handbook/ep-07/episode.mp3
 
 > NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 7 集
 
-听：series/nasa-se-handbook/ep-07/episode.mp3 · 时长 8 分 53 秒 · 2026-08-16 · 主播：小搭
+听：series/nasa-se-handbook/ep-07/episode.mp3 · 时长 8 分 53 秒 · 2026-08-20 · 主播：小搭
 
 **[guest]** ： 技术风险管理是交叉关联流程之一。风险定义有两个方面：一是工程或项目经历非期望事件的概率；二是若发生，其后果或影响或严重性。两者都可能与不确定性联系。
 

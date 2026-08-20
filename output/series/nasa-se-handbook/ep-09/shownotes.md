@@ -1,7 +1,7 @@
 ---
 title: "NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 9 集 · 附录群速查：A 到 Q 里最有用的几个模板"
 series: "NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎"
-date: 2026-08-16
+date: 2026-08-20
 duration: 536
 audio: series/nasa-se-handbook/ep-09/episode.mp3
 ---
@@ -10,7 +10,7 @@ audio: series/nasa-se-handbook/ep-09/episode.mp3
 
 > NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 9 集
 
-听：series/nasa-se-handbook/ep-09/episode.mp3 · 时长 8 分 56 秒 · 2026-08-16 · 主播：小搭
+听：series/nasa-se-handbook/ep-09/episode.mp3 · 时长 8 分 56 秒 · 2026-08-20 · 主播：小搭
 
 **[host]** 大家好，欢迎来到我们的节目。今天我们要聊的是NASA系统工程手册的附录部分，从A到Q，内容非常丰富。让我先请今天的嘉宾来给我们做个总体介绍。
 

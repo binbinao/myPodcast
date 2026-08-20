@@ -1,7 +1,7 @@
 ---
 title: "NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 6 集 · 技术管理上：规划 / 需求 / 接口 / 风险（上）"
 series: "NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎"
-date: 2026-08-16
+date: 2026-08-20
 duration: 495
 audio: series/nasa-se-handbook/ep-06/episode.mp3
 ---
@@ -10,7 +10,7 @@ audio: series/nasa-se-handbook/ep-06/episode.mp3
 
 > NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 6 集
 
-听：series/nasa-se-handbook/ep-06/episode.mp3 · 时长 8 分 15 秒 · 2026-08-16 · 主播：小搭
+听：series/nasa-se-handbook/ep-06/episode.mp3 · 时长 8 分 15 秒 · 2026-08-20 · 主播：小搭
 
 **[host]** ： 大家好，欢迎来到我们的系统工 程系列播客。今天我们要聊的是第6章——技术管理。这可是个重头戏，因为它涉及到整个项目的"纽带"。
 

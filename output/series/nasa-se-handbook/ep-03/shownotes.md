@@ -1,7 +1,7 @@
 ---
 title: "NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 3 集 · NASA 工程/项目寿命周期：从立项到退役的七个阶段"
 series: "NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎"
-date: 2026-08-16
+date: 2026-08-20
 duration: 384
 audio: series/nasa-se-handbook/ep-03/episode.mp3
 ---
@@ -10,7 +10,7 @@ audio: series/nasa-se-handbook/ep-03/episode.mp3
 
 > NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 3 集
 
-听：series/nasa-se-handbook/ep-03/episode.mp3 · 时长 6 分 24 秒 · 2026-08-16 · 主播：小搭
+听：series/nasa-se-handbook/ep-03/episode.mp3 · 时长 6 分 24 秒 · 2026-08-20 · 主播：小搭
 
 **[host]** 大家好，欢迎来到我们的节目。今天我们要聊的话题可能听起来有点专业，但我觉得特别有意思——就是NASA是怎么管理他们的工程项目的。他们把一个项目从想法到退役，分成了好几个阶段，每一阶段都有明确的决策点。guest，你之前了解过这个吗？
 

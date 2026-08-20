@@ -1,7 +1,7 @@
 ---
 title: "NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 8 集 · 相关专题：合同 / 一体化设计 / 人因 / 环境 / 公制"
 series: "NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎"
-date: 2026-08-16
+date: 2026-08-20
 duration: 579
 audio: series/nasa-se-handbook/ep-08/episode.mp3
 ---
@@ -10,7 +10,7 @@ audio: series/nasa-se-handbook/ep-08/episode.mp3
 
 > NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 8 集
 
-听：series/nasa-se-handbook/ep-08/episode.mp3 · 时长 9 分 39 秒 · 2026-08-16 · 主播：小搭
+听：series/nasa-se-handbook/ep-08/episode.mp3 · 时长 9 分 39 秒 · 2026-08-20 · 主播：小搭
 
 **[host]** 大家好，欢迎来到本期节目。今天我们要继续探讨NASA系统工程的内容，这是第7章的相关专题。主要是想聊聊怎么让系统工程流程执行得更高效，以及在实施过程中有哪些重要事项需要特别关注。
 

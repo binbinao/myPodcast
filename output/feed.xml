@@ -7,29 +7,12 @@
     <language>zh-CN</language>
     <itunes:author>小搭 &amp; 斌哥</itunes:author>
     <item>
-      <title>NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 6 集 · 技术管理上：规划 / 需求 / 接口 / 风险（下）</title>
-      <description></description>
-      <pubDate>2026-08-16</pubDate>
-      <itunes:episode>7</itunes:episode>
-      <itunes:season>1</itunes:season>
-      <enclosure url="https://binbinao.github.io/myPodcast/series/nasa-se-handbook/ep-07/episode.mp3" type="audio/mpeg" length="8532851"/>
-      <itunes:duration>533</itunes:duration>
-    </item>
-    <item>
       <title>NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 9 集 · 附录群速查：A 到 Q 里最有用的几个模板</title>
       <description></description>
       <pubDate>2026-08-16</pubDate>
       <itunes:episode>9</itunes:episode>
       <itunes:season>1</itunes:season>
       <enclosure url="https://binbinao.github.io/myPodcast/series/nasa-se-handbook/ep-09/episode.mp3" type="audio/mpeg" length="8592179"/>
-      <itunes:duration>536</itunes:duration>
-    </item>
-    <item>
-      <title></title>
-      <description></description>
-      <pubDate>2026-08-16</pubDate>
-      <itunes:episode>1</itunes:episode>
-      <enclosure url="https://binbinao.github.io/myPodcast/series/ep-09/ep-01/episode.mp3" type="audio/mpeg" length="8589299"/>
       <itunes:duration>536</itunes:duration>
     </item>
     <item>
@@ -42,12 +25,13 @@
       <itunes:duration>579</itunes:duration>
     </item>
     <item>
-      <title></title>
+      <title>NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 6 集 · 技术管理上：规划 / 需求 / 接口 / 风险（下）</title>
       <description></description>
       <pubDate>2026-08-16</pubDate>
-      <itunes:episode>1</itunes:episode>
-      <enclosure url="https://binbinao.github.io/myPodcast/series/ep-07/ep-01/episode.mp3" type="audio/mpeg" length="8561651"/>
-      <itunes:duration>534</itunes:duration>
+      <itunes:episode>7</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/nasa-se-handbook/ep-07/episode.mp3" type="audio/mpeg" length="8532851"/>
+      <itunes:duration>533</itunes:duration>
     </item>
     <item>
       <title>NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 6 集 · 技术管理上：规划 / 需求 / 接口 / 风险（上）</title>

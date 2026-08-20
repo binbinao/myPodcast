@@ -1,7 +1,7 @@
 ---
 title: "NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 1 集 · 引言：为什么 NASA 要写一本手册"
 series: "NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎"
-date: 2026-08-16
+date: 2026-08-20
 duration: 493
 audio: series/nasa-se-handbook/ep-01/episode.mp3
 ---
@@ -10,7 +10,7 @@ audio: series/nasa-se-handbook/ep-01/episode.mp3
 
 > NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 1 集
 
-听：series/nasa-se-handbook/ep-01/episode.mp3 · 时长 8 分 13 秒 · 2026-08-16 · 主播：小搭
+听：series/nasa-se-handbook/ep-01/episode.mp3 · 时长 8 分 13 秒 · 2026-08-20 · 主播：小搭
 
 **[host]** 欢迎来到「NASA系统工程」，我是主持人。今天我们正式进入《NASA系统工程手册》的第一章节。这档节目的目标很简单——用10到15分钟的时间，把NASA这本737页的官方手册掰开揉碎，让你在通勤或者做家务的时候听完，能在脑子里画出NASA一个项目从立项到退役的完整流程。
 

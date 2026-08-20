@@ -1,7 +1,7 @@
 ---
 title: "NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 5 集 · 产品实现：从制造、集成到验证、确认、交付"
 series: "NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎"
-date: 2026-08-16
+date: 2026-08-20
 duration: 491
 audio: series/nasa-se-handbook/ep-05/episode.mp3
 ---
@@ -10,7 +10,7 @@ audio: series/nasa-se-handbook/ep-05/episode.mp3
 
 > NASA 系统工程手册：NASA 怎么把 17 个流程炼成一套引擎 · 第 5 集
 
-听：series/nasa-se-handbook/ep-05/episode.mp3 · 时长 8 分 11 秒 · 2026-08-16 · 主播：小搭
+听：series/nasa-se-handbook/ep-05/episode.mp3 · 时长 8 分 11 秒 · 2026-08-20 · 主播：小搭
 
 **[host]** 大家好，欢迎来到我们的播客！今天我们要聊系统工程引擎右半部分——产品实现流程。这个章节非常关键，因为它回答了一个核心问题：如何把设计变成真正的产品？
 
