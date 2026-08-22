@@ -50,6 +50,33 @@ class TestFetchStats(unittest.TestCase):
         req = call_args[0][0]
         self.assertEqual(req.headers["Authorization"], "Bearer tk_xxx")
 
+    @patch("urllib.request.urlopen")
+    def test_401_returns_none(self, mock_urlopen: MagicMock) -> None:
+        """API key 错/缺 → GC 401 → 返回 None。"""
+        mock_urlopen.side_effect = urllib.error.HTTPError(
+            "url", 401, "Unauthorized", {}, None,
+        )
+        self.assertIsNone(fetch_stats("code12345", "wrong_key"))
+
+    @patch("urllib.request.urlopen")
+    def test_timeout_returns_none(self, mock_urlopen: MagicMock) -> None:
+        """网络超时(国内 CI 拉 GC) → 返回 None。"""
+        mock_urlopen.side_effect = TimeoutError("timed out")
+        self.assertIsNone(fetch_stats("code12345", "tk_xxx"))
+
+    @patch("urllib.request.urlopen")
+    def test_malformed_json_returns_none(self, mock_urlopen: MagicMock) -> None:
+        """200 OK 但 body 非 JSON → 返回 None。"""
+        mock_urlopen.return_value = _mock_urlopen_response(b"<html>500 error</html>")
+        self.assertIsNone(fetch_stats("code12345", "tk_xxx"))
+
+    @patch("urllib.request.urlopen")
+    def test_missing_keys_returns_none(self, mock_urlopen: MagicMock) -> None:
+        """200 OK + JSON,但缺 total_accepted → 返回 None。"""
+        body = json.dumps({"total_visits": 100}).encode("utf-8")
+        mock_urlopen.return_value = _mock_urlopen_response(body)
+        self.assertIsNone(fetch_stats("code12345", "tk_xxx"))
+
 
 if __name__ == "__main__":
     unittest.main()
