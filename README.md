@@ -225,13 +225,15 @@ push 到 main 自动构建并部署到 gh-pages，**走 skip-audio 模式**：�
 1. 访问 [goatcounter.com/start](https://www.goatcounter.com/start) 注册（免费 hobby 档）
 2. 添加站点 `binbinao.github.io/myPodcast` → 拿 8 字符 site code
 3. Settings → "Allow API access" 开 → 复制 token
-4. 填 `config.yaml`：
+4. 填 `config.yaml` 的 `podcast.analytics` 块：
 
    ```yaml
-   analytics:
-     enabled: true
-     code: "<your_code>"
-     api_key: "<your_token>"
+   podcast:
+     # ... 其他字段
+     analytics:
+       enabled: true
+       code: "<your_code>"
+       api_key: "<your_token>"
    ```
 
 5. `python -m src.build drafts/<某系列>` → push → 看 `output/index.html` `<head>` 有 GC script、footer 有 stats
