@@ -218,6 +218,29 @@ push 到 main 自动构建并部署到 gh-pages，**走 skip-audio 模式**：�
 
 ---
 
+## 站点访问统计（GoatCounter）
+
+5 分钟接入，默认关闭，无副作用：
+
+1. 访问 [goatcounter.com/start](https://www.goatcounter.com/start) 注册（免费 hobby 档）
+2. 添加站点 `binbinao.github.io/myPodcast` → 拿 8 字符 site code
+3. Settings → "Allow API access" 开 → 复制 token
+4. 填 `config.yaml`：
+
+   ```yaml
+   analytics:
+     enabled: true
+     code: "<your_code>"
+     api_key: "<your_token>"
+   ```
+
+5. `python -m src.build drafts/<某系列>` → push → 看 `output/index.html` `<head>` 有 GC script、footer 有 stats
+
+**失败兜底**：API key 错 / 网络超时 → widget 不渲染，build warn 但继续（不影响发布）。
+**国内 CI 提示**：如果 build 时拉 GC 超时，fetch_stats 失败但 build 仍绿，部署的 HTML 不带 footer 数字。属预期行为。
+
+---
+
 ## 单测
 
 ```bash
