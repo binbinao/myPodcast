@@ -611,6 +611,18 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
     about_html = _about_html(title, tagline, about_text, groups, episodes, author, language)
     subscribe_html = _subscribe_html(_ICON_LIB, base) if subscribe_enabled else ""
 
+    # ---- 站点统计(analytics)----
+    # 默认 disabled;enabled + code 都齐才拉 GC,失败 widget 隐身
+    # 放在 render 前是为了不让 GC 网络阻塞 build 主体计算
+    analytics_cfg = podcast.get("analytics", {}) or {}
+    stats: dict[str, int] | None = None
+    if analytics_cfg.get("enabled") and analytics_cfg.get("code"):
+        from .analytics import fetch_stats
+        stats = fetch_stats(
+            analytics_cfg["code"],
+            analytics_cfg.get("api_key", ""),
+        )
+
     # 注入 player.js（构建期替换占位符）
     player_js = (Path(__file__).resolve().parent.parent / "templates" / "player.js").read_text(encoding="utf-8")
     feed_js = (Path(__file__).resolve().parent.parent / "templates" / "feed.js").read_text(encoding="utf-8")
@@ -639,6 +651,8 @@ def build_index(out_dir: Path, podcast: dict[str, Any]) -> Path:
         latest=latest_ctx,
         player_js=player_js,
         feed_js=feed_js,
+        analytics=analytics_cfg,
+        stats=stats,
     )
     path = out_dir / "index.html"
     path.write_text(html, encoding="utf-8")

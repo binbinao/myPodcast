@@ -23,6 +23,16 @@ podcast:
   subscribe:                      # 站点"在更多地方听"订阅区块；enabled: false = 隐藏
     enabled: false
 
+  # 站点访问统计 (GoatCounter)
+  # provider: goatcounter (https://www.goatcounter.com,免费 hobby 档)
+  # 不配置或 enabled=false 时整个统计模块完全 pass-through,零侵入
+  # 5 分钟接入:见 README "站点访问统计(GoatCounter)" 章节
+  analytics:
+    enabled: false                      # 默认 false;用户注册 GC 后改为 true
+    provider: "goatcounter"             # 留作未来扩展点(umami/plausible)
+    code: ""                            # 8 字符 site code,注册后从 GC dashboard 复制
+    api_key: ""                         # GC Settings → "Allow API access" 开关后生成的 token
+
 # edge-tts 角色音色（zh-CN-XiaoxiaoNeural=女温暖, zh-CN-YunxiNeural=男活力, zh-CN-YunyangNeural=男新闻, zh-CN-XiaoyiNeural=女温柔）
 voices:
   host: "zh-CN-XiaoxiaoNeural"

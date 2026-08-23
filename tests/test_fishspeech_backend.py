@@ -18,15 +18,30 @@ from unittest.mock import MagicMock, patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from src import backends  # noqa: F401 — triggers @register
-from src.backends.fishspeech import (  # noqa: E402
-    DEFAULT_BASE_URL,
-    VALID_MODELS,
-    FishSpeechBackend,
-    _build_proxy_url,
-    _chunk_text,
-    _resolve_key,
-)
+# fishspeech 后端依赖 httpx（外网 SDK）。本地/CI 没装时整个模块应 graceful skip，
+# 而不是把所有 unittest runner 拖到 loader error。约定：src/backends/<backend>.py
+# 可选依赖缺失 → 测试文件 load_tests 返回空 suite，不计入 fail。
+try:
+    from src import backends  # noqa: F401 — triggers @register
+    from src.backends.fishspeech import (  # noqa: E402
+        DEFAULT_BASE_URL,
+        VALID_MODELS,
+        FishSpeechBackend,
+        _build_proxy_url,
+        _chunk_text,
+        _resolve_key,
+    )
+    _SKIP_REASON: str | None = None
+except ImportError as _exc:
+    _SKIP_REASON = f"fishspeech backend 依赖缺失: {_exc}"
+
+
+def load_tests(loader: unittest.TestLoader, tests: unittest.TestSuite, pattern: str) -> unittest.TestSuite:
+    """缺依赖时跳过整个文件,避免 loader error 污染 CI 总数。"""
+    if _SKIP_REASON is not None:
+        print(f"[skip] tests.test_fishspeech_backend — {_SKIP_REASON}")
+        return loader.suiteClass()
+    return loader.loadTestsFromNames([__name__])
 
 
 class TestRegistry(unittest.TestCase):
