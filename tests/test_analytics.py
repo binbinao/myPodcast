@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import sys
+import tempfile
 import unittest
 import urllib.error
 from pathlib import Path
@@ -76,6 +77,68 @@ class TestFetchStats(unittest.TestCase):
         body = json.dumps({"total_visits": 100}).encode("utf-8")
         mock_urlopen.return_value = _mock_urlopen_response(body)
         self.assertIsNone(fetch_stats("code12345", "tk_xxx"))
+
+
+class TestBuildIndexAnalytics(unittest.TestCase):
+    """build_index 集成:验证 analytics script tag 渲染。"""
+
+    def _setup_out_dir(self) -> tuple[Path, Path]:
+        """返回 (tmp_out_dir, project_root)。"""
+        tmp = Path(tempfile.mkdtemp(prefix="analytics-test-"))
+        # build_index 读 manifest.json(空数组就行)+ 渲染 index.html
+        (tmp / "manifest.json").write_text(
+            json.dumps({"episodes": []}), encoding="utf-8",
+        )
+        return tmp, ROOT
+
+    def _podcast_cfg(self, analytics: dict | None) -> dict:
+        cfg = {
+            "title": "Test",
+            "description": "Test",
+            "tagline": "T",
+            "website": "https://example.com",
+            "language": "zh-CN",
+            "author": "T",
+            "cover": "",
+            "subscribe": {"enabled": False},
+        }
+        if analytics is not None:
+            cfg["analytics"] = analytics
+        return cfg
+
+    @patch("src.analytics.fetch_stats", return_value={"pv": 100, "uv": 50})
+    def test_emits_script_tag_when_enabled(self, mock_fetch: MagicMock) -> None:
+        """enabled=true + code 填了 → output/index.html <head> 含 GC script。"""
+        tmp, root = self._setup_out_dir()
+        try:
+            cfg = self._podcast_cfg({"enabled": True, "code": "abc12345", "api_key": "tk_x"})
+            from src.feed import build_index
+            build_index(tmp, cfg)
+            html = (tmp / "index.html").read_text(encoding="utf-8")
+            self.assertIn(
+                'data-goatcounter="https://abc12345.goatcounter.com/count"',
+                html,
+            )
+            self.assertIn('src="//gc.zgo.at/count.js"', html)
+            mock_fetch.assert_called_once_with("abc12345", "tk_x")
+        finally:
+            import shutil
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    @patch("src.analytics.fetch_stats", return_value={"pv": 100, "uv": 50})
+    def test_no_script_when_disabled(self, mock_fetch: MagicMock) -> None:
+        """enabled=false → 无 GC script,fetch_stats 不被调用。"""
+        tmp, root = self._setup_out_dir()
+        try:
+            cfg = self._podcast_cfg({"enabled": False, "code": "abc12345", "api_key": "tk_x"})
+            from src.feed import build_index
+            build_index(tmp, cfg)
+            html = (tmp / "index.html").read_text(encoding="utf-8")
+            self.assertNotIn("data-goatcounter", html)
+            mock_fetch.assert_not_called()
+        finally:
+            import shutil
+            shutil.rmtree(tmp, ignore_errors=True)
 
 
 if __name__ == "__main__":

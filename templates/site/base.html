@@ -13,6 +13,9 @@
 <link rel="stylesheet" href="style.css">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="icon" type="image/png" href="cover.jpg">
+{% if analytics and analytics.enabled and analytics.code %}
+<script data-goatcounter="https://{{ analytics.code }}.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+{% endif %}
 </head>
 <body>
 {% include "site/partials/header.html" %}
