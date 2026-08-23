@@ -140,6 +140,36 @@ class TestBuildIndexAnalytics(unittest.TestCase):
             import shutil
             shutil.rmtree(tmp, ignore_errors=True)
 
+    @patch("src.analytics.fetch_stats", return_value={"pv": 1234, "uv": 567})
+    def test_emits_footer_widget_when_stats(self, mock_fetch: MagicMock) -> None:
+        """stats 有值 → footer 含 .footer-stats span,数字带千位分隔符。"""
+        tmp, root = self._setup_out_dir()
+        try:
+            cfg = self._podcast_cfg({"enabled": True, "code": "abc12345", "api_key": "tk_x"})
+            from src.feed import build_index
+            build_index(tmp, cfg)
+            html = (tmp / "index.html").read_text(encoding="utf-8")
+            self.assertIn("footer-stats", html)
+            self.assertIn("1,234 次访问", html)
+            self.assertIn("567 位独立访客", html)
+        finally:
+            import shutil
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    @patch("src.analytics.fetch_stats", return_value=None)
+    def test_widget_hidden_when_stats_none(self, mock_fetch: MagicMock) -> None:
+        """fetch_stats 返回 None(API 失败) → footer 无 .footer-stats。"""
+        tmp, root = self._setup_out_dir()
+        try:
+            cfg = self._podcast_cfg({"enabled": True, "code": "abc12345", "api_key": "tk_x"})
+            from src.feed import build_index
+            build_index(tmp, cfg)
+            html = (tmp / "index.html").read_text(encoding="utf-8")
+            self.assertNotIn("footer-stats", html)
+        finally:
+            import shutil
+            shutil.rmtree(tmp, ignore_errors=True)
+
 
 if __name__ == "__main__":
     unittest.main()

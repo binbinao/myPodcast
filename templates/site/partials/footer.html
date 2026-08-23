@@ -1,3 +1,3 @@
 <footer class="site-footer">
-  <p class="footer-credit">由 斌哥 用 <a href="https://github.com/binbinao/myPodcast">myPodcast</a> 流水线制作。</p>
+  <p class="footer-credit">由 斌哥 用 <a href="https://github.com/binbinao/myPodcast">myPodcast</a> 流水线制作。{% if stats and (stats.pv or stats.uv) %} <span class="footer-stats">{{ "{:,}".format(stats.pv) }} 次访问 · {{ "{:,}".format(stats.uv) }} 位独立访客</span>{% endif %}</p>
 </footer>
