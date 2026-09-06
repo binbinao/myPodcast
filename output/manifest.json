@@ -1,6 +1,27 @@
 {
   "episodes": [
     {
+      "_key": "gapminder2007::ep-01",
+      "slug": "gapminder2007",
+      "ep_index": 1,
+      "title": "2007 全球发展快照：人均 GDP × 预期寿命 × 人口的三个发现",
+      "subtitle": "",
+      "description": "",
+      "date": "2026-09-05",
+      "created": "2026-09-05",
+      "updated": "2026-09-05",
+      "duration": 758,
+      "size": 12140915,
+      "url": "series/gapminder2007/ep-01/episode.mp3",
+      "series": "2007 全球发展快照：人均 GDP × 预期寿命 × 人口的三个发现",
+      "episode": 1,
+      "total": 1,
+      "format": "solo",
+      "chapter": "2007 全球发展快照：一张图里的三个发现",
+      "voice": "host=audiobook_male_1",
+      "source_hash": "99a587998266b101"
+    },
+    {
       "_key": "codebuddy-auto-ee::ep-09",
       "slug": "codebuddy-auto-ee",
       "ep_index": 9,

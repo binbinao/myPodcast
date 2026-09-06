@@ -421,3 +421,9 @@ section > p.lead { color: var(--text-soft); margin: 0 0 32px; font-size: 16px; m
 .ep-play[data-state="playing"] { background: var(--color-on-accent); color: var(--accent); border-color: var(--accent); }
 .ep-play svg { width: 14px; height: 14px; fill: currentColor; }
 .ep-card.is-playing { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 4px 20px var(--color-accent-glow); }
+
+.footer-stats {
+  margin-left: 1rem;
+  font-size: 0.85em;
+  opacity: 0.7;
+}

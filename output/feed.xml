@@ -7,6 +7,15 @@
     <language>zh-CN</language>
     <itunes:author>小搭 &amp; 斌哥</itunes:author>
     <item>
+      <title>2007 全球发展快照：人均 GDP × 预期寿命 × 人口的三个发现</title>
+      <description></description>
+      <pubDate>2026-09-05</pubDate>
+      <itunes:episode>1</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/gapminder2007/ep-01/episode.mp3" type="audio/mpeg" length="12140915"/>
+      <itunes:duration>758</itunes:duration>
+    </item>
+    <item>
       <title>汽车 E&amp;E 工程的 AI 助手化：CodeBuddy 脚手架工程全景 · 第 9 集 · 总结与展望</title>
       <description></description>
       <pubDate>2026-08-20</pubDate>

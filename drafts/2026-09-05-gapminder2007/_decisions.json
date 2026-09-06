@@ -1,0 +1,14 @@
+{
+  "decisions": {
+    "format": "solo",
+    "voice": "host=audiobook_male_1",
+    "voice_type": "(frontmatter)",
+    "host_voice": "",
+    "guest_voice": "",
+    "split_strategy": "by_h2",
+    "split_params": {
+      "max_episode_chars": 3000
+    },
+    "split_count": 0
+  }
+}
