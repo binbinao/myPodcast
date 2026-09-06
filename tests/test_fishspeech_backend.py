@@ -37,11 +37,19 @@ except ImportError as _exc:
 
 
 def load_tests(loader: unittest.TestLoader, tests: unittest.TestSuite, pattern: str) -> unittest.TestSuite:
-    """缺依赖时跳过整个文件,避免 loader error 污染 CI 总数。"""
+    """缺依赖时跳过整个文件，避免 loader error 污染 CI 总数。
+
+    注意：这里绝不能手动调 loader.loadTestsFromNames([__name__]) ——
+    load_tests 本身就是 unittest 发现本模块测试的钩子，手动再调会无限递归
+    （loadTestsFromNames → 触发 load_tests → 又 loadTestsFromNames → …），
+    在 Python 3.13 下直接 RecursionError 崩掉整个 discover。
+    """
     if _SKIP_REASON is not None:
         print(f"[skip] tests.test_fishspeech_backend — {_SKIP_REASON}")
         return loader.suiteClass()
-    return loader.loadTestsFromNames([__name__])
+    # 缺依赖时提前 return 空 suite；有依赖则让 loader 用默认逻辑发现
+    # 本文件里的 TestCase（不手动递归 loadTestsFromNames）。
+    return None
 
 
 class TestRegistry(unittest.TestCase):
