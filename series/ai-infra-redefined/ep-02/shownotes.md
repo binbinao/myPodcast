@@ -1,0 +1,36 @@
+---
+title: "重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 1.2 关键区分：训练集群 vs 推理集群的本质差异"
+series: "重新定义AI Infra：从GPU堆砌到全栈基础设施的进化"
+date: 2026-08-02
+duration: 80
+audio: series/ai-infra-redefined/ep-02/episode.mp3
+---
+
+# 重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 1.2 关键区分：训练集群 vs 推理集群的本质差异
+
+> 《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》1.2 关键区分：训练集群 vs 推理集群的本质差异（第 2/19 集）
+
+听：series/ai-infra-redefined/ep-02/episode.mp3 · 时长 1 分 20 秒 · 2026-08-02 · 主播：小搭
+
+**[host]** 要正确理解AI Infra，首先必须厘清一个根本性的区别：训练（Training）和推理（Inference）是完全不同的技术场景，需要截然不同的基础设施设计。
+
+**[host]** 维度  训练场景  推理场景
+
+**[host]** 核心目标  最大化吞吐，缩短训练时间  平衡延迟与成本，保证服务质量
+
+**[host]** 任务特征  长时间运行（数小时至数周），高资源占用  短请求（毫秒级），突发流量
+
+**[host]** 容错要求  可中断、可重试，依赖Checkpoint机制  高可用、低延迟，要求99.9%+ SLA
+
+**[host]** 资源弹性  抢占式调度，资源混部  自动扩缩容，按流量调整
+
+**[host]** 成本结构  CAPEX为主（硬件采购）  OPEX为主（云服务按需付费）
+
+**[host]** 关键指标  MFU（模型算力利用率）  P99延迟、每token成本
+
+**[host]** 这种差异决定了训练集群和推理集群在硬件选型、软件栈、调度策略上的根本分野。混淆二者，或用同一套Infra试图同时满足两种需求，往往导致两边都做不好。
+
+## 订阅
+
+- [RSS / Atom](https://binbinao.github.io/myPodcast/feed.xml)
+- 在 [Apple Podcasts](https://podcasts.apple.com/)、[小宇宙](https://www.xiaoyuzhoufm.com/) 等客户端粘贴 RSS 链接

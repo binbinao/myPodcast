@@ -1,0 +1,38 @@
+---
+title: "重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 3.3 框架与运行时层"
+series: "重新定义AI Infra：从GPU堆砌到全栈基础设施的进化"
+date: 2026-08-02
+duration: 158
+audio: series/ai-infra-redefined/ep-10/episode.mp3
+---
+
+# 重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 3.3 框架与运行时层
+
+> 《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》3.3 框架与运行时层（第 10/19 集）
+
+听：series/ai-infra-redefined/ep-10/episode.mp3 · 时长 2 分 38 秒 · 2026-08-02 · 主播：小搭
+
+**[host]** 框架与运行时层是 AI 基础设施的软件核心，直接决定了硬件算力能否被充分释放。这一层是过去几年创新最密集的领域。
+
+**[host]** 训练框架的并行策略演进清晰可见：数据并行（DP）是最基础的方式；模型并行（MP）解决单卡放不下模型的问题；管道并行（PP）通过微批次流水线降低管道气泡；张量并行（TP）把单层矩阵乘法拆分到多卡。当前万卡级训练的标准配置是 3D 并行——数据并行叠加管道并行叠加张量并行。
+
+**[host]** DeepSpeed 以 ZeRO 优化器系列著称：ZeRO-1 分片优化器状态，ZeRO-2 分片优化器加梯度，ZeRO-3 分片全部参数。Megatron-LM 专注于张量并行和序列并行的极致优化。FSDP（完全分片数据并行）是 PyTorch 原生的全参分片方案，与 PyTorch 生态无缝集成。Colossal-AI 则提供了更统一的并行抽象。
+
+**[host]** 推理引擎领域 vLLM 成为现象级产品，其 PagedAttention 技术通过分页管理 KV Cache，将 GPU 利用率提升数倍。TensorRT-LLM 是 NVIDIA 官方推理优化引擎，在 H 系列 GPU 上性能领先。llama.cpp 则以纯 CPU/C++ 实现著称，适合边缘部署。
+
+**[host]** 量化技术是推理成本优化的核心杠杆。FP16 是训练和推理的通用精度；INT8 在精度损失可接受的前提下大幅降低显存和算力需求；GPTQ 和 AWQ 是主流的后训练量化方法；SmoothQuant 则通过数学变换平衡各通道的量化难度。
+
+**[host]** 核心内容
+
+**[host]** - 并行策略演进：DP/TP/PP/SP/EP，3D并行标配
+
+**[host]** - 训练框架对比：DeepSpeed ZeRO（-1/2/3）、Megatron-LM、Colossal-AI、FSDP
+
+**[host]** - 推理引擎对比：vLLM（PagedAttention）、TensorRT-LLM、llama.cpp
+
+**[host]** - 量化技术：FP16/INT8/GPTQ/AWQ/SmoothQuant
+
+## 订阅
+
+- [RSS / Atom](https://binbinao.github.io/myPodcast/feed.xml)
+- 在 [Apple Podcasts](https://podcasts.apple.com/)、[小宇宙](https://www.xiaoyuzhoufm.com/) 等客户端粘贴 RSS 链接
