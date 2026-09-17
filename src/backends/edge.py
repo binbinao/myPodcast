@@ -6,12 +6,17 @@
 """
 from __future__ import annotations
 
+import asyncio
+import re
 import subprocess
 import tempfile
 from pathlib import Path
 from typing import Any
 
 from .base import Backend, register
+
+# 含任一可朗读字符（CJK / 字母 / 数字）即视为可合成；否则（孤立引号、纯标点、空白）跳过
+_HAS_SPEAKABLE = re.compile(r"[\u3400-\u9fff\uF900-\uFAFFA-Za-z0-9]")
 
 
 def _run(cmd: list[str]) -> None:
@@ -44,14 +49,25 @@ def _duration(path: Path) -> int:
 async def _speak(text: str, voice: str, out_path: Path,
                  rate: str, pitch: str, volume: str) -> None:
     import edge_tts
+    # 净化：edge-tts 对「只剩标点/引号/空白」或含破折号的文本偶发返回空音频
+    # ① 破折号归一为逗号（避免变速率下确定性拒收）
+    t = text.replace("——", "，").replace("—", "，").replace("–", "，")
+    # ② 去首尾空白后再判定
+    t = t.strip()
+    # ③ 无可朗读字符（如孤立的闭合弯引号 "）→ 写极短静音占位，避免 ffmpeg concat 缺文件
+    if not _HAS_SPEAKABLE.search(t):
+        _silence(out_path, 50)
+        return
     last: Exception | None = None
-    for _ in range(3):
+    for attempt in range(5):
         try:
-            comm = edge_tts.Communicate(text, voice, rate=rate, volume=volume, pitch=pitch)
+            comm = edge_tts.Communicate(t, voice, rate=rate, volume=volume, pitch=pitch)
             await comm.save(str(out_path))
             return
         except Exception as e:  # noqa: BLE001
             last = e
+            if attempt < 4:
+                await asyncio.sleep(0.4 * (attempt + 1))  # 退避，缓解偶发 NoAudioReceived
     raise last or RuntimeError("edge-tts TTS 失败")
 
 

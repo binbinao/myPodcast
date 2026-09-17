@@ -1,6 +1,27 @@
 {
   "episodes": [
     {
+      "_key": "data-analytics-10-lesson-introduction::ep-01",
+      "slug": "data-analytics-10-lesson-introduction",
+      "ep_index": 1,
+      "title": "10 节课,让你拿到任何数据都敢下手",
+      "subtitle": "",
+      "description": "",
+      "date": "2026-09-17",
+      "created": "2026-09-17",
+      "updated": "2026-09-17",
+      "duration": 717,
+      "size": 2871500,
+      "url": "series/data-analytics-10-lesson-introduction/ep-01/episode.mp3",
+      "series": "10 节课,让你拿到任何数据都敢下手",
+      "episode": 1,
+      "total": 1,
+      "format": "solo",
+      "chapter": "第2部分",
+      "voice": "male-qn-jingying",
+      "source_hash": "c8e1753fbed67f90"
+    },
+    {
       "_key": "gapminder2007::ep-01",
       "slug": "gapminder2007",
       "ep_index": 1,
