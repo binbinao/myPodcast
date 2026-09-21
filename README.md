@@ -4,7 +4,7 @@
 
 把文章、白皮书、长文，自动变成能听的播客。每篇文章按结构智能拆集，LLM 改写为口播稿，TTS 合成多角色音频，产出一个完整 RSS + 节目站。
 
-特点：**长文按章节拆多集、短文单集、单人/双人形式可配**；**LLM 全自动与人工润色半自动双模式**；TTS 后端可在 edge-tts（免费）和 MiniMax Speech 2.8 HD（带 8 种情绪 + 22 拟声词）之间切换。
+特点：**长文按章节拆多集、短文单集、单人/双人形式可配**；**LLM 全自动与人工润色半自动双模式**；TTS 后端可切换——默认走**本机 Qwen3-TTS**（零边际成本 / 离线 / Apache-2.0 可商用），也可切 edge-tts（免费轻量）、MiniMax Speech 2.8 HD（8 种情绪 + 22 拟声词）、SCNet Qwen3-TTS、Fish Audio。
 
 ---
 
@@ -60,8 +60,9 @@ python3.13 -m venv .venv
 | `src/polish.py` | LLM 调用封装（OpenAI 兼容）；`resolve_api_key` 支持 cfg-first + env-兜底；自动给 MiniMax 加 `reasoning_split + thinking.disabled`；payload 读 cfg 的 `max_tokens` / `temperature` |
 | `src/prepare.py` | `raw/` → `drafts/` 流水线入口；`--mark-reviewed` / `--freeze` 改 stage |
 | `src/build.py` | `drafts/` → `output/`。**draft 只读**（不再二次 polish）。**支持断点续传**：manifest 含 `source_hash`，未变跳过；`--only ep-XX` / `--from ep-XX` / `--retry-failed` / `--force` |
-| `src/tts.py` | TTS backend registry：`@register` 抽象；当前支持 edge-tts 与 MiniMax speech-2.8-hd |
-| `src/backends/{edge,minimax}.py` | TTS 后端实现 |
+| `src/tts.py` | TTS backend registry：`@register` 抽象。支持 qwen3-local（本机，默认）/ edge-tts / minimax / qwen-tts（SCNet 云）/ fish-speech |
+| `src/backends/{qwen3_local,edge,minimax,qwen_tts,fishspeech}.py` | TTS 后端实现 |
+| `src/backends/qwen3_local.py` | 本机 Qwen3-TTS 后端；服务实现在 `~/Documents/GitHub/Personal/qwen3-tts-local/` |
 | `src/prosody.py` | 韵律规划。heuristic（零依赖，按标点） / llm（按情绪打标）；缓解单人播客单调 |
 | `src/voicecaster.py` | 智能音色选型。frontmatter `voice` > LLM 推断 > 启发式 5 类文章分类 > 默认 |
 | `src/feed.py` | shownotes / RSS(`feed.xml`) / 暗色节目站(`index.html`) |
@@ -140,12 +141,41 @@ LLM 成本翻倍、同一 draft 每次 build 输出不同（不可复现）。
 
 | 后端 | 代价 | 优势 | 何时用 |
 |---|---|---|---|
+| **qwen3-local** | **零边际成本**（本机算力） | 可商用(Apache-2.0)、离线、9 个跨语种音色、自然语言控制语气 | **当前默认**：日常出片 |
 | edge-tts | 免费 | 零 key、低延迟、稳定性已加 3 次重试 | 开发 / 烟雾测试 / CI 默认（TTS_BACKEND=edge-tts） |
-| MiniMax Speech 2.8 HD | 按字符 | 8 种情绪 + 22 拟声词、HD 拟人化 | 主用：单人 / 反思独白 / 商务节目 |
+| MiniMax Speech 2.8 HD | 按字符 | 8 种情绪 + 22 拟声词、HD 拟人化 | 要最快出片 / 高拟人度时 |
+| qwen-tts | 按字符（SCNet） | Instruct 自然语言控语气 | 云上的 Qwen 路线 |
+| fish-speech | 按量（Fish Audio） | OpenAudio S2，可自建音色 | 需要专属克隆音色时 |
 
-`src/tts.py` backend 路由 `cfg.tts.backend → backends.edge | backends.minimax`。切换**只改 config**，不改业务代码。
+`src/tts.py` backend 路由 `cfg.tts.backend → backends.<name>`。切换**只改 config**，不改业务代码。
+加新后端只需在 `src/backends/` 新建文件用 `@register` 注册。
 
 MiniMax 的 `mp3` 响应 mime 标签是 `mp4a`（实际编码是 mp3），ffmpeg concat filter 会 exit 234；已通过 `aformat=sample_fmts=fltp:sample_rates=32000:channel_layouts=mono` 归一化每段解决。
+
+#### qwen3-local（本机 Qwen3-TTS，当前默认）
+
+跑本机 `Qwen3-TTS-12Hz-1.7B-CustomVoice`，独立 Python 环境 + 常驻 HTTP 服务，
+与仓库 `.venv` 完全隔离（模型要 torch 2.14 + transformers 4.57，塞进仓库会污染依赖）。
+
+```bash
+./scripts/start-qwen-tts-local.sh          # 必需：先起服务（127.0.0.1:8100）
+.venv/bin/python -m src.build drafts/<...> 
+```
+
+实现与部署细节见 `~/Documents/GitHub/Personal/qwen3-tts-local/README.md`。要点：
+
+- **实测 RTF 2.2**（M1 Pro 32GB / MPS / float16）→ 一集 15 分钟约需 **33 分钟**机时，与音色/文本无关。
+  因为是算力瓶颈，进度可见性很关键：backend 按 `chunk_chars` 分块逐块请求，每块打印
+  `[n/N] 音色 字数 已用/预计剩余`。
+- **音色**：`voices_qwen3local` 配置 `host/guest/default`。9 个预置音色见服务 `/v1/audio/voices`。
+- **历史稿件零改动可跑**：frontmatter 里的 `host_voice: audiobook_male_1` 等 minimax ID
+  不是本机音色，`build.py` 会记一行日志并回退到 `voices_qwen3local`，不会报错。
+- 服务没起时会**立刻报错并给出启动命令**，不会重试到超时。
+- **只影响新出片，不动存量**：切默认后端不会重渲已有 mp3。仓库现有 81 集（≈8.1 小时音频）是 minimax
+  时代产物，声线仍是旧的；要统一成"醇厚低沉 + 温暖柔和"这套本机音色，需 `--force` 重跑，
+  按 RTF ≈2.1 估算全量约 **17 小时机时**（建议按系列分批，一次一个系列）。
+- 守护测试 `tests/test_default_tts_backend.py`：钉住「默认后端 = qwen3-local」、音色路由与 duo 回退
+  分支，纯静态断言（不连模型/服务），可进 CI。
 
 ### LLM 后端：MiniMax chat（OpenAI 兼容）
 

@@ -33,8 +33,8 @@ def generate_audio(
     # 触发 backend 注册（如果上层未触发）
     from . import backends  # noqa: F401
     backend = backends.get_backend(backend_name)
-    # 给 minimax 类 backend 注入 emotion（edge-tts 忽略 emotion 字段）
-    if backend_name == "minimax":
+    # 给 minimax/qwen-tts/qwen3-local 类 backend 注入 emotion（edge-tts 忽略 emotion 字段）
+    if backend_name in ("minimax", "qwen-tts", "qwen3-local"):
         segments = _enrich_with_emotion(segments, cfg)
     return asyncio.run(backend.generate(segments, voice_map, cfg, out_path))
 
@@ -58,14 +58,11 @@ def build_episode_audio(
     from . import backends  # noqa: F401
     backend_name = cfg.get("tts", {}).get("backend", "edge-tts").lower()
     backend = backends.get_backend(backend_name)
-    if backend_name == "minimax":
-        from .prosody import plan_sentences
-        enriched = []
-        for seg in segments:
-            sents = plan_sentences(seg["text"], cfg)
-            emo = sents[0]["emotion"] if sents else "calm"
-            enriched.append({**seg, "emotion": emo})
-        segments = enriched
+    # 与 generate_audio 保持一致：这三个 backend 都消费 emotion 字段
+    # （原实现只处理 minimax，导致 build_episode_audio 走 qwen-tts/qwen3-local 时
+    #   韵律规划被静默丢弃）
+    if backend_name in ("minimax", "qwen-tts", "qwen3-local"):
+        segments = _enrich_with_emotion(segments, cfg)
     return backend.build_episode(
         segments, voice_map, cfg, out_dir,
         series_title=series_title, series_slug=series_slug, ep_index=ep_index,

@@ -7,3 +7,10 @@ output/manifest.json.bak
 # 系统 / 助手内部状态
 .DS_Store
 .workbuddy/
+
+# 本机助手配置 / 上游素材包（与流水线无关，不入库）
+.claude/
+markdown-podcast-studio.zip
+
+# raw 派生中间产物（可由原 PDF 重新提取，不入库）
+raw/_extracted/

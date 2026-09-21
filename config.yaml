@@ -1,6 +1,11 @@
 # myPodcast 配置
-# TTS 后端：edge-tts（免费，零依赖，单调）/ minimax（情感/22拟声词，需 API Key）/ fish-speech（Fish Audio OpenAudio S2）
-# 切换时 voices / voices_minimax / voices_fishspeech 对应不同后端使用的音色 ID。
+# TTS 后端：qwen3-local（本机 Qwen3-TTS-12Hz-1.7B-CustomVoice，零成本/离线/可商用）
+#          / minimax（云 API，情感/22拟声词，需 API Key）
+#          / qwen-tts（SCNet 云 API，按字符计费）
+#          / fish-speech（Fish Audio OpenAudio S2）
+#          / edge-tts（免费，零依赖，单调）
+# 切换时 voices / voices_minimax / voices_qwentts / voices_qwen3local / voices_fishspeech
+# 对应不同后端使用的音色 ID。
 
 podcast:
   title: "小搭-斌哥电台"
@@ -56,6 +61,25 @@ voices_fishspeech:
   guest: ""     # 嘉宾的 reference_id（duo 节目用）
   default: ""   # 兜底
 
+# SCNet Qwen3-TTS 角色音色（超算互联网语音合成 API，Qwen3-TTS-Instruct-Flash）
+# 音色为英文标识；Instruct 版支持 instructions 自然语言控制语气/语速
+# 男: Ethan(晨煦·阳光温暖) Elias(墨讲师·学术) Ryan(甜茶·戏剧) Moon(随性)
+# 女: Cherry(芊悦·阳光) Serena(苏瑶·温柔) Katerina(成熟) Vivian(酷飒)
+voices_qwentts:
+  host: "Ethan"      # 单人/host：阳光温暖男声，标准普通话带北方口音
+  guest: "Serena"    # 嘉宾：温柔女声（duo 节目用）
+  default: "Ethan"
+
+# 本机 Qwen3-TTS 角色音色（Qwen3-TTS-12Hz-1.7B-CustomVoice，9 个预置音色）
+# 服务：./scripts/start-qwen-tts-local.sh   （独立环境，见 qwen3-tts-local/README.md）
+# 女: Vivian(明亮微飒) Serena(温暖柔和) Ono_Anna(日系) Sohee(韩系)
+# 男: Uncle_Fu(醇厚低沉) Dylan(京腔青年) Eric(成都口音) Ryan(英文) Aiden(美式英文)
+# 注意：音色是模型预置的，没有自建音色；想固定自定义音色需另跑 VoiceDesign + Base 克隆
+voices_qwen3local:
+  host: "Uncle_Fu"   # host：醇厚低沉成熟男声（对齐原 minimax audiobook_male_1 的沉稳调性）
+  guest: "Serena"    # guest：温暖柔和女声（对齐原 frontmatter 的 female-chengshu）
+  default: "Uncle_Fu"
+
 # 音色智能选型（基于文章内容自动选 voice_id）
 # 优先级：frontmatter voice 字段 > LLM 推断(mode=llm 且 api_key 配了) > 启发式规则 > default_voice
 # 文章类型 → 音色映射见 src/voicecaster.py 的 ARTICLE_TYPES
@@ -65,11 +89,26 @@ voicecaster:
 
 # TTS 参数
 tts:
-  backend: "minimax"         # edge-tts | minimax | fish-speech
+  backend: "qwen3-local"     # qwen3-local | minimax | qwen-tts | fish-speech | edge-tts
   rate: "+0%"                # 语速（仅 edge-tts 全局模式用）
   volume: "+0%"              # 音量
   pitch: "+0Hz"
   pause_ms: 600              # 每段之间的停顿(毫秒)
+
+  # 本机 Qwen3-TTS 配置（仅当 backend=qwen3-local 时生效）
+  # 需要先起本地服务：./scripts/start-qwen-tts-local.sh
+  # 服务实现与部署说明见 ~/Documents/GitHub/Personal/qwen3-tts-local/
+  # 硬件实测：M1 Pro 32GB / MPS / float16，无 NVIDIA 依赖，Apache-2.0 可商用
+  qwen3_local:
+    base_url: "http://127.0.0.1:8100"
+    language: "Chinese"      # Chinese/English/... ；Auto = 自动判定
+    chunk_chars: 200         # 单次请求字符数；块小→进度细→单块失败重试代价小
+    timeout_sec: 900         # 单块超时（M1 Pro 上 200 字约 1-3 分钟）
+    speed: 1.0               # 1.0 = 原速；>1 加快
+    format: "mp3"            # mp3 | wav（服务端编码）
+    instructions: ""         # 全局语气指令（自然语言），如"用沉稳亲和的电台主播腔"
+    use_emotion: true        # 把 prosody emotion 标签翻译成 instruct 注入
+
   # MiniMax 配置（仅当 backend=minimax 时生效）
   minimax:
     base_url: "https://api.minimaxi.com/v1/t2a_v2"
@@ -99,6 +138,19 @@ tts:
     # 走 MITM 代理时（如公司 VPN），Python SSL hostname 校验会失败；本地调试可关
     # CI/直连保留 True。False 会触发 urllib3 InsecureRequestWarning，可忽略。
     verify_ssl: false
+
+  # SCNet Qwen3-TTS 配置（仅当 backend=qwen-tts 时生效）
+  # 端点/参数见 https://www.scnet.cn/ac/openapi/doc/2.0/moduleapi/api/audio/tts.html
+  # 计费按输入字符（阿里云原价 0.8 元/万字符；SCNet 侧以控制台为准）
+  qwen:
+    base_url: "https://api.scnet.cn/api/llm/v1/audios/generations"
+    # api_key 不推荐写文件，优先用环境变量 SCNET_API_KEY
+    api_key: ""
+    model: "Qwen3-TTS-Instruct-Flash"
+    chunk_chars: 1500        # 段内超长按句末标点切
+    timeout_sec: 120
+    instructions: ""         # 全局音色指令（自然语言），如"用沉稳亲和的电台主播腔"
+    use_emotion: true        # 把 prosody emotion 标签翻译成 instructions 注入
 
 # 韵律规划：缓解单人播客语调单调
 # enable: 是否按句注入 prosody

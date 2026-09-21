@@ -74,6 +74,10 @@ def run_one(
         voice_key = "voices_minimax"
     elif backend == "fish-speech":
         voice_key = "voices_fishspeech"
+    elif backend == "qwen-tts":
+        voice_key = "voices_qwentts"
+    elif backend == "qwen3-local":
+        voice_key = "voices_qwen3local"
     else:
         voice_key = "voices"
     voice_map = dict(cfg.get(voice_key, {}))  # 拷贝，避免改全局配置
@@ -81,27 +85,55 @@ def run_one(
     # 音色选型：仅 minimax backend 用 voicecaster（Fish Audio voice ID 是平台分配的，
     # voicecaster 词典是 minimax 专用的）；duo 节目保留 host/guest 映射
     fmt = str(meta.get("format", "")).lower()
-    if backend == "minimax" and fmt != "duo":
+    if backend in ("minimax", "qwen-tts", "qwen3-local") and fmt != "duo":
         # 优先级：CLI --voice > frontmatter voice > voicecaster 自动
+        # qwen-tts / qwen3-local 的 voicecaster 词典是 minimax 专用，跳过自动选型，
+        # 直接用 frontmatter voice / voices_<backend>.default
         explicit = voice_override or meta.get("voice")
-        source_rel = meta.get("source")
-        article_text = raw
-        if source_rel:
-            src_path = Path(source_rel)
-            if src_path.exists():
-                article_text = src_path.read_text(encoding="utf-8")
-        chosen = vc_cast(article_text, cfg, explicit=explicit)
-        voice_map["default"] = chosen
-        if voice_override:
-            log.info(f"      voice CLI 覆盖 → {voice_override}")
+        if backend in ("qwen-tts", "qwen3-local"):
+            # Qwen3-TTS 音色名是英文（qwen-tts 云：Ethan/Cherry/…；
+            # qwen3-local 本机：Vivian/Serena/Uncle_Fu/…），frontmatter 的
+            # minimax 音色 ID（male-qn-jingying / audiobook_male_1）不适用。
+            # 仅接受「显式指定」或「看起来不是 minimax ID」的值。
+            if voice_override:
+                voice_map["default"] = voice_override
+                log.info(f"      voice CLI 覆盖 → {voice_override}")
+            elif meta.get("voice") and not str(meta.get("voice")).startswith(
+                    ("male-", "female-", "audiobook_")):
+                voice_map["default"] = meta.get("voice")
+                log.info(f"      frontmatter voice → {meta.get('voice')}")
+            else:
+                log.info(f"      {backend} default voice → {voice_map.get('default')}")
         else:
-            log.info(f"      voicecaster → {chosen}")
-    elif backend in ("minimax", "fish-speech") and fmt == "duo":
+            source_rel = meta.get("source")
+            article_text = raw
+            if source_rel:
+                src_path = Path(source_rel)
+                if src_path.exists():
+                    article_text = src_path.read_text(encoding="utf-8")
+            chosen = vc_cast(article_text, cfg, explicit=explicit)
+            voice_map["default"] = chosen
+            if voice_override:
+                log.info(f"      voice CLI 覆盖 → {voice_override}")
+            else:
+                log.info(f"      voicecaster → {chosen}")
+    elif backend in ("minimax", "fish-speech", "qwen-tts", "qwen3-local") and fmt == "duo":
         # duo 节目：尊重 frontmatter host_voice / guest_voice；都缺再回退到
         # voices_<backend> 的 host/guest 配置。CLI --voice 在 duo 模式下不适用
         # （需要分别覆盖两个音色，应走 frontmatter 而不是 CLI 单值）。
         host_v = meta.get("host_voice") or voice_map.get("host")
         guest_v = meta.get("guest_voice") or voice_map.get("guest")
+        # qwen3-local：历史稿件的 frontmatter 存的是 minimax 音色 ID（audiobook_male_1 /
+        # female-chengshu），本机音色表里没有。此时忽略 frontmatter，回退到
+        # voices_qwen3local 的 host/guest，而不是直接报错——保证已有稿件零改动可跑。
+        if backend == "qwen3-local":
+            from .backends.qwen3_local import SPEAKERS as _LOCAL_SPEAKERS
+            if host_v and host_v not in _LOCAL_SPEAKERS:
+                log.info(f"      host_voice={host_v!r} 非本机音色，回退 {voice_map.get('host')}")
+                host_v = voice_map.get("host")
+            if guest_v and guest_v not in _LOCAL_SPEAKERS:
+                log.info(f"      guest_voice={guest_v!r} 非本机音色，回退 {voice_map.get('guest')}")
+                guest_v = voice_map.get("guest")
         if host_v:
             voice_map["host"] = host_v
         if guest_v:
