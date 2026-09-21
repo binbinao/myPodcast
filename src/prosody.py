@@ -12,7 +12,7 @@ import math
 import re
 from typing import Any
 
-from .polish import llm_complete, resolve_api_key
+from .llm import llm_complete, resolve_api_key
 
 # 以这些标点/换行切句（中英文句末 + 分号 + 省略号）
 _SPLIT_RE = re.compile(r"(?<=[。！？!?；;…\.\n])")

@@ -20,4 +20,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["src*", "scripts*"]
+# 只打包 src（可 import 的库）。scripts/ 是工具目录、无 __init__.py，不是包；
+# 原先的 `include = ["src*", "scripts*"]` 是无效声明（find_packages 找不到无
+# __init__.py 的目录），留着只会让人误以为 scripts/ 参与分发。
+include = ["src*"]

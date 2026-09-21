@@ -1,7 +1,7 @@
-"""src.polish 单元测试（unittest.TestCase 风格，零依赖）。
+"""src.llm 单元测试（unittest.TestCase 风格，零依赖）。
 
 LLM 链路兜底：heuristic_clean 应当把 LLM 输出的常见 markdown 残留
-去干净，且保留 [角色] 标签不动。
+去干净，且保留 [角色] 标签不动；resolve_api_key 三级兜底。
 """
 import sys
 import unittest
@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.polish import heuristic_clean, resolve_api_key
+from src.llm import heuristic_clean, resolve_api_key
 
 
 class TestHeuristicClean(unittest.TestCase):

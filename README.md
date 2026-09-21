@@ -55,11 +55,11 @@ python3.13 -m venv .venv
 | 模块 | 职责 |
 |---|---|
 | `src/split.py` | 按 H2 章节拆集；单块长文按 `max_episode_chars` 切；过长单章再按 H3/段落细分；产出 `EpisodePlan` |
-| `src/generate.py` | 脚本生成。全自动（LLM，按 `format` 出 solo/duo）/ 半自动（骨架）。**auto 模式调 polish.llm_complete**，产出的 draft 自带 `ai_stage` |
+| `src/generate.py` | 脚本生成。全自动（LLM，按 `format` 出 solo/duo）/ 半自动（骨架）。**auto 模式调 llm.llm_complete**，产出的 draft 自带 `ai_stage` |
 | `src/stages.py` | **draft 生命周期**：`ai_stage` = skeleton → generated → reviewed → frozen。build 据此告警；`set_stage` 只改这一行，正文逐字节保留 |
-| `src/polish.py` | LLM 调用封装（OpenAI 兼容）；`resolve_api_key` 支持 cfg-first + env-兜底；自动给 MiniMax 加 `reasoning_split + thinking.disabled`；payload 读 cfg 的 `max_tokens` / `temperature` |
+| `src/llm.py` | LLM 调用工具（OpenAI 兼容）+ 文本清洗；`resolve_api_key` 支持 cfg-first + env-兜底；自动给 MiniMax 加 `reasoning_split + thinking.disabled`；payload 读 cfg 的 `max_tokens` / `temperature`。（原名 `polish.py`，2026-09-21 更名——`polish()` 已随 build 只读契约废弃） |
 | `src/prepare.py` | `raw/` → `drafts/` 流水线入口；`--mark-reviewed` / `--freeze` 改 stage |
-| `src/build.py` | `drafts/` → `output/`。**draft 只读**（不再二次 polish）。**支持断点续传**：manifest 含 `source_hash`，未变跳过；`--only ep-XX` / `--from ep-XX` / `--retry-failed` / `--force` |
+| `src/build.py` | `drafts/` → `output/`。**draft 只读**（不再做 LLM 二次改写）。**支持断点续传**：manifest 含 `source_hash`，未变跳过；`--only ep-XX` / `--from ep-XX` / `--retry-failed` / `--force` |
 | `src/tts.py` | TTS backend registry：`@register` 抽象。支持 qwen3-local（本机，默认）/ edge-tts / minimax / qwen-tts（SCNet 云）/ fish-speech |
 | `src/backends/{qwen3_local,edge,minimax,qwen_tts,fishspeech}.py` | TTS 后端实现 |
 | `src/backends/qwen3_local.py` | 本机 Qwen3-TTS 后端（客户端）；服务实现体在 `scripts/qwen3-tts-local/` |
@@ -135,7 +135,8 @@ build 消费 draft 时按 stage 告警（`reviewed`/`frozen` 静默，其余提�
 而 draft 本身已是 `generate._auto()` 的 LLM 产物 —— 后果是人工在 `drafts/` 的修改被吃、
 LLM 成本翻倍、同一 draft 每次 build 输出不同（不可复现）。
 这条契约由 `tests/test_stages.py::TestBuildReadOnlyContract` AST 扫描机械 enforce：
-`build.py` 一旦重新 import 或调用 `polish`，测试立即 fail。
+`build.py` 一旦重新 import `llm`、或调用 `llm_complete()` / `heuristic_clean()`，测试立即 fail。
+（那个已被废弃的 `polish()` 整篇改写入口本身也已删除，不会复活。）
 
 ### TTS 后端切换
 
@@ -191,11 +192,11 @@ llm:
   temperature: 0.7
 ```
 
-**必须传 `reasoning_split: true` + `thinking: {type: "disabled"}`**（polish.py 自动检测 MiniMax 端点自动加）。否则 M2.x 默认开 adaptive thinking，把 tokens 全烧在 reasoning，`message.content` 为空。
+**必须传 `reasoning_split: true` + `thinking: {type: "disabled"}`**（llm.py 自动检测 MiniMax 端点自动加）。否则 M2.x 默认开 adaptive thinking，把 tokens 全烧在 reasoning，`message.content` 为空。
 
 ### 密钥不落盘
 
-`src/polish.py:resolve_api_key()` 解析优先级：`cfg.api_key` → env `LLM_API_KEY` → `MINIMAX_API_KEY` → `OPENAI_API_KEY`。`config.yaml` 可以安全提交，敏感 key 全在 zshrc / CI secrets。
+`src/llm.py:resolve_api_key()` 解析优先级：`cfg.api_key` → env `LLM_API_KEY` → `MINIMAX_API_KEY` → `OPENAI_API_KEY`。`config.yaml` 可以安全提交，敏感 key 全在 zshrc / CI secrets。
 
 zshrc 例：
 
@@ -279,10 +280,13 @@ push 到 main 自动构建并部署到 gh-pages，**走 skip-audio 模式**：�
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-142 个 case，覆盖命名 / 校验 / voicecaster / split / stage 契约等模块。零外部依赖。
+229 个 case，覆盖命名 / 校验 / voicecaster / split / stage 契约 / 血缘 / output 契约等模块。零外部依赖。
 
 其中 `test_stages.py::TestBuildReadOnlyContract` 是**机械守卫**：AST 扫描 `build.py`，
-一旦重新 import 或调用 `polish` 就 fail —— 让"draft 只读"这条规范不只是注释。
+一旦重新 import `llm`、或调用 `llm_complete()` / `heuristic_clean()` 就 fail ——
+让"draft 只读"这条规范不只是注释。
+`test_lineage.py` 与 `test_output_contract.py` 是另两条同类守卫，分别守
+raw→drafts→output 的血缘登记、以及 output/ 作为发布件的完整性。
 
 ---
 

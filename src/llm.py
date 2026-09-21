@@ -1,4 +1,19 @@
-"""脚本润色：可选 LLM（OpenAI 兼容），默认启发式清洗。"""
+"""LLM 调用工具（OpenAI 兼容）+ 不依赖 LLM 的文本清洗。
+
+模块职责
+--------
+本模块是所有 LLM 调用方的公共底座，本身不含"润色"语义：
+- ``resolve_api_key`` —— api_key 解析（cfg-first + env 兜底）
+- ``llm_complete``    —— 通用 chat completions 调用（含 MiniMax thinking 兼容）
+- ``heuristic_clean`` —— 纯字符串清洗，去 markdown 标记，保留 [角色] 标签
+
+命名沿革：原名 ``polish.py``，因最初只服务于 ``polish()`` 整篇改写函数。
+自 build 改为「draft 只读」契约后（守卫见
+tests/test_stages.py::TestBuildReadOnlyContract），``polish()`` 已无任何调用者
+——generate / prosody / voicecaster 只调 ``llm_complete``。模块名遂与职责脱节，
+2026-09-21 改名为 ``llm.py``，并删掉三个只为 polish() 存在的私有函数
+（FRONTMATTER_SPLIT / _split_frontmatter / _llm_polish / polish）。
+"""
 from __future__ import annotations
 
 import json
@@ -25,16 +40,6 @@ def resolve_api_key(cfg: dict[str, Any], env_names: tuple[str, ...] = ("LLM_API_
 
 # 私有 alias，模块内保持 _resolve_api_key 调用一致
 _resolve_api_key = resolve_api_key
-
-FRONTMATTER_SPLIT = re.compile(r"^(---\s*\n.*?\n---\s*\n)", re.DOTALL)
-
-
-def _split_frontmatter(text: str) -> tuple[str, str]:
-    m = FRONTMATTER_SPLIT.match(text)
-    if not m:
-        return "", text
-    return m.group(1), text[m.end():]
-
 
 def _heuristic(body: str) -> str:
     """轻量清洗：去 markdown 标记，保留 [角色] 标签。"""
@@ -102,19 +107,7 @@ def llm_complete(system_prompt: str, user_content: str, cfg: dict[str, Any]) -> 
     return (msg.get("content") or "").strip()
 
 
-def _llm_polish(body: str, cfg: dict[str, Any]) -> str:
-    llm = cfg.get("llm", {})
-    prompt = llm.get("prompt", "把下面内容改写成口语化播客脚本，用 [host] 和 [guest] 交替。")
-    return llm_complete(prompt, body, cfg)
-
-
-def polish(text: str, cfg: dict[str, Any]) -> str:
-    """润色整篇脚本（保留 frontmatter）。"""
-    fm, body = _split_frontmatter(text)
-    llm = cfg.get("llm", {})
-    use_llm = bool(llm.get("enable")) and bool(_resolve_api_key(llm))
-    if use_llm:
-        new_body = _llm_polish(body, cfg)
-    else:
-        new_body = _heuristic(body)
-    return fm + new_body
+# 注：原来的 polish() / _llm_polish() 已删除 —— build 改为「draft 只读」后它
+# 没有任何调用者（generate / prosody / voicecaster 只调 llm_complete）。
+# 若将来确实需要"整篇改写"，请在调用方显式组合 llm_complete，
+# 而不是在这里复活一个隐式入口 —— 那正是 draft 只读契约要防的东西。

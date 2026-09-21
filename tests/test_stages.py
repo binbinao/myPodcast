@@ -2,7 +2,7 @@
 
 两类断言：
 1. stages 模块本身：stage 读写、legacy 兼容、frontmatter 逐字节保留
-2. **契约守卫**：build.py 不得再调 polish() —— 这是本次重构的核心不变量，
+2. **契约守卫**：build.py 不得再调 LLM 文本改写入口 —— 这是本次重构的核心不变量，
    靠 AST 扫描机械 enforce，防止后人"顺手加回来"。
 """
 import ast
@@ -241,13 +241,18 @@ class TestBuildReadOnlyContract(unittest.TestCase):
 
     重构前 build.py 调 polish() 二次改写，吃掉人工在 drafts/ 的修改。
     规范若只写在注释里就会被后人改回去，所以用 AST 机械 enforce。
+
+    注：``polish()`` 已于 2026-09-21 随模块更名（src/polish.py → src/llm.py）
+    一并删除（它已无任何调用者）。这里仍保留对 ``polish`` 这个名字的检查——
+    防止有人以"恢复旧入口"的名义把它复活。
     """
 
     @staticmethod
     def _build_tree() -> ast.Module:
         return ast.parse((ROOT / "src" / "build.py").read_text(encoding="utf-8"))
 
-    def test_no_polish_import(self):
+    def test_no_llm_module_import(self):
+        """build.py 不得直接 import llm —— draft 只读契约要求 build 不改写正文。"""
         names = set()
         for node in ast.walk(self._build_tree()):
             if isinstance(node, ast.ImportFrom):
@@ -255,20 +260,26 @@ class TestBuildReadOnlyContract(unittest.TestCase):
             elif isinstance(node, ast.Import):
                 names.update(a.name for a in node.names)
         self.assertNotIn(
-            "polish", names,
-            "build.py 不得 import polish —— draft 只读契约要求 build 不改写正文",
+            "llm", names,
+            "build.py 不得 import llm —— draft 只读契约要求 build 不改写正文",
         )
 
-    def test_no_polish_call(self):
+    def test_no_text_rewrite_call(self):
+        """build.py 不得调用任何 LLM 文本改写入口（AST 级真实调用）。
+
+        与 test_no_llm_complete_call 互补：那条查源码字符串，这条查 Call 节点，
+        可覆盖 `from .x import y as llm_complete` 这类改名绕过。
+        """
         called = {
             node.func.id
             for node in ast.walk(self._build_tree())
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
         }
-        self.assertNotIn(
-            "polish", called,
-            "build.py 不得调用 polish() —— 会吃掉 drafts/ 里的人工修改",
-        )
+        for name in ("llm_complete", "heuristic_clean", "polish"):
+            self.assertNotIn(
+                name, called,
+                f"build.py 不得调用 {name}() —— 会改写 drafts/ 里的正文",
+            )
 
     def test_no_llm_complete_call(self):
         """build 阶段不该有任何 LLM 文本改写入口。
@@ -283,16 +294,16 @@ class TestBuildReadOnlyContract(unittest.TestCase):
 class TestMaxTokensWired(unittest.TestCase):
     """config 的 llm.max_tokens / temperature 必须真的进 payload。
 
-    这两个键曾经写在 config.yaml 里但 polish.py 从不读取（死配置）。
+    这两个键曾经写在 config.yaml 里但 llm.py 从不读取（死配置）。
     """
 
-    def test_polish_reads_both_keys(self):
-        src = (ROOT / "src" / "polish.py").read_text(encoding="utf-8")
+    def test_llm_reads_both_keys(self):
+        src = (ROOT / "src" / "llm.py").read_text(encoding="utf-8")
         self.assertIn('llm.get("max_tokens"', src)
         self.assertIn('llm.get("temperature"', src)
 
     def test_no_hardcoded_temperature(self):
-        src = (ROOT / "src" / "polish.py").read_text(encoding="utf-8")
+        src = (ROOT / "src" / "llm.py").read_text(encoding="utf-8")
         self.assertNotIn('"temperature": 0.7', src,
                          "temperature 应从 cfg 读，不能硬编码")
 

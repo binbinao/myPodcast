@@ -13,7 +13,7 @@ import re
 from typing import Any
 
 from .log import logger as log
-from .polish import llm_complete, resolve_api_key
+from .llm import llm_complete, resolve_api_key
 
 
 # 默认词典（config.yaml 没配 voicecaster.* 时使用）
