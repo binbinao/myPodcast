@@ -64,6 +64,7 @@ RAW_LINEAGE: dict[str, str] = {
     "2026-03-30-ai-chips.md": "produced:2026-03-30-ai-chips",
     "2026-04-12-cross-border-ecommerce.md": "produced:2026-04-12-cross-border-ecommerce",
     "2026-06-12-codebuddy-ee-final.md": "upstream-of:2026-08-20-codebuddy-auto-ee.md",
+    "2026-06-14-agentic-engineering-wechat-final.md": "produced:2026-06-14-agentic-engineering-wechat-final",
     "2026-07-31-when-platform-absorbs-you.md": "produced:2026-07-31-when-platform-absorbs-you",
     "2026-08-01-knowledge-management.md": "produced:2026-08-01-knowledge-management",
     "2026-08-06-cbm-baremetal.md": "withdrawn:cbm-baremetal",

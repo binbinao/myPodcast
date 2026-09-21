@@ -1,6 +1,27 @@
 {
   "episodes": [
     {
+      "_key": "agentic-engineering-wechat-final::ep-01",
+      "slug": "agentic-engineering-wechat-final",
+      "ep_index": 1,
+      "title": "什么是 Agentic Engineering？一个故事讲透",
+      "subtitle": "",
+      "description": "",
+      "date": "2026-09-21",
+      "created": "2026-09-21",
+      "updated": "2026-09-21",
+      "duration": 571,
+      "size": 6855884,
+      "url": "series/agentic-engineering-wechat-final/ep-01/episode.mp3",
+      "series": "什么是 Agentic Engineering？一个故事讲透",
+      "episode": 1,
+      "total": 1,
+      "format": "duo",
+      "chapter": "第2部分",
+      "voice": "host=Uncle_Fu / guest=Serena",
+      "source_hash": "94f54621fba757fd"
+    },
+    {
       "_key": "data-analytics-10-lesson-introduction::ep-01",
       "slug": "data-analytics-10-lesson-introduction",
       "ep_index": 1,

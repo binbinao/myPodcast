@@ -1,0 +1,14 @@
+{
+  "decisions": {
+    "format": "duo",
+    "voice": "host=Uncle_Fu / guest=Serena",
+    "voice_type": "(frontmatter)",
+    "host_voice": "Uncle_Fu",
+    "guest_voice": "",
+    "split_strategy": "by_chars",
+    "split_params": {
+      "max_episode_chars": 6000
+    },
+    "split_count": 0
+  }
+}
