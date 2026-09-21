@@ -26,6 +26,8 @@ from src.decisions import (  # noqa: E402
     save_decisions,
     Decisions,
 )
+from src.ingest import parse_script  # noqa: E402
+from src.prepare import prepare_file  # noqa: E402
 
 
 SAMPLE_DUO = """
@@ -165,6 +167,93 @@ class TestSaveDecisions(unittest.TestCase):
             self.assertEqual(data["decisions"]["format"], "solo")
             self.assertEqual(data["decisions"]["voice"], "audiobook_male_1")
             self.assertEqual(data["decisions"]["split_strategy"], "by_h2")
+
+
+class TestFrontmatterShortcutCarriesDuoVoices(unittest.TestCase):
+    """回归（2026-09-21）：frontmatter 三件套齐全 → 快捷分支必须把 duo 音色带进 draft。
+
+    旧行为只读 format / voice / split_strategy，host_voice / guest_voice 被丢弃：
+    draft frontmatter 缺这两项、_decisions.json 记成 ""。因为 build 会回退到
+    voices_<backend> 的默认 host / guest，音频听不出问题 —— "用户显式写了音色却被丢"
+    只能靠断言发现，所以这里把两种合法写法都钉住。
+    """
+
+    _PARA = (
+        "这是一段用于测试的正文内容，目的是让每个小节都超过最小集长度阈值，避免切分逻辑"
+        "把小节合并到一起，也避免正文过短而走到兜底路径。这段文字本身没有业务含义，"
+        "只服务于测试的可重复性与稳定性。"
+    )
+    _BODY = (
+        f"\n\n## 第一节\n\n{_PARA}{_PARA}{_PARA}\n\n"
+        f"## 第二节\n\n{_PARA}{_PARA}{_PARA}\n"
+    )
+
+    def _prepare(self, frontmatter: str) -> tuple[list[dict], dict]:
+        """跑一次真 prepare（llm 关闭，不联网），返回 (各集 frontmatter, 决策字典)。"""
+        with tempfile.TemporaryDirectory() as td:
+            raw = Path(td) / "raw"
+            raw.mkdir()
+            src = raw / "2026-01-02-voice-routing.md"
+            src.write_text(f"---\n{frontmatter}\n---{self._BODY}", encoding="utf-8")
+            drafts_dir = Path(td) / "drafts"
+            cfg = {
+                "format": "duo",
+                "llm": {"enable": False},  # 关键：不联网，走 _skeleton
+                "split": {"min_episode_chars": 10, "max_episode_chars": 3000},
+            }
+            made = prepare_file(src, cfg, drafts_dir)
+            self.assertTrue(made, "prepare_file 未产出任何 draft")
+            metas = [parse_script(f.read_text(encoding="utf-8"))[0] for f in made]
+            dec_files = list(drafts_dir.glob("*/_decisions.json"))
+            self.assertEqual(len(dec_files), 1, "应恰好落一份 _decisions.json")
+            dec = json.loads(dec_files[0].read_text(encoding="utf-8"))["decisions"]
+        return metas, dec
+
+    def test_explicit_keys_are_carried(self):
+        metas, dec = self._prepare(
+            "title: 音色路由测试\n"
+            "format: duo\n"
+            'voice: "host=Uncle_Fu / guest=Serena"\n'
+            "host_voice: Uncle_Fu\n"
+            "guest_voice: Serena\n"
+            "split_strategy: by_h2\n"
+            "date: 2026-01-02"
+        )
+        for m in metas:
+            self.assertEqual(m.get("host_voice"), "Uncle_Fu", f"draft 丢了 host_voice：{m}")
+            self.assertEqual(m.get("guest_voice"), "Serena", f"draft 丢了 guest_voice：{m}")
+        self.assertEqual(dec["host_voice"], "Uncle_Fu")
+        self.assertEqual(dec["guest_voice"], "Serena")
+
+    def test_voice_label_only_is_parsed(self):
+        """只有 voice 标签、没有 host_voice/guest_voice 键，也要能解析出来。
+
+        decisions.py 的交互门写出的正是这个格式，只认键不认标签会让这类 raw 静默丢音色。
+        """
+        metas, dec = self._prepare(
+            "title: 音色路由测试\n"
+            "format: duo\n"
+            'voice: "host=Dylan / guest=Ono_Anna"\n'
+            "split_strategy: by_h2\n"
+            "date: 2026-01-02"
+        )
+        self.assertEqual(metas[0].get("host_voice"), "Dylan")
+        self.assertEqual(metas[0].get("guest_voice"), "Ono_Anna")
+        self.assertEqual(dec["host_voice"], "Dylan")
+        self.assertEqual(dec["guest_voice"], "Ono_Anna")
+
+    def test_solo_does_not_get_phantom_duo_voices(self):
+        """solo 稿没有 host/guest 是合法的，不该崩、也不该误填。"""
+        metas, dec = self._prepare(
+            "title: 音色路由测试\n"
+            "format: solo\n"
+            'voice: "host=Uncle_Fu"\n'
+            "split_strategy: by_h2\n"
+            "date: 2026-01-02"
+        )
+        self.assertEqual(metas[0].get("format"), "solo")
+        self.assertFalse(metas[0].get("guest_voice"), "solo 不该凭空得到 guest_voice")
+        self.assertFalse(dec["guest_voice"])
 
 
 if __name__ == "__main__":
