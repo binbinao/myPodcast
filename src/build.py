@@ -181,6 +181,26 @@ def run_one(
 SKIP_AUDIO = False
 
 
+def _is_unchanged(meta_pre: dict[str, Any], old: dict[str, Any]) -> bool:
+    """已注册的一集，内容指纹是否未变（决定断点续传能否跳过）。
+
+    - 有 ``source:`` 且 hash 与 manifest 一致 → 未变，可跳过。
+    - **无** ``source:`` → 视为「无可比对」（早期 demo 稿没有源文章可算指纹），
+      按未变处理。若一律判为已变，这类稿件会在**每次 build 都重渲**：
+      manifest 的 ``updated``、条目顺序、feed.xml 每次部署都变，
+      断点续传对它们彻底失效（2026-09-21 修复的真实缺陷）。
+    - 有 ``source:`` 但文件缺失（``_hash_source`` 返回 None）→ 视为已变，
+      不静默放过，让它重跑并在下游暴露问题。
+    """
+    from .feed import _hash_source
+
+    src_field = meta_pre.get("source", "")
+    if not src_field:
+        return True
+    src_h = _hash_source(src_field)
+    return bool(src_h) and old.get("source_hash") == src_h
+
+
 def _ffprobe_duration(mp3: Path) -> int:
     import subprocess
     r = subprocess.run(
@@ -251,12 +271,9 @@ def run(
         ep_idx = int(meta_pre.get("episode", 1) or 1)
         key = f"{series_slug}::ep-{ep_idx:02d}"
 
-        # 断点续传：已成功且 source_hash 未变 → 跳过
+        # 断点续传：已成功且内容指纹未变 → 跳过
         if not force and not retry_failed and key in existing_keys:
-            old = existing_keys[key]
-            from .feed import _hash_source
-            src_h = _hash_source(meta_pre.get("source", ""))
-            if src_h and old.get("source_hash") == src_h:
+            if _is_unchanged(meta_pre, existing_keys[key]):
                 # 检查 mp3 是否真存在
                 mp3 = out_dir / "series" / series_slug / f"ep-{ep_idx:02d}" / "episode.mp3"
                 if mp3.exists():

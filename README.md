@@ -280,7 +280,7 @@ push 到 main 自动构建并部署到 gh-pages，**走 skip-audio 模式**：�
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-229 个 case，覆盖命名 / 校验 / voicecaster / split / stage 契约 / 血缘 / output 契约等模块。零外部依赖。
+234 个 case，覆盖命名 / 校验 / voicecaster / split / stage 契约 / 血缘 / output 契约 / 续传判定等模块。零外部依赖。
 
 其中 `test_stages.py::TestBuildReadOnlyContract` 是**机械守卫**：AST 扫描 `build.py`，
 一旦重新 import `llm`、或调用 `llm_complete()` / `heuristic_clean()` 就 fail ——

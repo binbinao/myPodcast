@@ -16,6 +16,15 @@
       <itunes:duration>717</itunes:duration>
     </item>
     <item>
+      <title>为什么工程师也该做一档自己的播客</title>
+      <description>工程师做内容总卡在'写'上。这期聊聊怎么用流水线把文章、白皮书自动变成播客，让输出门槛降一个量级。</description>
+      <pubDate>2026-08-01</pubDate>
+      <itunes:episode>1</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <enclosure url="https://binbinao.github.io/myPodcast/series/why-engineers-should-podcast/ep-01/episode.mp3" type="audio/mpeg" length="427821"/>
+      <itunes:duration>106</itunes:duration>
+    </item>
+    <item>
       <title>2007 全球发展快照：人均 GDP × 预期寿命 × 人口的三个发现</title>
       <description></description>
       <pubDate>2026-09-05</pubDate>
@@ -724,15 +733,6 @@
       <itunes:episode>1</itunes:episode>
       <itunes:season>1</itunes:season>
       <enclosure url="https://binbinao.github.io/myPodcast/series/ai-infra-redefined/ep-01/episode.mp3" type="audio/mpeg" length="1702644"/>
-      <itunes:duration>106</itunes:duration>
-    </item>
-    <item>
-      <title>为什么工程师也该做一档自己的播客</title>
-      <description>首集 — 把文章、白皮书、长文，变成能听的电台。</description>
-      <pubDate>2026-08-01</pubDate>
-      <itunes:episode>1</itunes:episode>
-      <itunes:season>1</itunes:season>
-      <enclosure url="https://binbinao.github.io/myPodcast/series/why-engineers-should-podcast/ep-01/episode.mp3" type="audio/mpeg" length="427821"/>
       <itunes:duration>106</itunes:duration>
     </item>
   </channel>

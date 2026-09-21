@@ -9,7 +9,7 @@
       "description": "",
       "date": "2026-09-17",
       "created": "2026-09-17",
-      "updated": "2026-09-17",
+      "updated": "2026-09-21",
       "duration": 717,
       "size": 2871500,
       "url": "series/data-analytics-10-lesson-introduction/ep-01/episode.mp3",
@@ -19,7 +19,28 @@
       "format": "solo",
       "chapter": "第2部分",
       "voice": "male-qn-jingying",
-      "source_hash": "c8e1753fbed67f90"
+      "source_hash": "b211283e1dcd1450"
+    },
+    {
+      "_key": "why-engineers-should-podcast::ep-01",
+      "slug": "why-engineers-should-podcast",
+      "ep_index": 1,
+      "title": "为什么工程师也该做一档自己的播客",
+      "subtitle": "从文字到声音，把积累变成能听的资产",
+      "description": "工程师做内容总卡在'写'上。这期聊聊怎么用流水线把文章、白皮书自动变成播客，让输出门槛降一个量级。",
+      "date": "2026-08-01",
+      "created": "2026-08-01",
+      "updated": "2026-09-21",
+      "duration": 106,
+      "size": 427821,
+      "url": "series/why-engineers-should-podcast/ep-01/episode.mp3",
+      "series": "为什么工程师也该做一档自己的播客",
+      "episode": 1,
+      "total": 1,
+      "format": "duo",
+      "chapter": "",
+      "voice": "",
+      "source_hash": null
     },
     {
       "_key": "gapminder2007::ep-01",
@@ -1679,26 +1700,6 @@
       "chapter": "1.1 现象：GPU抢购狂潮背后的认知盲区",
       "voice": "",
       "source_hash": "93ccde8f717ec89a"
-    },
-    {
-      "_key": "why-engineers-should-podcast::ep-01",
-      "slug": "why-engineers-should-podcast",
-      "ep_index": 1,
-      "title": "为什么工程师也该做一档自己的播客",
-      "subtitle": "",
-      "description": "首集 — 把文章、白皮书、长文，变成能听的电台。",
-      "date": "2026-08-01",
-      "created": "2026-08-01",
-      "updated": "2026-08-01",
-      "duration": 106,
-      "size": 427821,
-      "url": "series/why-engineers-should-podcast/ep-01/episode.mp3",
-      "series": "为什么工程师也该做一档自己的播客",
-      "episode": 1,
-      "total": 1,
-      "format": "duo",
-      "chapter": "",
-      "voice": ""
     }
   ]
 }

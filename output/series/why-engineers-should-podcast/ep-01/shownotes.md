@@ -1,12 +1,16 @@
+---
+title: "为什么工程师也该做一档自己的播客"
+series: "为什么工程师也该做一档自己的播客"
+date: 2026-08-01
+duration: 106
+audio: series/why-engineers-should-podcast/ep-01/episode.mp3
+---
+
 # 为什么工程师也该做一档自己的播客
 
 > 工程师做内容总卡在'写'上。这期聊聊怎么用流水线把文章、白皮书自动变成播客，让输出门槛降一个量级。
 
-- 主播：小搭 / 嘉宾：斌哥
-- 时长：1 分 46 秒
-- 日期：2026-08-01
-
-## 正文
+听：series/why-engineers-should-podcast/ep-01/episode.mp3 · 时长 1 分 46 秒 · 2026-08-01 · 嘉宾：斌哥
 
 **[host]** 大家好，欢迎来到《小搭电台》。我是小搭。
 
@@ -31,3 +35,8 @@
 **[host]** 好，那下一期我们聊怎么挑音色、怎么写更适合朗读的脚本。先这样，我们下期见。
 
 **[guest]** 下期见。
+
+## 订阅
+
+- [RSS / Atom](https://binbinao.github.io/myPodcast/feed.xml)
+- 在 [Apple Podcasts](https://podcasts.apple.com/)、[小宇宙](https://www.xiaoyuzhoufm.com/) 等客户端粘贴 RSS 链接
