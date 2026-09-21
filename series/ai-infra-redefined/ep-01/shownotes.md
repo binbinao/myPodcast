@@ -1,0 +1,24 @@
+---
+title: "重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 1.1 现象：GPU抢购狂潮背后的认知盲区"
+series: "重新定义AI Infra：从GPU堆砌到全栈基础设施的进化"
+date: 2026-08-02
+duration: 106
+audio: series/ai-infra-redefined/ep-01/episode.mp3
+---
+
+# 重新定义AI Infra：从GPU堆砌到全栈基础设施的进化 · 1.1 现象：GPU抢购狂潮背后的认知盲区
+
+> 《重新定义AI Infra：从GPU堆砌到全栈基础设施的进化》1.1 现象：GPU抢购狂潮背后的认知盲区（第 1/19 集）
+
+听：series/ai-infra-redefined/ep-01/episode.mp3 · 时长 1 分 46 秒 · 2026-08-02 · 主播：小搭
+
+**[host]** 摘要：本文系统性地重新定义了AI Infra的概念，从狭义的"GPU堆砌"拓展为包含硬件层、虚拟化层、框架层、调度层、数据层、观测层的六层全栈基础设施。通过训练vs推理的双轨对比视角，深入解析每层的技术选型、最佳实践和行业趋势，为技术管理者、AI工程师和业务决策者提供全景认知和投资决策依据。
+
+**[host]** 2024年，全球AI硬件市场规模达到593亿美元，预计2034年将增长至2963亿美元，年复合增长率高达18%。在这场AI军备竞赛中，GPU成为了最炙手可热的战略资源。各大科技公司动辄宣布采购数万甚至数十万块GPU：Meta计划购买35万块H100，Inflection AI搭建了包含22,000个H100的超级计算机集群，微软、谷歌、亚马逊等云厂商更是持续加码数据中心建设。
+
+**[host]** 然而，在这股GPU抢购狂潮的背后，一个令人尴尬的事实被有意无意地忽视了：大多数AI集群的GPU利用率仅有20-40%。这意味着企业花费巨资购买的算力资源，有超过一半处于闲置状态。问题的根源不在于硬件本身，而在于我们对AI Infra的认知存在严重偏差——太多人将AI Infra等同于"买更多GPU"，却忽视了软件栈、调度优化、数据管理等系统性工程。
+
+## 订阅
+
+- [RSS / Atom](https://binbinao.github.io/myPodcast/feed.xml)
+- 在 [Apple Podcasts](https://podcasts.apple.com/)、[小宇宙](https://www.xiaoyuzhoufm.com/) 等客户端粘贴 RSS 链接
