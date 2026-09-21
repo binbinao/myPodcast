@@ -1,7 +1,6 @@
 # myPodcast 高层流程图（写稿 → Review → 转 MP3）
 
 > 一页式高层视角，只看三件事：怎么产出脚本、怎么人工 review、怎么合成 MP3。
-> 详细模块图见 [pipeline-flow-2026-08-02.md](pipeline-flow-2026-08-02.md)。
 
 ## 三层数据流 + 三阶段动作
 

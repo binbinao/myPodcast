@@ -1,4 +1,20 @@
-"""M3 mini player 守恒测试 — build 后的 index.html 必须含吸底 player 结构。"""
+"""M3 mini player 守恒测试 — 已提交的 output/index.html 必须含吸底 player 结构。
+
+关于"不自己触发 build"（2026-09-21 修正）
+----------------------------------------
+本文件原先在 ``setUpClass`` 里跑 ``python -m src.build drafts/ --skip-audio``，
+理由是"确保 output/index.html 是最新的"。这是错的，有两个真实代价：
+
+1. **污染生产目录**：``--skip-audio`` 只在 ``source_hash`` 命中时幂等跳过；只要
+   drafts 里有一集的 hash 与 manifest 不符（改稿后未重渲的正常状态），这一步就会
+   重渲它并**刷掉 shownotes 日期**、改写 manifest —— 跑一次测试就多两处 git 脏改动。
+2. **CI 里纯冗余**：publish.yml 的顺序是「Unit tests」(L49) → 「Render index + feed」
+   (L61) → deploy，测试跑完几秒后还会全量 build 一次。这里的 build 让全量渲染做两遍。
+
+所以本测试改为**只读断言**：验证「已经提交进仓库、即将被部署的那份 index.html」
+符合 player 契约 —— 这比验证临时构建的产物更贴近要守的东西。
+产物缺失时 skip 并提示先跑构建，不再代劳。
+"""
 from __future__ import annotations
 
 import unittest
@@ -8,15 +24,11 @@ ROOT = Path(__file__).resolve().parent.parent
 INDEX = ROOT / "output" / "index.html"
 
 
+@unittest.skipUnless(
+    INDEX.exists(),
+    "缺 output/index.html；先跑 `python -m src.build drafts/ --skip-audio` 再测",
+)
 class MiniPlayerRenderTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls) -> None:
-        # 触发一次 build 确保 output/index.html 是最新的
-        import subprocess, sys
-        subprocess.run(
-            [sys.executable, "-m", "src.build", "drafts/", "--skip-audio", "--log-level", "WARNING"],
-            cwd=ROOT, capture_output=True, check=False,
-        )
 
     def test_player_audio_in_dom(self) -> None:
         """player-audio 元素在 DOM 里恰好 1 个（排除 player.js 注释里的字符串）。"""
