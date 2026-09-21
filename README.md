@@ -62,7 +62,7 @@ python3.13 -m venv .venv
 | `src/build.py` | `drafts/` → `output/`。**draft 只读**（不再二次 polish）。**支持断点续传**：manifest 含 `source_hash`，未变跳过；`--only ep-XX` / `--from ep-XX` / `--retry-failed` / `--force` |
 | `src/tts.py` | TTS backend registry：`@register` 抽象。支持 qwen3-local（本机，默认）/ edge-tts / minimax / qwen-tts（SCNet 云）/ fish-speech |
 | `src/backends/{qwen3_local,edge,minimax,qwen_tts,fishspeech}.py` | TTS 后端实现 |
-| `src/backends/qwen3_local.py` | 本机 Qwen3-TTS 后端；服务实现在 `~/Documents/GitHub/Personal/qwen3-tts-local/` |
+| `src/backends/qwen3_local.py` | 本机 Qwen3-TTS 后端（客户端）；服务实现体在 `scripts/qwen3-tts-local/` |
 | `src/prosody.py` | 韵律规划。heuristic（零依赖，按标点） / llm（按情绪打标）；缓解单人播客单调 |
 | `src/voicecaster.py` | 智能音色选型。frontmatter `voice` > LLM 推断 > 启发式 5 类文章分类 > 默认 |
 | `src/feed.py` | shownotes / RSS(`feed.xml`) / 暗色节目站(`index.html`) |
@@ -162,7 +162,7 @@ MiniMax 的 `mp3` 响应 mime 标签是 `mp4a`（实际编码是 mp3），ffmpeg
 .venv/bin/python -m src.build drafts/<...> 
 ```
 
-实现与部署细节见 `~/Documents/GitHub/Personal/qwen3-tts-local/README.md`。要点：
+实现与部署细节见 `scripts/qwen3-tts-local/README.md`。要点：
 
 - **实测 RTF 2.2**（M1 Pro 32GB / MPS / float16）→ 一集 15 分钟约需 **33 分钟**机时，与音色/文本无关。
   因为是算力瓶颈，进度可见性很关键：backend 按 `chunk_chars` 分块逐块请求，每块打印

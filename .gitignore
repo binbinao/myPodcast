@@ -14,3 +14,6 @@ markdown-podcast-studio.zip
 
 # raw 派生中间产物（可由原 PDF 重新提取，不入库）
 raw/_extracted/
+
+# 本机 TTS 服务运行时产物（日志/PID；实现体本身入库，见 scripts/qwen3-tts-local/）
+scripts/qwen3-tts-local/logs/

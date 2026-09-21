@@ -97,7 +97,8 @@ tts:
 
   # 本机 Qwen3-TTS 配置（仅当 backend=qwen3-local 时生效）
   # 需要先起本地服务：./scripts/start-qwen-tts-local.sh
-  # 服务实现与部署说明见 ~/Documents/GitHub/Personal/qwen3-tts-local/
+  # 服务实现体在仓库内 scripts/qwen3-tts-local/（仅模型权重与独立 venv 在仓库外）
+  # 统一入口：./scripts/start-qwen-tts-local.sh
   # 硬件实测：M1 Pro 32GB / MPS / float16，无 NVIDIA 依赖，Apache-2.0 可商用
   qwen3_local:
     base_url: "http://127.0.0.1:8100"
