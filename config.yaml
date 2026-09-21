@@ -173,18 +173,32 @@ split:
   min_episode_chars: 600    # 小于此字数的章节合并进上一集
   max_episode_chars: 3000   # 单集上限，超出按 H3/段落继续切
 
-# 可选 LLM 润色（推荐开，走 MiniMax 兼容 OpenAI 的 chat 接口）
-# api_key 留空时会自动从 env LLM_API_KEY / MINIMAX_API_KEY / OPENAI_API_KEY 取
+# 写稿 LLM（OpenAI 兼容 chat 接口）
+# 默认走 SCNet（超算互联网）：DeepSeek-V4.1-Flash，与 WorkBuddy 客户端当前会话同款模型。
+# key 从 env 的 SCNET_API_KEY 取（api_key_env 显式声明，避免误用环境里其它 provider 的 key）。
+# 注意本机 ~/.zshrc 目前只有 MINIMAX_API_KEY（且 Token Plan 用量已满，HTTP 429），
+# 首次使用前需 export SCNET_API_KEY=<key>。
+# model 只能从端点可用模型中选：llm_complete 会先 GET /models 校验，
+# 配了不存在的模型会直接报错并列出可用清单。SCNet 现有相关模型（2026-09-21 实测）：
+#   DeepSeek-V4.1-Flash（默认） / DeepSeek-V4-Pro / DeepSeek-V4-Flash-0731 /
+#   DeepSeek-V4-Pro-0813 / GLM-5.3 / GLM-5.3-Flash / Kimi-K3 / Qwen3.8-Flash ...
+# 离线备选：本机 Ollama http://127.0.0.1:11434/v1（零成本、无需 key，但 27B 模型
+# decode ~9 tok/s，一集出稿约 7 分钟，且需 16k ctx 派生模型，长输入才不截断）
 # 端点检测到 "minimax" 字串时会自动加 thinking.disabled + reasoning_split，
 # 避免 MiniMax 模型把 tokens 全部烧在 reasoning 上导致 content 为空
 llm:
   enable: true
-  base_url: "https://api.minimaxi.com/v1"
-  api_key: ""
-  model: "MiniMax-M2.5"
+  base_url: "https://api.scnet.cn/api/llm/v1"
+  api_key: ""                                   # 留空 → 从 api_key_env 列出的 env 取
+  api_key_env: ["SCNET_API_KEY"]                # 只认这个，不回落到 MINIMAX_API_KEY
+  model: "DeepSeek-V4.1-Flash"
   # 单集口播稿目标 ~3000-4000 字（中文口播 ~250 字/分 → 12-16 分钟）。
   # 曾为 1500：截断长稿，是"产出集偏短"的一条成因。
-  max_tokens: 4000
+  # V4.1-Flash 是思考型模型：reasoning 与正文共享 max_tokens 预算（实测 1600 字输入
+  # → reasoning 1044 tokens + 正文 458 tokens）。给 12000 才不会正文截断。
+  max_tokens: 12000
+  temperature: 0.7
+  timeout: 300                                  # 实测单次 17s 出稿，300s 是宽松上限
   temperature: 0.7
   # 润色提示词（把书面文改成口语播客稿）
   prompt: |

@@ -126,6 +126,17 @@ def generate_script(plan: EpisodePlan, cfg: dict[str, Any], source: str | None =
     llm = cfg.get("llm", {})
     if llm.get("enable") and resolve_api_key(llm):
         return _auto(plan, cfg, source)
+    if llm.get("enable"):
+        # 曾在缺 key 时静默降级成骨架稿：产出看着"像稿子"，实际没有 LLM 改写，
+        # 出片短、语气生硬，问题极难定位（2026-09-21 MiniMax 欠费事故即此类）。
+        # 仍保留降级（不中断流水线），但必须把原因喊出来。
+        want = llm.get("api_key_env") or ["LLM_API_KEY"]
+        names = ", ".join(want) if isinstance(want, list) else str(want)
+        log.warning(
+            f"llm.enable=true 但拿不到 api_key（env: {names}）→ 本集降级为骨架稿，未经 LLM 改写。"
+            f" 修复：export {names.split(',')[0].strip()}=<key>，"
+            f"或把 config.yaml 的 llm.enable 关掉以表明确实不要改写。"
+        )
     return _skeleton(plan, source)
 
 

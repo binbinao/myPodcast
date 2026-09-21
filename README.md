@@ -57,7 +57,7 @@ python3.13 -m venv .venv
 | `src/split.py` | 按 H2 章节拆集；单块长文按 `max_episode_chars` 切；过长单章再按 H3/段落细分；产出 `EpisodePlan` |
 | `src/generate.py` | 脚本生成。全自动（LLM，按 `format` 出 solo/duo）/ 半自动（骨架）。**auto 模式调 llm.llm_complete**，产出的 draft 自带 `ai_stage` |
 | `src/stages.py` | **draft 生命周期**：`ai_stage` = skeleton → generated → reviewed → frozen。build 据此告警；`set_stage` 只改这一行，正文逐字节保留 |
-| `src/llm.py` | LLM 调用工具（OpenAI 兼容）+ 文本清洗；`resolve_api_key` 支持 cfg-first + env-兜底；自动给 MiniMax 加 `reasoning_split + thinking.disabled`；payload 读 cfg 的 `max_tokens` / `temperature`。（原名 `polish.py`，2026-09-21 更名——`polish()` 已随 build 只读契约废弃） |
+| `src/llm.py` | LLM 调用工具（OpenAI 兼容）+ 文本清洗；`resolve_api_key` 支持 cfg-first + 显式 `api_key_env` + env 兜底；调上游前 `GET /models` 做**模型白名单预检**（配错名报出可用清单）；自动给 MiniMax 加 `reasoning_split + thinking.disabled`；payload 读 cfg 的 `max_tokens` / `temperature` / `timeout`。（原名 `polish.py`，2026-09-21 更名——`polish()` 已随 build 只读契约废弃） |
 | `src/prepare.py` | `raw/` → `drafts/` 流水线入口；`--mark-reviewed` / `--freeze` 改 stage |
 | `src/build.py` | `drafts/` → `output/`。**draft 只读**（不再做 LLM 二次改写）。**支持断点续传**：manifest 含 `source_hash`，未变跳过；`--only ep-XX` / `--from ep-XX` / `--retry-failed` / `--force` |
 | `src/tts.py` | TTS backend registry：`@register` 抽象。支持 qwen3-local（本机，默认）/ edge-tts / minimax / qwen-tts（SCNet 云）/ fish-speech |
@@ -178,31 +178,43 @@ MiniMax 的 `mp3` 响应 mime 标签是 `mp4a`（实际编码是 mp3），ffmpeg
 - 守护测试 `tests/test_default_tts_backend.py`：钉住「默认后端 = qwen3-local」、音色路由与 duo 回退
   分支，纯静态断言（不连模型/服务），可进 CI。
 
-### LLM 后端：MiniMax chat（OpenAI 兼容）
+### LLM 后端：SCNet DeepSeek-V4.1-Flash（OpenAI 兼容）
+
+写稿模型默认走 **SCNet（超算互联网）的 `DeepSeek-V4.1-Flash`** —— 与 WorkBuddy 客户端当前会话同款。
 
 `config.yaml` 的 `llm:` 一段：
 
 ```yaml
 llm:
   enable: true
-  base_url: "https://api.minimaxi.com/v1"
-  api_key: ""               # 留空：自动用环境变量 MINIMAX_API_KEY
-  model: "MiniMax-M2.5"     # 便宜优先；要更强推理换 MiniMax-M3
-  max_tokens: 4000          # 单集口播稿 ~3000-4000 字；1500 会截断长稿
+  base_url: "https://api.scnet.cn/api/llm/v1"
+  api_key: ""                                   # 留空 → 从下面 api_key_env 列出的 env 取
+  api_key_env: ["SCNET_API_KEY"]                # 只认这个，不回落到别的 provider
+  model: "DeepSeek-V4.1-Flash"                  # 只能从端点可用模型中选
+  max_tokens: 12000                             # 思考型模型：reasoning 与正文共享预算
   temperature: 0.7
+  timeout: 300
 ```
 
-**必须传 `reasoning_split: true` + `thinking: {type: "disabled"}`**（llm.py 自动检测 MiniMax 端点自动加）。否则 M2.x 默认开 adaptive thinking，把 tokens 全烧在 reasoning，`message.content` 为空。
+**两个必须知道的点**：
+
+1. **`max_tokens` 要够大**。V4.1-Flash 是思考型模型，`reasoning` 与正文**共享** `max_tokens` 预算，走的还是独立字段 `reasoning_content`（不污染正文）。实测 1600 字输入 → reasoning 1044 tokens + 正文 458 tokens。给 4000 会正文截断，甚至 content 为空。
+2. **模型名会被预检**。`llm_complete` 调上游前先 `GET {base_url}/models`，模型名不在清单里就直接报错并列出可用模型（避免上游回一句裸 404）。端点不通时跳过预检，不额外制造失败点。
 
 ### 密钥不落盘
 
-`src/llm.py:resolve_api_key()` 解析优先级：`cfg.api_key` → env `LLM_API_KEY` → `MINIMAX_API_KEY` → `OPENAI_API_KEY`。`config.yaml` 可以安全提交，敏感 key 全在 zshrc / CI secrets。
+`src/llm.py:resolve_api_key()` 解析优先级：`cfg.api_key` → **`cfg.api_key_env` 列出的 env（显式声明时只认这些）** → 默认 env `LLM_API_KEY` / `MINIMAX_API_KEY` / `OPENAI_API_KEY`。`config.yaml` 可以安全提交，敏感 key 全在 zshrc / CI secrets。
+
+`api_key_env` 存在的理由：多个 provider 的 key 同时躺在 shell 里时（例如 `MINIMAX_API_KEY` 已欠费、`SCNET_API_KEY` 才是要用的那把），默认列表的顺序会取错 key —— 拿到的 key 能过鉴权但配额已尽，报错很难定位。
 
 zshrc 例：
 
 ```sh
-export MINIMAX_API_KEY="sk-cp-..."
+export SCNET_API_KEY="sk-tp-..."
+export MINIMAX_API_KEY="sk-cp-..."   # 备选：Token Plan 恢复后才可用
 ```
+
+**离线备选**：本机 Ollama（`base_url: http://127.0.0.1:11434/v1`，无需 key）。零成本，但 27B 模型 decode ~9 tok/s，一集出稿约 7 分钟，且默认 4k 上下文会截断长输入（需 16k ctx 派生模型）。
 
 ### 智能音色（voicecaster）
 

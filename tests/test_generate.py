@@ -78,12 +78,44 @@ class TestSkeleton(unittest.TestCase):
 class TestGenerateScript(unittest.TestCase):
     """generate_script 入口：未配 key → 走 _skeleton 路径。"""
 
+    ENV_KEYS = ("LLM_API_KEY", "MINIMAX_API_KEY", "OPENAI_API_KEY", "SCNET_API_KEY")
+
+    def setUp(self):
+        """清掉 shell 里的 LLM key：否则测试会真的打到线上端点。
+        （曾经因为开发者 shell 里存着 MINIMAX_API_KEY 而让这个类变成联网测试）"""
+        import os
+        self.os = os
+        self.saved = {k: os.environ.pop(k, None) for k in self.ENV_KEYS}
+
+    def tearDown(self):
+        for k, v in self.saved.items():
+            if v is not None:
+                self.os.environ[k] = v
+
     def test_no_key_falls_back_to_skeleton(self):
         cfg = {"llm": {"enable": True, "api_key": ""}, "format": "duo"}
         plan = _make_plan()
         out = generate_script(plan, cfg)
         # 应包含 [host]，且无 LLM 调用（这里通过缺 key 走 fallback）
         self.assertIn("[host]", out)
+
+    def test_missing_key_warns_loudly(self):
+        """缺 key 静默降级会伪装成"稿子出好了"——必须留一条 warning。"""
+        cfg = {"llm": {"enable": True, "api_key": "", "api_key_env": ["SCNET_API_KEY"]}}
+        plan = _make_plan()
+        with self.assertLogs("mypodcast", level="WARNING") as cm:
+            generate_script(plan, cfg)
+        joined = "\n".join(cm.output)
+        self.assertIn("SCNET_API_KEY", joined)
+        self.assertIn("降级为骨架稿", joined)
+
+    def test_disabled_is_silent(self):
+        """llm.enable=false 是明确选择，不该刷 warning。"""
+        cfg = {"llm": {"enable": False, "api_key": "irrelevant"}, "format": "solo"}
+        plan = _make_plan(format="solo")
+        with self.assertRaises(AssertionError):
+            with self.assertLogs("mypodcast", level="WARNING"):
+                generate_script(plan, cfg)
 
     def test_disabled_falls_back_to_skeleton(self):
         cfg = {"llm": {"enable": False, "api_key": "irrelevant"}, "format": "solo"}
@@ -94,9 +126,6 @@ class TestGenerateScript(unittest.TestCase):
 
     def test_enable_with_resolvable_env(self):
         """enable=true 但 cfg.api_key="" → 用 env 兜底（如果 env 也无 → 仍走 skeleton）。"""
-        import os
-        for k in ("LLM_API_KEY", "MINIMAX_API_KEY", "OPENAI_API_KEY"):
-            os.environ.pop(k, None)
         cfg = {"llm": {"enable": True, "api_key": ""}, "format": "duo"}
         plan = _make_plan()
         # env 全空 + api_key 空 → resolve_api_key 返回 '' → 走 skeleton
