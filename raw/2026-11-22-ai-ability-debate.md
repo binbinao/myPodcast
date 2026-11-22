@@ -6,7 +6,6 @@ date: 2026-11-22
 format: duo
 voice: "host=Uncle_Fu / guest=Serena"
 split_strategy: by_h2
-source: "AI时代能力辩论_裁决_v4定稿.md"
 description: "把一份严谨的辩论裁决稿，改写成普通人能听懂的对话。核心问题：AI 把执行都包干了，人最该守住的能力到底是什么？"
 ---
 

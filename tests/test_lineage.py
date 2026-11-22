@@ -72,6 +72,7 @@ RAW_LINEAGE: dict[str, str] = {
     "2026-08-20-codebuddy-auto-ee.md": "produced:2026-08-20-codebuddy-auto-ee",
     "2026-09-05-gapminder2007.md": "produced:2026-09-05-gapminder2007",
     "2026-09-16-data-analytics-10-lesson-introduction.md": "produced:2026-09-16-data-analytics-10-lesson-introduction",
+    "2026-11-22-ai-ability-debate.md": "produced:2026-11-22-ai-ability-debate",
     "NASA系统工程手册.pdf": "upstream-of:2026-08-16-nasa-se-handbook.md",
 }
 
