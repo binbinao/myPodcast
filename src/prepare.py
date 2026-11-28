@@ -11,95 +11,32 @@
 from __future__ import annotations
 
 import argparse
-import re
-from datetime import date
 from pathlib import Path
+from typing import Any
 
 import yaml
 
-from .generate import draft_dir_for, draft_filename, generate_script
-from .ingest import parse_script
+from .episodes import write_episodes
+from .generate import draft_dir_for
+from .ingest import article_meta, duo_voices_from_meta, parse_script
 from .log import logger as log
 from .naming import chinese_to_ascii
+from .outline import ensure_outline, program_brief
 from .split import plan_episodes
-
-H1_RE = re.compile(r"^#\s+(.+)$", re.M)
-
-
-def _article_meta(article: str, path: Path, fmt_default: str) -> tuple[str, str, int | None, str, str]:
-    """返回 (title, format, episodes_n, article_date, explicit_slug)。"""
-    meta, _ = parse_script(article)
-    title = meta.get("title") or (H1_RE.search(article) and H1_RE.search(article).group(1).strip())
-    if not title:
-        title = path.stem
-    fmt = str(meta.get("format", fmt_default)).lower()
-    if fmt not in ("solo", "duo"):
-        fmt = fmt_default
-    episodes = meta.get("episodes")
-    if episodes is not None:
-        try:
-            episodes = int(episodes)
-        except (TypeError, ValueError):
-            episodes = None
-    # 日期：优先 frontmatter date → 否则从 raw 文件名 YYYY-MM-DD- 抽 → 否则今日
-    art_date = str(meta.get("date") or "")
-    if not art_date:
-        m = re.match(r"^(\d{4}-\d{2}-\d{2})-", path.stem)
-        if m:
-            art_date = m.group(1)
-    if not art_date:
-        art_date = date.today().isoformat()
-    # slug 优先 frontmatter series_slug → 否则 slug → 否则从 raw 文件名（去掉日期前缀）
-    # 兜底。**不再走 chinese_to_ascii(title)**——2026-08-02 拍板，pipeline 不再越权
-    # 决定命名；raw 文件用什么名，drafts/ 目录就跟什么名。
-    explicit_slug = (
-        str(meta.get("series_slug") or "").strip()
-        or str(meta.get("slug") or "").strip()
-    )
-    if not explicit_slug:
-        m = re.match(r"^\d{4}-\d{2}-\d{2}-(.+)$", path.stem)
-        if m:
-            explicit_slug = m.group(1).strip()
-    return title, fmt, episodes, art_date, explicit_slug
-
-
-def _duo_voices_from_meta(meta: dict[str, Any]) -> tuple[str, str]:
-    """从 frontmatter 解析 duo 的 host/guest 音色，返回 (host, guest)。
-
-    两个来源，显式键优先：
-    1. ``host_voice`` / ``guest_voice`` —— 与 build 读取的 draft frontmatter 同名，
-       仓库里 raw/2026-08-16-nasa-se-handbook.md 等即此写法。
-    2. ``voice`` 标签 ``"host=X / guest=Y"`` —— decisions.py 的交互门正是按这个格式
-       写出来的（``decisions.py`` 的 ``voice_choice = f"host={h} / guest={g}"``）。
-       只认键不认标签，会让"三件套齐全"的 raw 静默丢掉音色。
-
-    回归背景（2026-09-21）：快捷分支曾只读 format/voice/split_strategy，导致 draft
-    frontmatter 缺 host_voice/guest_voice、``_decisions.json`` 记成 ""。因为 build 会
-    回退到 ``voices_<backend>`` 的默认 host/guest，音频结果没暴露问题 —— 但"用户在
-    raw 里显式写了音色却被丢弃"是实打实的信息丢失。
-    """
-    host = str(meta.get("host_voice") or "").strip()
-    guest = str(meta.get("guest_voice") or "").strip()
-    if not (host and guest):
-        m = re.search(
-            r"host\s*=\s*([^\s/]+)\s*/\s*guest\s*=\s*([^\s/]+)",
-            str(meta.get("voice") or ""),
-        )
-        if m:
-            host = host or m.group(1)
-            guest = guest or m.group(2)
-    return host, guest
-
 
 def prepare_file(
     path: Path,
     cfg: dict[str, Any],
     drafts_dir: Path,
     auto_accept: bool = False,
+    *,
+    force: bool = False,
+    regenerate_outline: bool = False,
+    outline_only: bool = False,
 ) -> list[Path]:
     article = path.read_text(encoding="utf-8")
     fmt_default = str(cfg.get("format", "duo")).lower()
-    series_title, fmt, episodes, art_date, explicit_slug = _article_meta(
+    series_title, fmt, episodes, art_date, explicit_slug = article_meta(
         article, path, fmt_default
     )
     # series_slug：frontmatter series_slug 优先 → 否则用 explicit_slug（来自
@@ -119,7 +56,7 @@ def prepare_file(
     fm_format = str(meta.get("format", "")).lower()
     fm_voice = str(meta.get("voice", "")).strip()
     fm_split = str(meta.get("split_strategy", "")).strip()
-    fm_host, fm_guest = _duo_voices_from_meta(meta)
+    fm_host, fm_guest = duo_voices_from_meta(meta)
 
     if fm_format in ("solo", "duo") and fm_voice and fm_split:
         # frontmatter 三件套都齐：尊重用户，不打扰
@@ -155,9 +92,7 @@ def prepare_file(
         decisions.guest_voice = decisions.guest_voice or fm_guest
         decisions.split_strategy = decisions.split_strategy or fm_split or "auto"
 
-    # 写决策日志（_decisions.json），与 draft 同目录，方便审计
     out_dir = Path(draft_dir_for(art_date, series_title, explicit_slug, str(drafts_dir)))
-    save_decisions(out_dir, decisions)
 
     fmt = decisions.format
     # plan_episodes 接受 strategy + 透传参数
@@ -171,7 +106,32 @@ def prepare_file(
         max_duration_min=sp.get("max_duration_min"),
         chars_per_minute=sp.get("chars_per_minute", 250),
     )
-    made: list[Path] = []
+    # ===== 系列上下文（REQ-01）=====
+    # 多集系列：读/建 outline.md，逐集注入节目身份 + 总纲 + 上一集结尾 + 下一集主题。
+    # 单集不走这条路径：不产大纲，prompt 与改造前逐字节一致。
+    outline = ensure_outline(
+        out_dir, plans, cfg, regenerate=regenerate_outline or outline_only
+    )
+    brief = program_brief(cfg) if outline is not None else ""
+    # --outline-only 是"只重建大纲"的独立动作：放在多集分支之外，单集也必须早退，
+    # 否则单集场景仍会生成 ep-01（票面验收：单集行为不变）。
+    if outline_only:
+        # save_decisions 也留到返回之后，让"未改动任何文件"字面为真。
+        if len(plans) <= 1:
+            log.info("  --outline-only：单集不产大纲，未改动任何文件。")
+        elif outline is None:
+            log.warning(
+                "  --outline-only：没有可写的大纲（无 LLM key 或调用失败），未改动任何文件。"
+            )
+        else:
+            log.info(f"  --outline-only：只更新大纲，{len(plans)} 集正文未动。")
+        return []
+    if len(plans) > 1 and outline is None:
+        log.warning("  ⚠ 本系列没有可用大纲：按逐集独立生成，跨集承接无保障。")
+
+    # 写决策日志（_decisions.json），与 draft 同目录，方便审计
+    save_decisions(out_dir, decisions)
+
     try:
         source_rel = str(path.resolve().relative_to(Path.cwd()))
     except ValueError:
@@ -187,11 +147,12 @@ def prepare_file(
             plan.guest_voice = decisions.guest_voice
         if decisions.split_strategy:
             plan.split_strategy = decisions.split_strategy
-        script = generate_script(plan, cfg, source_rel)
-        f = out_dir / draft_filename(plan)
-        f.write_text(script, encoding="utf-8")
-        made.append(f)
-    log.info(f"  {path.name} → 《{series_title}》{len(plans)} 集 → {out_dir}")
+
+    made = write_episodes(
+        plans, out_dir, cfg, source_rel, outline=outline, brief=brief, force=force
+    )
+    count = f"{len(plans)} 集" if len(made) == len(plans) else f"{len(plans)} 集（写入 {len(made)}）"
+    log.info(f"  {path.name} → 《{series_title}》{count} → {out_dir}")
     return made
 
 
@@ -201,6 +162,10 @@ def run(
     config_path: Path,
     article: Path | None = None,
     auto_accept: bool = False,
+    *,
+    force: bool = False,
+    regenerate_outline: bool = False,
+    outline_only: bool = False,
 ) -> None:
     cfg = yaml.safe_load(Path(config_path).read_text(encoding="utf-8"))
     drafts_dir = Path(drafts_dir)
@@ -208,8 +173,11 @@ def run(
     # 不再 hard gate 静默 rename：raw 文件名由作者自主决定（frontmatter slug
     # 是 preferred，但 prepare 不再越权改用户命名）。2026-08-02 与斌哥拍板取消
     # silent rename——个人内容资产，英文/拼音/中文都应该是用户说了算。
+    opts = dict(
+        force=force, regenerate_outline=regenerate_outline, outline_only=outline_only
+    )
     if article:
-        prepare_file(Path(article), cfg, drafts_dir, auto_accept=auto_accept)
+        prepare_file(Path(article), cfg, drafts_dir, auto_accept=auto_accept, **opts)
         return
     raw_dir = Path(raw_dir)
     files = sorted(raw_dir.glob("*.md"))
@@ -218,7 +186,7 @@ def run(
         return
     total = 0
     for f in files:
-        total += len(prepare_file(f, cfg, drafts_dir, auto_accept=auto_accept))
+        total += len(prepare_file(f, cfg, drafts_dir, auto_accept=auto_accept, **opts))
     log.info(f"\n✓ 生成 {total} 个草稿脚本到 {drafts_dir}/（审完用 build 生成音频）")
 
 
@@ -237,6 +205,12 @@ def main() -> None:
                     help="把指定 draft 目录/文件标为 ai_stage: reviewed（审阅完成，消除 build 告警）")
     ap.add_argument("--freeze", metavar="路径",
                     help="把指定 draft 标为 ai_stage: frozen（锁稿，语义同 reviewed 且声明不再重生成）")
+    ap.add_argument("--force", action="store_true",
+                    help="覆盖 reviewed 稿（默认跳过；frozen 始终跳过，需先 --mark-reviewed）")
+    ap.add_argument("--regenerate-outline", action="store_true",
+                    help="重新调用模型生成系列大纲（默认已有 outline.md 则沿用；手改大纲直接生效）")
+    ap.add_argument("--outline-only", action="store_true",
+                    help="只重建系列大纲，不生成/覆盖任何一集（改完大纲再正常跑一次）")
     ap.add_argument("--log-file", default=None, help="追加日志到此文件")
     ap.add_argument("--log-level", default="INFO", help="DEBUG/INFO/WARNING/ERROR")
     args = ap.parse_args()
@@ -262,7 +236,10 @@ def main() -> None:
 
     art = Path(args.article) if args.article else None
     run(Path(args.raw), Path(args.drafts), Path(args.config), art,
-        auto_accept=args.auto_accept)
+        auto_accept=args.auto_accept,
+        force=args.force,
+        regenerate_outline=args.regenerate_outline,
+        outline_only=args.outline_only)
 
 
 if __name__ == "__main__":

@@ -16,6 +16,8 @@ from typing import Any
 from .log import logger as log
 from .naming import draft_filename as _draft_filename, drafts_dir_for as _drafts_dir_for
 from .llm import heuristic_clean, llm_complete, resolve_api_key
+from .outline import OUTLINE_SHA_KEY
+from .series import SeriesContext
 from .split import EpisodePlan, _strip_md
 from .stages import STAGE_GENERATED, STAGE_SKELETON
 
@@ -25,6 +27,7 @@ def _wrap(
     body_text: str,
     source: str | None = None,
     stage: str = STAGE_GENERATED,
+    outline_sha: str = "",
 ) -> str:
     """把 draft 包成带 frontmatter 的 markdown。
 
@@ -56,6 +59,10 @@ def _wrap(
         fm["split_strategy"] = plan.split_strategy
     if source:
         fm["source"] = source
+    if outline_sha:
+        # 本集基于哪一版系列大纲生成（src/outline.py 的指纹）。prepare 重跑时
+        # 用它提醒"reviewed/frozen 的稿子还停在旧大纲上"，不参与 build。
+        fm[OUTLINE_SHA_KEY] = outline_sha
     fm["ai_stage"] = stage
 
     # sort_keys=False 保留字段顺序；allow_unicode=True 支持中文；
@@ -95,7 +102,12 @@ def _ensure_clean_body(body: str, episode_label: str) -> str:
     return cleaned
 
 
-def _auto(plan: EpisodePlan, cfg: dict[str, Any], source: str | None = None) -> str:
+def _auto(
+    plan: EpisodePlan,
+    cfg: dict[str, Any],
+    source: str | None = None,
+    series: SeriesContext | None = None,
+) -> str:
     if plan.format == "solo":
         sys_prompt = (
             "你是一名播客文案编辑。把下面的书面内容改写成自然、口语化、适合单人朗读的播客稿。"
@@ -108,24 +120,45 @@ def _auto(plan: EpisodePlan, cfg: dict[str, Any], source: str | None = None) -> 
             "用 [host] 和 [guest] 交替发言，像真实聊天，有来有回、有互动。"
             "保留关键信息，去掉书面冗余。只输出脚本正文，不要解释。"
         )
+    if series and series.block:
+        # 系列上下文（节目身份 / 总纲 / 上一集结尾 / 下一集主题）拼在 system 里，
+        # user 仍只放本集正文：让模型分清"写作约束"与"要改写的材料"。
+        sys_prompt = f"{sys_prompt}\n\n{series.block}"
     raw = llm_complete(sys_prompt, plan.body, cfg)
     text = _ensure_clean_body(_strip_md(raw), f"ep-{plan.index:02d} {plan.chapter}")
-    return _wrap(plan, text, source)
+    return _wrap(plan, text, source, outline_sha=series.outline_sha if series else "")
 
 
-def _skeleton(plan: EpisodePlan, source: str | None = None) -> str:
+def _skeleton(
+    plan: EpisodePlan,
+    source: str | None = None,
+    series: SeriesContext | None = None,
+) -> str:
     lines = []
     for para in plan.body.split("\n\n"):
         p = _strip_md(para).strip()
         if p:
             lines.append(f"[host] {p}")
-    return _wrap(plan, "\n".join(lines), source, stage=STAGE_SKELETON)
+    # 骨架稿也记下大纲指纹：否则"大纲换代了但某集还是旧骨架"无法被 prepare 察觉。
+    return _wrap(
+        plan,
+        "\n".join(lines),
+        source,
+        stage=STAGE_SKELETON,
+        outline_sha=series.outline_sha if series else "",
+    )
 
 
-def generate_script(plan: EpisodePlan, cfg: dict[str, Any], source: str | None = None) -> str:
+def generate_script(
+    plan: EpisodePlan,
+    cfg: dict[str, Any],
+    source: str | None = None,
+    series: SeriesContext | None = None,
+) -> str:
+    """生成单集脚本。series 为空时行为与改造前一致（单集场景 / 无大纲）。"""
     llm = cfg.get("llm", {})
     if llm.get("enable") and resolve_api_key(llm):
-        return _auto(plan, cfg, source)
+        return _auto(plan, cfg, source, series)
     if llm.get("enable"):
         # 曾在缺 key 时静默降级成骨架稿：产出看着"像稿子"，实际没有 LLM 改写，
         # 出片短、语气生硬，问题极难定位（2026-09-21 MiniMax 欠费事故即此类）。
@@ -137,7 +170,7 @@ def generate_script(plan: EpisodePlan, cfg: dict[str, Any], source: str | None =
             f" 修复：export {names.split(',')[0].strip()}=<key>，"
             f"或把 config.yaml 的 llm.enable 关掉以表明确实不要改写。"
         )
-    return _skeleton(plan, source)
+    return _skeleton(plan, source, series)
 
 
 # ----- 命名代理（保持旧 import 兼容） -----

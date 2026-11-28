@@ -19,6 +19,7 @@ python3.13 -m venv .venv
 # 1. 一篇 markdown 扔进 raw/（frontmatter 可加 format: solo|duo、series_slug: <英文>）
 # 2. 准备脚本（评审门，审完再生成音频）
 .venv/bin/python -m src.prepare
+# 2.5 多集系列先生成 drafts/<系列>/outline.md（大纲可手改，下次 prepare 只读不覆盖）
 # 3. 编辑 drafts/ 里的脚本（按你的口吻调整 [host]/[guest]），审完标记
 .venv/bin/python -m src.prepare --mark-reviewed drafts/<系列目录>
 # 4. 生成音频 + 刷新 RSS / 节目站（build 只读 drafts，不会覆盖你的修改）
@@ -56,9 +57,12 @@ python3.13 -m venv .venv
 |---|---|
 | `src/split.py` | 按 H2 章节拆集；单块长文按 `max_episode_chars` 切；过长单章再按 H3/段落细分；产出 `EpisodePlan` |
 | `src/generate.py` | 脚本生成。全自动（LLM，按 `format` 出 solo/duo）/ 半自动（骨架）。**auto 模式调 llm.llm_complete**，产出的 draft 自带 `ai_stage` |
-| `src/stages.py` | **draft 生命周期**：`ai_stage` = skeleton → generated → reviewed → frozen。build 据此告警；`set_stage` 只改这一行，正文逐字节保留 |
+| `src/outline.py` | **系列大纲**：生成/解析 `drafts/<系列>/outline.md`（系列总纲 + 每集论点）、大纲指纹、节目身份短摘要（取 `config.yaml` 的 `podcast:`）；已存在则只读（`--regenerate-outline` 才重写） |
+| `src/series.py` | **单集上下文**：从磁盘截断上一集结尾（不额外调模型），拼「节目身份 + 总纲 + 本集位置 + 上一集结尾 + 下一集主题」注入每集 prompt |
+| `src/episodes.py` | **落盘与分级覆盖**：按 `ai_stage` 决定每集重生成 / 跳过，并汇报「被跳过但基于旧大纲」的集 |
+| `src/stages.py` | **draft 生命周期**：`ai_stage` = skeleton → generated → reviewed → frozen。build 据此告警；`set_stage` 只改这一行，正文逐字节保留；`overwrite_allowed` 是「能否覆盖」的唯一判定 |
 | `src/llm.py` | LLM 调用工具（OpenAI 兼容）+ 文本清洗；`resolve_api_key` 支持 cfg-first + 显式 `api_key_env` + env 兜底；调上游前 `GET /models` 做**模型白名单预检**（配错名报出可用清单）；自动给 MiniMax 加 `reasoning_split + thinking.disabled`；payload 读 cfg 的 `max_tokens` / `temperature` / `timeout`。（原名 `polish.py`，2026-09-21 更名——`polish()` 已随 build 只读契约废弃） |
-| `src/prepare.py` | `raw/` → `drafts/` 流水线入口；`--mark-reviewed` / `--freeze` 改 stage |
+| `src/prepare.py` | `raw/` → `drafts/` 流水线入口；`--mark-reviewed` / `--freeze` 改 stage；`--force` / `--regenerate-outline` / `--outline-only` 控制系列重生成 |
 | `src/build.py` | `drafts/` → `output/`。**draft 只读**（不再做 LLM 二次改写）。**支持断点续传**：manifest 含 `source_hash`，未变跳过；`--only ep-XX` / `--from ep-XX` / `--retry-failed` / `--force` |
 | `src/tts.py` | TTS backend registry：`@register` 抽象。支持 qwen3-local（本机，默认）/ edge-tts / minimax / qwen-tts（SCNet 云）/ fish-speech |
 | `src/backends/{qwen3_local,edge,minimax,qwen_tts,fishspeech}.py` | TTS 后端实现 |
@@ -137,6 +141,37 @@ LLM 成本翻倍、同一 draft 每次 build 输出不同（不可复现）。
 这条契约由 `tests/test_stages.py::TestBuildReadOnlyContract` AST 扫描机械 enforce：
 `build.py` 一旦重新 import `llm`、或调用 `llm_complete()` / `heuristic_clean()`，测试立即 fail。
 （那个已被废弃的 `polish()` 整篇改写入口本身也已删除，不会复活。）
+
+### 系列连贯：outline.md 与分级覆盖
+
+多集系列（`total > 1`）在 `prepare` 时先产出 `drafts/<系列>/outline.md`：
+系列总纲 3–5 行 + 每集一段（本集论点、与前后集的承接）。它是一份**可手改的文本**，
+下次 `prepare` 只读不覆盖 —— 改大纲即改下一轮的生成输入。
+
+每集出稿时，system prompt 会注入：节目身份短摘要（取自 `config.yaml` 的 `podcast:`）、
+系列总纲、本集位置、**上一集结尾**（从磁盘 `ep-(N-1).md` 尾部截断 ~700 字，
+不额外调模型）、下一集主题（末集不预告）。draft frontmatter 记 `series_outline_sha`，
+据此判断某集是否基于旧版大纲。
+
+覆盖分级（避免吃掉人工成果）：
+
+| 当前 stage | 直接重跑 | `--force` |
+|---|---|---|
+| `skeleton` / `generated` / legacy 无 stage | 重生成 | 重生成 |
+| `reviewed` | 跳过并汇报 | 重生成 |
+| `frozen` | 跳过并汇报 | 仍然跳过（需先 `--mark-reviewed`） |
+
+```bash
+.venv/bin/python -m src.prepare --regenerate-outline   # 重写 outline.md（其它集照常按 stage 处理）
+.venv/bin/python -m src.prepare --outline-only         # 只更新大纲，不动任何一集（单集不产大纲、不改文件）
+.venv/bin/python -m src.prepare --force                # 连 reviewed 一起重生成
+```
+
+覆盖判定集中在 `src/stages.py` 的 `overwrite_allowed`：`src/episodes.py` 只负责读
+stage 再交给它判，不把 frozen / reviewed / generated 的规则散在流水线里。
+
+大纲只在模型真的写出了分集内容时才落盘：模型回空串 / 只写总纲时保留现有
+`outline.md`（没有旧文件则按逐集独立生成），不会用手改版换一份全占位文件。
 
 ### TTS 后端切换
 
@@ -292,7 +327,7 @@ push 到 main 自动构建并部署到 gh-pages，**走 skip-audio 模式**：�
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-234 个 case，覆盖命名 / 校验 / voicecaster / split / stage 契约 / 血缘 / output 契约 / 续传判定等模块。零外部依赖。
+283 个 case，覆盖命名 / 校验 / voicecaster / split / stage 契约 / 血缘 / 系列大纲与上下文 / output 契约 / 续传判定等模块。零外部依赖。
 
 其中 `test_stages.py::TestBuildReadOnlyContract` 是**机械守卫**：AST 扫描 `build.py`，
 一旦重新 import `llm`、或调用 `llm_complete()` / `heuristic_clean()` 就 fail ——

@@ -53,6 +53,19 @@ def is_human_approved(stage: str) -> bool:
     return stage in _HUMAN_APPROVED
 
 
+def overwrite_allowed(stage: str, force: bool = False) -> bool:
+    """prepare 重跑时能否覆盖这份稿子（REQ-01 拍板的分级覆盖）。
+
+    frozen 永不覆盖；reviewed 要 --force；generated / skeleton / legacy（""）是
+    流水线产物，按旧行为重生成。所以这个判定只属于 stage 生命周期，不散在 prepare。
+    """
+    if stage == STAGE_FROZEN:
+        return False
+    if stage == STAGE_REVIEWED and not force:
+        return False
+    return True
+
+
 def stage_warning(stage: str) -> str:
     """build 消费 draft 时的告警文案。返回 "" 表示无需告警。
 
